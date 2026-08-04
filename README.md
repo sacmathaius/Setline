@@ -1,22 +1,21 @@
-# Setline PWA v6.4
+# Setline PWA v6.5
 
-## Changes
-- Fixed long food-name overlap in History by reserving a separate calorie column and action row.
-- Rebuilt the workout set grid so Load, Reps, and RIR/RPE have equal aligned columns.
-- Added date selectors to Workout and Calories. You can add, edit, copy, or delete records on previous dates.
-- Added **Copy previous workout** and **Copy previous meals**.
-- Workout forms now autosave drafts locally and recover them after an accidental refresh.
-- Edits and deletions support Undo.
-- A clear selected-date banner reduces accidental logging on the wrong day.
-- App updates now show an **Update** button and create a safety snapshot before activating.
-- Data migration uses the permanent `setline-data-v1` key and no longer merges old keys on every launch.
+## What changed
+- Added a local user profile for name, goal, experience, split, and training frequency.
+- Reduced Home-screen clutter by moving goals, bodyweight settings, backups, and advanced region targets into Profile.
+- Added a Weekly Muscle Region Report using primary and secondary exercise mappings.
+- Added next-session focus suggestions for under-covered regions.
+- Added a five-tab navigation: Home, Workout, Nutrition, Progress, Profile.
+- Preserved the permanent `setline-data-v1` storage key and automatic migration from previous packages.
 
-## Upload to GitHub
-1. Export a backup from **History → Export backup** while your current records are visible.
-2. Open the `Setline` repository.
-3. Delete or replace the old app files.
-4. Upload **all files from this package to the repository root**. The icon files are intentionally in the root.
-5. Commit the changes and wait for GitHub Pages to deploy.
-6. Open Setline. When the update notice appears, tap **Update**.
+## Update your GitHub Pages app
+1. Export a backup from your current Setline installation.
+2. Replace every file in the repository root with the contents of this folder.
+3. Commit the changes and wait for GitHub Pages to deploy.
+4. Reopen Setline. Use the in-app Update button if the old version remains cached.
 
-Keep the same repository name and GitHub Pages URL. Browser storage is tied to that exact origin and path.
+## Important
+- Muscle-region coverage is a practical training estimate, not a medical or physiological diagnosis.
+- Working sets count 1.0 for primary regions and 0.5 for secondary regions; drop sets count 0.5. Warm-up sets do not count.
+- Existing workouts without stored region tags are mapped from their exercise names when the report is generated.
+- Data remains local to the browser/device unless exported and imported manually.

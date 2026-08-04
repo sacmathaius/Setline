@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Setline">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Setline — Fitness Tracker v6.4</title>
+<title>Setline — Fitness Tracker v6.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -806,6 +806,19 @@
   }
   .update-banner button{flex:0 0 auto;padding:8px 12px;border-radius:8px;background:var(--workout);color:#111216;font-weight:800;}
 
+
+  /* ---------- v6.5 profile, simplified navigation, and region coverage ---------- */
+  .navbar{grid-template-columns:repeat(5,minmax(0,1fr));padding:8px 5px calc(8px + env(safe-area-inset-bottom));}
+  .nav-btn{min-width:0;padding:5px 1px;gap:3px;font-size:8.5px;}
+  .nav-btn svg{width:20px;height:20px}.nav-btn span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .focus-card{display:grid;grid-template-columns:38px minmax(0,1fr) 28px;gap:11px;align-items:center;padding:14px;margin:0 0 18px;background:linear-gradient(135deg,var(--surface),#171923);border:1px solid var(--line);border-radius:13px;}
+  .focus-icon,.profile-avatar{display:grid;place-items:center;background:var(--workout);color:#101116;font-weight:900;border-radius:11px;}
+  .focus-icon{width:38px;height:38px;font-size:19px}.focus-kicker{font-size:9px;text-transform:uppercase;letter-spacing:.9px;color:var(--workout);font-weight:800}.focus-title{font-size:13px;font-weight:800;margin-top:2px}.focus-text{font-size:10px;line-height:1.45;color:var(--text-dim);margin-top:3px}.focus-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.focus-tags span{padding:3px 6px;border-radius:99px;background:var(--workout-dim);color:var(--workout);font-size:8.5px;font-weight:700}.focus-arrow{background:none;color:var(--text-dim);font-size:28px;padding:0}.focus-copy{min-width:0}
+  .profile-card,.region-report-card,.about-card,.settings-details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px;margin-bottom:14px;}
+  .profile-identity{display:flex;align-items:center;gap:12px;margin-bottom:16px}.profile-avatar{width:48px;height:48px;font-size:24px;border-radius:14px}.profile-name{font-size:17px;font-weight:800}.profile-meta{font-size:10px;color:var(--text-dim);margin-top:3px}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}.profile-grid label,.region-target-grid label{font-size:9px;text-transform:uppercase;letter-spacing:.55px;color:var(--text-dim)}.profile-grid input,.profile-grid select,.region-target-grid input{display:block;width:100%;margin-top:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:11px 10px;font:inherit;text-transform:none;letter-spacing:0}.settings-details>summary,.region-details>summary{cursor:pointer;font-weight:800;font-size:12px;list-style:none;display:flex;align-items:center;justify-content:space-between}.settings-details>summary::after,.region-details>summary::after{content:'+';color:var(--workout);font-size:18px}.settings-details[open]>summary::after,.region-details[open]>summary::after{content:'−'}.settings-details .card-sub{margin:8px 0 12px}.region-target-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.profile-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.about-card p{font-size:10px;line-height:1.55;color:var(--text-dim);margin:12px 0 0}.brand-mini{display:flex;align-items:center;gap:10px}.brand-mini>span{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--workout);color:#111216;font-weight:900}.brand-mini b,.brand-mini small{display:block}.brand-mini small{font-size:9px;color:var(--text-dim);margin-top:2px}
+  .region-report-card{padding:15px}.coverage-score{font-family:'Space Mono',monospace;font-size:18px;font-weight:800;color:var(--workout)}.region-overview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.coverage-stat{padding:10px;border-radius:10px;background:var(--surface-2);text-align:center}.coverage-stat b{display:block;font-size:17px}.coverage-stat span{font-size:8.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.55px}.coverage-stat.missed b{color:var(--danger)}.coverage-stat.low b{color:var(--calorie)}.coverage-stat.good b{color:var(--workout)}.region-action{padding:12px;border-left:2px solid var(--workout);background:var(--workout-dim);font-size:10.5px;line-height:1.5;border-radius:0 9px 9px 0;margin-bottom:12px}.region-action b{display:block;font-size:12px;margin-bottom:3px}.region-details{border-top:1px solid var(--line);padding-top:12px}.region-report-list{display:grid;gap:9px;margin-top:12px}.region-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.region-name{font-size:10.5px;font-weight:700}.region-group{font-size:8.5px;color:var(--text-dim);margin-top:2px}.region-value{font-family:'Space Mono',monospace;font-size:9px;text-align:right}.region-meter{grid-column:1/-1;height:5px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-top:-5px}.region-meter span{display:block;height:100%;background:var(--workout);border-radius:99px}.region-row.low .region-meter span{background:var(--calorie)}.region-row.missed .region-meter span{background:var(--danger)}.region-row.high .region-meter span{background:#C18CFF}.region-status{display:inline-block;margin-left:5px;font-size:7.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-dim)}
+  @media(max-width:390px){.profile-grid{grid-template-columns:1fr}.region-target-grid{grid-template-columns:1fr 1fr}.nav-btn{font-size:7.7px}.nav-btn svg{width:19px;height:19px}.focus-card{grid-template-columns:34px minmax(0,1fr) 24px;padding:12px}.focus-icon{width:34px;height:34px}.region-overview{gap:6px}.coverage-stat{padding:9px 4px}}
+
 </style>
 </head>
 <body>
@@ -818,7 +831,7 @@
     <div class="page" id="page-dashboard">
       <div class="topbar" style="padding-left:0;padding-right:0;">
         <div class="brand-row">
-          <img class="brand-mark" src="./setline-s.svg?v=6.4" alt="Setline logo">
+          <img class="brand-mark" src="./setline-s.svg?v=6.5" alt="Setline logo">
           <div class="brand-copy">
             <div class="greeting" id="greeting-text">Good evening</div>
             <div class="title">Setline</div>
@@ -846,40 +859,24 @@
         </div>
       </div>
 
-      <div class="goal-settings-card">
-        <div class="card-head">
-          <div><div class="card-title">Daily targets</div><div class="card-sub">Nutrition and training preferences.</div></div>
-          <div class="header-actions"><div class="unit-toggle" aria-label="Preferred weight unit"><button id="unit-kg" type="button" onclick="setPreferredUnit('kg')">kg</button><button id="unit-lb" type="button" onclick="setPreferredUnit('lb')">lb</button></div><button type="button" class="text-btn" onclick="toggleGoalEditor()">Edit</button></div>
-        </div>
-        <div class="target-grid">
-          <div class="target-item"><b id="goal-summary-kcal">3200</b><span>kcal</span></div>
-          <div class="target-item"><b id="goal-summary-protein">160g</b><span>protein</span></div>
-          <div class="target-item"><b id="goal-summary-carbs">420g</b><span>carbs</span></div>
-          <div class="target-item"><b id="goal-summary-fat">95g</b><span>fat</span></div>
-        </div>
-        <div class="goal-editor hidden" id="goal-editor">
-          <label>Calories<input id="goal-kcal-input" type="number" min="800" max="10000" step="50" inputmode="numeric"></label>
-          <label>Protein (g)<input id="goal-protein-input" type="number" min="0" max="500" inputmode="numeric"></label>
-          <label>Carbs (g)<input id="goal-carbs-input" type="number" min="0" max="1200" inputmode="numeric"></label>
-          <label>Fat (g)<input id="goal-fat-input" type="number" min="0" max="400" inputmode="numeric"></label>
-          <label>Body weight (<span id="bodyweight-unit-label">kg</span>)<input id="bodyweight-input" type="number" min="20" max="700" step="0.1" inputmode="decimal"></label>
-          <label>Auto rest (seconds)<input id="rest-seconds-input" type="number" min="15" max="600" step="15" inputmode="numeric"></label>
-          <label class="switch-label"><input id="auto-rest-input" type="checkbox"> Start timer when set is checked</label>
-          <div class="goal-editor-actions"><button class="compact-btn" type="button" onclick="toggleGoalEditor(false)">Cancel</button><button class="compact-btn primary" type="button" onclick="saveGoals()">Save settings</button></div>
-        </div>
-      </div>
 
-      <div class="weight-card">
-        <div class="card-head">
-          <div><div class="card-title">Body weight</div><div class="card-sub">Log it consistently to see the real trend.</div></div>
-          <div class="weight-current"><span id="bodyweight-current">—</span> <small id="bodyweight-current-unit">kg</small></div>
-        </div>
-        <div class="weight-row"><input id="quick-bodyweight" type="number" min="20" max="700" step="0.1" inputmode="decimal" placeholder="Today's weight"><button type="button" class="compact-btn primary" onclick="logBodyWeight()">Log</button></div>
-      </div>
+
+
 
       <div class="quick-actions">
         <button class="quick-btn workout" onclick="goTo('workout')">+ Log Workout</button>
-        <button class="quick-btn calorie" onclick="goTo('calorie')">+ Log Calories</button>
+        <button class="quick-btn calorie" onclick="goTo('calorie')">+ Log Nutrition</button>
+      </div>
+
+      <div class="focus-card" id="home-region-focus">
+        <div class="focus-icon">S</div>
+        <div class="focus-copy">
+          <div class="focus-kicker">Weekly focus</div>
+          <div class="focus-title" id="home-focus-title">Log your first workout</div>
+          <div class="focus-text" id="home-focus-text">Setline will identify muscle regions receiving less training.</div>
+          <div class="focus-tags" id="home-focus-tags"></div>
+        </div>
+        <button class="focus-arrow" type="button" aria-label="Open progress" onclick="goTo('history')">›</button>
       </div>
 
       <div class="insight-card">
@@ -1055,7 +1052,20 @@
 
     <!-- HISTORY -->
     <div class="page hidden" id="page-history">
-      <div class="topbar" style="padding-left:0;padding-right:0;"><div class="title">History</div></div>
+      <div class="topbar" style="padding-left:0;padding-right:0;"><div><div class="greeting">Training analysis</div><div class="title">Progress</div></div></div>
+      <div class="region-report-card">
+        <div class="card-head">
+          <div><div class="card-title">Weekly muscle-region report</div><div class="card-sub" id="region-report-range">Last 7 days · effective-set estimate</div></div>
+          <span class="coverage-score" id="coverage-score">0%</span>
+        </div>
+        <div class="region-overview" id="region-overview"></div>
+        <div class="region-action" id="region-action"></div>
+        <details class="region-details">
+          <summary>View every muscle region</summary>
+          <div class="region-report-list" id="region-report-list"></div>
+        </details>
+        <div class="source-note">Coverage is an estimate: working sets count fully for primary regions and half for secondary regions. It does not diagnose recovery or guarantee growth.</div>
+      </div>
       <div class="history-card">
         <div class="history-date-row"><button class="date-arrow" onclick="changeHistoryDate(-1)">‹</button><input id="history-date" type="date" onchange="setHistoryDate(this.value)"><button class="date-arrow" onclick="changeHistoryDate(1)">›</button></div>
         <div class="card-title">Last 30 days</div><div class="card-sub">Blue means training; orange underline means food logged.</div>
@@ -1074,30 +1084,98 @@
       <div class="section-label">Sessions</div><div id="history-sessions"></div>
       <div class="section-label">Workouts</div><div id="history-workouts"></div>
       <div class="section-label">Nutrition</div><div id="history-calories"></div>
+
+    </div>
+
+
+    <!-- PROFILE -->
+    <div class="page hidden" id="page-profile">
+      <div class="topbar" style="padding-left:0;padding-right:0;">
+        <div><div class="greeting">Your settings</div><div class="title">Profile</div></div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-identity">
+          <div class="profile-avatar">S</div>
+          <div><div class="profile-name" id="profile-display-name">Setline athlete</div><div class="profile-meta" id="profile-display-meta">Build muscle · Intermediate</div></div>
+        </div>
+        <div class="profile-grid">
+          <label>Name<input id="profile-name-input" type="text" maxlength="40" placeholder="Your name"></label>
+          <label>Primary goal<select id="profile-goal-input"><option value="build_muscle">Build muscle</option><option value="strength">Strength</option><option value="maintain">Maintain</option><option value="fat_loss">Fat loss</option><option value="general">General fitness</option></select></label>
+          <label>Experience<select id="profile-experience-input"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></label>
+          <label>Workout split<select id="profile-split-input"><option value="push_pull_legs">Push / Pull / Legs</option><option value="upper_lower">Upper / Lower</option><option value="full_body">Full body</option><option value="bro_split">Body-part split</option><option value="custom">Custom</option></select></label>
+          <label>Training days / week<input id="profile-days-input" type="number" min="1" max="7" inputmode="numeric"></label>
+          <label>Training note<input id="profile-notes-input" type="text" maxlength="120" placeholder="Optional limitation or focus"></label>
+        </div>
+        <button type="button" class="submit-btn workout" onclick="saveProfile()">Save profile</button>
+      </div>
+
+      <div class="goal-settings-card">
+        <div class="card-head">
+          <div><div class="card-title">Daily targets</div><div class="card-sub">Nutrition and training preferences.</div></div>
+          <div class="header-actions"><div class="unit-toggle" aria-label="Preferred weight unit"><button id="unit-kg" type="button" onclick="setPreferredUnit('kg')">kg</button><button id="unit-lb" type="button" onclick="setPreferredUnit('lb')">lb</button></div><button type="button" class="text-btn" onclick="toggleGoalEditor()">Edit</button></div>
+        </div>
+        <div class="target-grid">
+          <div class="target-item"><b id="goal-summary-kcal">3200</b><span>kcal</span></div>
+          <div class="target-item"><b id="goal-summary-protein">160g</b><span>protein</span></div>
+          <div class="target-item"><b id="goal-summary-carbs">420g</b><span>carbs</span></div>
+          <div class="target-item"><b id="goal-summary-fat">95g</b><span>fat</span></div>
+        </div>
+        <div class="goal-editor hidden" id="goal-editor">
+          <label>Calories<input id="goal-kcal-input" type="number" min="800" max="10000" step="50" inputmode="numeric"></label>
+          <label>Protein (g)<input id="goal-protein-input" type="number" min="0" max="500" inputmode="numeric"></label>
+          <label>Carbs (g)<input id="goal-carbs-input" type="number" min="0" max="1200" inputmode="numeric"></label>
+          <label>Fat (g)<input id="goal-fat-input" type="number" min="0" max="400" inputmode="numeric"></label>
+          <label>Body weight (<span id="bodyweight-unit-label">kg</span>)<input id="bodyweight-input" type="number" min="20" max="700" step="0.1" inputmode="decimal"></label>
+          <label>Auto rest (seconds)<input id="rest-seconds-input" type="number" min="15" max="600" step="15" inputmode="numeric"></label>
+          <label class="switch-label"><input id="auto-rest-input" type="checkbox"> Start timer when set is checked</label>
+          <div class="goal-editor-actions"><button class="compact-btn" type="button" onclick="toggleGoalEditor(false)">Cancel</button><button class="compact-btn primary" type="button" onclick="saveGoals()">Save settings</button></div>
+        </div>
+      </div>
+
+      <div class="weight-card">
+        <div class="card-head">
+          <div><div class="card-title">Body weight</div><div class="card-sub">Log it consistently to see the real trend.</div></div>
+          <div class="weight-current"><span id="bodyweight-current">—</span> <small id="bodyweight-current-unit">kg</small></div>
+        </div>
+        <div class="weight-row"><input id="quick-bodyweight" type="number" min="20" max="700" step="0.1" inputmode="decimal" placeholder="Today's weight"><button type="button" class="compact-btn primary" onclick="logBodyWeight()">Log</button></div>
+      </div>
+
+      <details class="settings-details">
+        <summary>Muscle-region targets</summary>
+        <div class="card-sub">Weekly effective-set targets used by the coverage report. Adjust only when needed.</div>
+        <div class="region-target-grid" id="region-target-grid"></div>
+        <div class="profile-actions"><button type="button" class="compact-btn" onclick="resetRegionTargets()">Reset defaults</button><button type="button" class="compact-btn primary" onclick="saveRegionTargets()">Save targets</button></div>
+      </details>
+
       <div class="data-card">
         <div class="card-head"><div><div class="card-title">Your data</div><div class="card-sub">Create a backup or move your records to another device.</div></div></div>
         <div class="data-actions"><button class="compact-btn primary" onclick="exportData()">Export backup</button><button class="compact-btn" onclick="document.getElementById('import-file').click()">Import backup</button></div>
         <input id="import-file" type="file" accept="application/json" class="hidden" onchange="importData(event)">
+      </div>
+
+      <div class="about-card">
+        <div class="brand-mini"><span>S</span><div><b>Setline v6.5</b><small>Local-first fitness tracking</small></div></div>
+        <p>Your records remain on this browser unless you export and import a backup. Keep a backup before clearing browser data or changing phones.</p>
       </div>
     </div>
 
     <!-- NAVBAR -->
     <div class="navbar">
       <button class="nav-btn active" id="nav-dashboard" onclick="goTo('dashboard')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
-        Home
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3Z"/></svg><span>Home</span>
       </button>
       <button class="nav-btn workout" id="nav-workout" onclick="goTo('workout')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 4l3 3M20 20l-3-3M2 10l4-4M18 4l4 4M10 22l4-4M14 2l4 4M8 8l8 8"/></svg>
-        Workout
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8v8M9 6v12M15 6v12M19 8v8M3 12h18"/></svg><span>Workout</span>
       </button>
       <button class="nav-btn calorie" id="nav-calorie" onclick="goTo('calorie')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c-1.5 3-4 5-4 8.5A4 4 0 0 0 12 15a4 4 0 0 0 4-4.5C16 7 13.5 5 12 2Z"/><path d="M9 15c0 3.5 1.5 6 3 7 1.5-1 3-3.5 3-7"/></svg>
-        Calories
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c4 3 6 6 6 10a6 6 0 1 1-12 0c0-4 2-7 6-10Z"/><path d="M9 15h6"/></svg><span>Nutrition</span>
       </button>
       <button class="nav-btn" id="nav-history" onclick="goTo('history')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
-        History
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg><span>Progress</span>
+      </button>
+      <button class="nav-btn" id="nav-profile" onclick="goTo('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg><span>Profile</span>
       </button>
     </div>
     <div class="update-banner hidden" id="update-banner"><span>A Setline update is ready. Your data will be backed up first.</span><button type="button" id="install-update-btn">Update</button></div>
@@ -1106,7 +1184,7 @@
 </div>
 
 <script>
-  // Setline v6.4: past-date editing, draft autosave, safer updates, and responsive history cards.
+  // Setline v6.5: profile, simplified navigation, and weekly muscle-region coverage.
   // This key is intentionally NOT versioned. Future app updates must keep using it.
   const STORAGE_KEY = 'setline-data-v1';
   const STORAGE_BACKUP_KEY = 'setline-data-last-good-v1';
@@ -1173,6 +1251,75 @@
   ];
 
 
+  const MUSCLE_REGIONS = [
+    {id:'upper_chest',label:'Upper chest',group:'Chest',target:4},{id:'mid_chest',label:'Mid chest',group:'Chest',target:4},{id:'lower_chest',label:'Lower chest',group:'Chest',target:2},
+    {id:'lats',label:'Lats',group:'Back',target:6},{id:'upper_back',label:'Upper back',group:'Back',target:4},{id:'mid_back',label:'Mid back',group:'Back',target:4},{id:'lower_back',label:'Lower back',group:'Back',target:2},
+    {id:'front_delts',label:'Front delts',group:'Shoulders',target:2},{id:'side_delts',label:'Side delts',group:'Shoulders',target:4},{id:'rear_delts',label:'Rear delts',group:'Shoulders',target:4},
+    {id:'biceps',label:'Biceps',group:'Arms',target:6},{id:'triceps',label:'Triceps',group:'Arms',target:6},{id:'forearms',label:'Forearms',group:'Arms',target:2},
+    {id:'quads',label:'Quads',group:'Legs',target:6},{id:'hamstrings',label:'Hamstrings',group:'Legs',target:6},{id:'glutes',label:'Glutes',group:'Legs',target:4},{id:'adductors',label:'Adductors',group:'Legs',target:2},{id:'calves',label:'Calves',group:'Legs',target:4},
+    {id:'abs',label:'Abs',group:'Core',target:4},{id:'obliques',label:'Obliques',group:'Core',target:2}
+  ];
+  function defaultRegionTargets(){ return Object.fromEntries(MUSCLE_REGIONS.map(region=>[region.id,region.target])); }
+
+  function regionExerciseKey(value=''){return String(value).toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();}
+
+  const REGION_EXERCISE_RULES = [
+    {names:['Incline Dumbbell Press','Incline Barbell Press','Incline Bench Press','Incline Chest Press','Incline Machine Press','Low-to-High Cable Fly'],primary:['upper_chest'],secondary:['front_delts','triceps']},
+    {names:['Barbell Bench Press','Flat Dumbbell Press','Dumbbell Bench Press','Machine Chest Press','Cable Chest Press','Push-Up','Push Up','Chest Press'],primary:['mid_chest'],secondary:['front_delts','triceps']},
+    {names:['Decline Bench Press','Decline Dumbbell Press','Chest Dip','Dips - Chest','High-to-Low Cable Fly'],primary:['lower_chest'],secondary:['mid_chest','triceps']},
+    {names:['Cable Fly','Dumbbell Fly','Pec Deck','Chest Fly','Machine Fly'],primary:['mid_chest'],secondary:['upper_chest','lower_chest']},
+    {names:['Overhead Press','Barbell Overhead Press','Military Press','Dumbbell Shoulder Press','Machine Shoulder Press','Arnold Press','Seated Shoulder Press'],primary:['front_delts'],secondary:['side_delts','triceps']},
+    {names:['Cable Lateral Raise','Dumbbell Lateral Raise','Machine Lateral Raise','Lateral Raise','Lean-Away Lateral Raise','Upright Row'],primary:['side_delts'],secondary:['upper_back']},
+    {names:['Rear Delt Fly','Reverse Pec Deck','Face Pull','Cable Rear Delt Fly','Bent-Over Reverse Fly'],primary:['rear_delts'],secondary:['upper_back','mid_back']},
+    {names:['Lat Pulldown','Wide-Grip Lat Pulldown','Close-Grip Pulldown','Neutral-Grip Pulldown','Straight-Arm Pulldown','Cable Pullover','Machine Pullover'],primary:['lats'],secondary:['biceps']},
+    {names:['Pull-Up','Pull Up','Chin-Up','Chin Up','Assisted Pull-Up','Assisted Chin-Up'],primary:['lats'],secondary:['biceps','upper_back']},
+    {names:['Seated Cable Row','Cable Row','Chest-Supported Row','Machine Row','T-Bar Row','Barbell Row','Pendlay Row','One-Arm Dumbbell Row','Dumbbell Row'],primary:['mid_back'],secondary:['lats','biceps','rear_delts']},
+    {names:['High Row','Wide-Grip Row','Seal Row','Meadows Row'],primary:['upper_back'],secondary:['rear_delts','lats','biceps']},
+    {names:['Shrug','Barbell Shrug','Dumbbell Shrug','Machine Shrug','Farmer Carry','Farmers Walk'],primary:['upper_back'],secondary:['forearms']},
+    {names:['Back Extension','Hyperextension','Good Morning','Reverse Hyperextension'],primary:['lower_back'],secondary:['glutes','hamstrings']},
+    {names:['Deadlift','Conventional Deadlift','Sumo Deadlift','Rack Pull'],primary:['glutes','hamstrings','lower_back'],secondary:['quads','upper_back','forearms']},
+    {names:['Romanian Deadlift','RDL','Stiff-Leg Deadlift','Dumbbell Romanian Deadlift'],primary:['hamstrings','glutes'],secondary:['lower_back','forearms']},
+    {names:['Back Squat','High-Bar Squat','Front Squat','Goblet Squat','Safety Bar Squat','Hack Squat','Pendulum Squat','Leg Press','Belt Squat'],primary:['quads'],secondary:['glutes','adductors']},
+    {names:['Bulgarian Split Squat','Split Squat','Walking Lunge','Reverse Lunge','Forward Lunge','Step-Up','Step Up'],primary:['quads','glutes'],secondary:['adductors']},
+    {names:['Leg Extension','Single-Leg Extension','Sissy Squat'],primary:['quads'],secondary:[]},
+    {names:['Leg Curl','Seated Leg Curl','Lying Leg Curl','Standing Leg Curl','Nordic Curl','Nordic Hamstring Curl'],primary:['hamstrings'],secondary:[]},
+    {names:['Hip Thrust','Barbell Hip Thrust','Glute Bridge','Cable Pull-Through','Kickback','Cable Kickback','Glute Kickback'],primary:['glutes'],secondary:['hamstrings']},
+    {names:['Hip Adduction','Adductor Machine','Copenhagen Plank','Sumo Squat'],primary:['adductors'],secondary:['glutes','quads']},
+    {names:['Standing Calf Raise','Seated Calf Raise','Leg Press Calf Raise','Donkey Calf Raise','Single-Leg Calf Raise'],primary:['calves'],secondary:[]},
+    {names:['Biceps Curl','Barbell Curl','EZ-Bar Curl','Preacher Curl','Incline Dumbbell Curl','Cable Curl','Bayesian Curl','Concentration Curl','Spider Curl'],primary:['biceps'],secondary:['forearms']},
+    {names:['Hammer Curl','Cross-Body Hammer Curl','Reverse Curl','Zottman Curl'],primary:['forearms'],secondary:['biceps']},
+    {names:['Triceps Pushdown','Rope Pushdown','Cable Pushdown','Skull Crusher','Lying Triceps Extension','Overhead Triceps Extension','Cable Overhead Extension','Close-Grip Bench Press','Triceps Dip'],primary:['triceps'],secondary:[]},
+    {names:['Wrist Curl','Reverse Wrist Curl','Wrist Roller','Plate Pinch','Dead Hang'],primary:['forearms'],secondary:[]},
+    {names:['Crunch','Cable Crunch','Machine Crunch','Ab Crunch','Reverse Crunch','Hanging Knee Raise','Hanging Leg Raise','Ab Wheel Rollout','Plank'],primary:['abs'],secondary:['obliques']},
+    {names:['Side Plank','Russian Twist','Wood Chop','Cable Woodchop','Pallof Press','Bicycle Crunch'],primary:['obliques'],secondary:['abs']}
+  ];
+  const EXERCISE_REGION_MAP = (()=>{const map={};REGION_EXERCISE_RULES.forEach(rule=>rule.names.forEach(name=>map[regionExerciseKey(name)]={primary:[...rule.primary],secondary:[...rule.secondary]}));return map;})();
+  const REGION_SUGGESTIONS = {
+    upper_chest:['incline dumbbell press','low-to-high cable fly'],mid_chest:['bench press','cable chest press'],lower_chest:['chest dip','high-to-low cable fly'],
+    lats:['lat pulldown','pull-up'],upper_back:['high row','face pull'],mid_back:['seated cable row','chest-supported row'],lower_back:['back extension','Romanian deadlift'],
+    front_delts:['overhead press','Arnold press'],side_delts:['cable lateral raise','dumbbell lateral raise'],rear_delts:['rear-delt fly','face pull'],
+    biceps:['preacher curl','Bayesian curl'],triceps:['overhead triceps extension','triceps pushdown'],forearms:['hammer curl','farmer carry'],
+    quads:['hack squat','leg extension'],hamstrings:['Romanian deadlift','leg curl'],glutes:['hip thrust','Bulgarian split squat'],adductors:['adductor machine','sumo squat'],calves:['standing calf raise','seated calf raise'],
+    abs:['cable crunch','hanging leg raise'],obliques:['side plank','Pallof press']
+  };
+  function regionLabel(id){ return MUSCLE_REGIONS.find(region=>region.id===id)?.label||id.replaceAll('_',' '); }
+  function getExerciseRegionMapping(name,details=null){
+    const key=regionExerciseKey(name); if(!key) return {primary:[],secondary:[]};
+    if(EXERCISE_REGION_MAP[key]){const found=EXERCISE_REGION_MAP[key];return {primary:[...found.primary],secondary:[...found.secondary]};}
+    const aliases=Object.keys(EXERCISE_REGION_MAP).sort((a,b)=>b.length-a.length);
+    const match=aliases.find(alias=>key.includes(alias)||alias.includes(key)); if(match){const found=EXERCISE_REGION_MAP[match];return {primary:[...found.primary],secondary:[...found.secondary]};}
+    const source=`${key} ${(details?.muscles||[]).join(' ').toLowerCase()}`; const primary=[]; const secondary=[];
+    const add=(list,id)=>{if(!list.includes(id))list.push(id)};
+    if(/upper chest|clavicular|incline/.test(source))add(primary,'upper_chest'); else if(/chest|pectoral/.test(source))add(primary,'mid_chest');
+    if(/latissimus|\blats?\b|pulldown|pull up|pull-up/.test(source))add(primary,'lats');
+    if(/mid back|rhomboid|row/.test(source))add(primary,'mid_back'); if(/upper back|trap|shrug/.test(source))add(primary,'upper_back'); if(/lower back|spinal erector|back extension/.test(source))add(primary,'lower_back');
+    if(/side delt|lateral raise/.test(source))add(primary,'side_delts'); if(/rear delt|reverse fly|face pull/.test(source))add(primary,'rear_delts'); if(/front delt|shoulder press|overhead press/.test(source))add(primary,'front_delts');
+    if(/tricep/.test(source))add(primary,'triceps'); if(/bicep|curl/.test(source))add(primary,'biceps'); if(/forearm|brachioradialis|grip/.test(source))add(primary,'forearms');
+    if(/quad|leg extension|squat|leg press/.test(source))add(primary,'quads'); if(/hamstring|leg curl|romanian/.test(source))add(primary,'hamstrings'); if(/glute|hip thrust|bridge/.test(source))add(primary,'glutes'); if(/adductor|inner thigh/.test(source))add(primary,'adductors'); if(/calf|calves/.test(source))add(primary,'calves');
+    if(/oblique|side plank|wood chop|pallof/.test(source))add(primary,'obliques'); else if(/abdominal|\babs?\b|crunch|plank/.test(source))add(primary,'abs');
+    return {primary,secondary};
+  }
+
 
   const workoutRoutines = {
     Push:['Incline Dumbbell Press','Arnold Press','Cable Fly','Triceps Pushdown'],
@@ -1231,7 +1378,7 @@
     return `${y}-${m}-${d}`;
   }
 
-  function defaultState(){ return { days:{}, calorieGoal:3200, proteinGoal:160, carbsGoal:420, fatGoal:95, routines:{}, preferredUnit:'kg', bodyWeightKg:72, bodyWeights:{}, autoRest:true, restSeconds:90, machineProfiles:{}, liveSession:null, workoutDrafts:{}, schemaVersion:2, updatedAt:null }; }
+  function defaultState(){ return { days:{}, calorieGoal:3200, proteinGoal:160, carbsGoal:420, fatGoal:95, routines:{}, preferredUnit:'kg', bodyWeightKg:72, bodyWeights:{}, autoRest:true, restSeconds:90, machineProfiles:{}, liveSession:null, workoutDrafts:{}, profile:{name:'',goal:'build_muscle',experience:'intermediate',split:'push_pull_legs',trainingDays:4,notes:''}, regionTargets:defaultRegionTargets(), schemaVersion:3, updatedAt:null }; }
 
   function normaliseState(parsed){
     const fallback = defaultState();
@@ -1251,6 +1398,8 @@
       machineProfiles:parsed.machineProfiles && typeof parsed.machineProfiles === 'object' ? parsed.machineProfiles : {},
       liveSession:parsed.liveSession && typeof parsed.liveSession === 'object' ? parsed.liveSession : null,
       workoutDrafts:parsed.workoutDrafts && typeof parsed.workoutDrafts === 'object' ? parsed.workoutDrafts : {},
+      profile:parsed.profile && typeof parsed.profile === 'object' ? {...fallback.profile,...parsed.profile,trainingDays:Math.min(7,Math.max(1,Number(parsed.profile.trainingDays)||fallback.profile.trainingDays))} : fallback.profile,
+      regionTargets:parsed.regionTargets && typeof parsed.regionTargets === 'object' ? {...fallback.regionTargets,...parsed.regionTargets} : fallback.regionTargets,
       schemaVersion:Number.isFinite(Number(parsed.schemaVersion)) ? Number(parsed.schemaVersion) : 1,
       updatedAt:typeof parsed.updatedAt === 'string' ? parsed.updatedAt : null
     };
@@ -1306,6 +1455,8 @@
     result.bodyWeights={...(other.bodyWeights||{}),...(result.bodyWeights||{})};
     if(!result.liveSession && other.liveSession) result.liveSession=other.liveSession;
     result.workoutDrafts={...(other.workoutDrafts||{}),...(result.workoutDrafts||{})};
+    result.profile={...(other.profile||{}),...(result.profile||{})};
+    result.regionTargets={...(other.regionTargets||{}),...(result.regionTargets||{})};
     if(!result.updatedAt && other.updatedAt) result.updatedAt=other.updatedAt;
     return result;
   }
@@ -1337,16 +1488,16 @@
     }
 
     // Preserve a complete snapshot before changing the data schema.
-    if(Number(loaded.schemaVersion||1)<2){
+    if(Number(loaded.schemaVersion||1)<3){
       try{
-        const snapshot=JSON.stringify({app:'Setline',reason:'pre-v6.4-migration',backedUpAt:new Date().toISOString(),data:loaded});
+        const snapshot=JSON.stringify({app:'Setline',reason:'pre-v6.5-migration',backedUpAt:new Date().toISOString(),data:loaded});
         localStorage.setItem('setline-pre-migration-backup-v1',snapshot);
         localStorage.setItem(STORAGE_BACKUP_KEY,JSON.stringify(loaded));
       }catch(err){}
     }
 
     loaded=normaliseState(loaded);
-    loaded.schemaVersion=2;
+    loaded.schemaVersion=3;
     try{
       const serialised=JSON.stringify(loaded);
       localStorage.setItem(STORAGE_KEY,serialised);
@@ -1413,12 +1564,14 @@
       renderHistory();
       renderProgressCharts();
       renderLiveSession();
+      renderMuscleRegionReport();
+      renderProfile();
       showToast('Recovered your saved Setline data.');
     }catch(err){}
   }
 
   function saveState(){
-    state.schemaVersion=2;
+    state.schemaVersion=3;
     state.updatedAt=new Date().toISOString();
     try{
       const serialised=JSON.stringify(state);
@@ -1453,8 +1606,9 @@
 
   function setGreeting(){
     const h = new Date().getHours();
-    const g = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-    document.getElementById('greeting-text').textContent = g;
+    const base = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    const name=state.profile?.name?.trim()?.split(/\s+/)[0];
+    document.getElementById('greeting-text').textContent = name ? `${base}, ${name}` : base;
   }
 
   document.getElementById('w-name').addEventListener('keydown', e => { if(e.key === 'Enter') searchExercise(); });
@@ -1481,12 +1635,13 @@
   });
 
   function goTo(pageName){
-    ['dashboard','workout','calorie','history'].forEach(p => {
+    ['dashboard','workout','calorie','history','profile'].forEach(p => {
       document.getElementById('page-'+p).classList.toggle('hidden', p !== pageName);
       const navEl = document.getElementById('nav-'+p);
       if(navEl) navEl.classList.toggle('active', p === pageName);
     });
-    if(pageName === 'history'){ renderHistory(); renderProgressCharts(); }
+    if(pageName === 'history'){ renderHistory(); renderProgressCharts(); renderMuscleRegionReport(); }
+    if(pageName === 'profile') renderProfile();
     if(pageName === 'workout') renderLiveSession();
   }
 
@@ -1651,7 +1806,7 @@
   }
 
   function exportData(){
-    const payload={app:'Setline',version:'6.4',exportedAt:new Date().toISOString(),data:state};
+    const payload={app:'Setline',version:'6.5',exportedAt:new Date().toISOString(),data:state};
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}), url=URL.createObjectURL(blob), a=document.createElement('a');
     a.href=url; a.download=`setline-backup-${todayKey()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showToast('Backup exported.');
   }
@@ -1938,7 +2093,7 @@
     const newMaxWeightKg=Math.max(0,...setEntries.map(set=>set.weightKg)), newVolumeKg=setEntries.reduce((sum,set)=>sum+set.weightKg*(Number(set.reps)||0),0);
     let prType=''; if(previousRecord.found&&newMaxWeightKg>previousRecord.maxWeightKg+0.001) prType='Weight PR'; else if(previousRecord.found&&newVolumeKg>previousRecord.maxVolumeKg+0.001) prType='Volume PR';
     const existingEntry=editingWorkoutId?todayData().workouts.find(w=>w.id===editingWorkoutId):null;
-    const entry={id:editingWorkoutId||uniqueId(),loggedAt:existingEntry?.loggedAt||Date.now(),name,unit,duration,setEntries,details:selectedExercise?{...selectedExercise}:existingEntry?.details||null,prType,superset,loadType:config.loadType,entryMode:config.entryMode,profileName:config.profileName,startWeightKg:toKg(config.startWeight,config.unit),profileKey,effortMode};
+    const entry={id:editingWorkoutId||uniqueId(),loggedAt:existingEntry?.loggedAt||Date.now(),name,unit,duration,setEntries,details:selectedExercise?{...selectedExercise}:existingEntry?.details||null,regionTags:getExerciseRegionMapping(name,selectedExercise||existingEntry?.details),prType,superset,loadType:config.loadType,entryMode:config.entryMode,profileName:config.profileName,startWeightKg:toKg(config.startWeight,config.unit),profileKey,effortMode};
     saveMachineProfile(name,config);
     if(editingWorkoutId){ const index=todayData().workouts.findIndex(w=>w.id===editingWorkoutId); if(index>=0) todayData().workouts[index]=entry; showToast('Workout updated.'); }
     else { todayData().workouts.push(entry); if(state.liveSession?.active&&state.liveSession.date===todayKey()){ state.liveSession.exerciseIds ||= []; state.liveSession.exerciseIds.push(entry.id); } }
@@ -2262,6 +2417,59 @@
     return [c.meal, c.grams ? `${round1(c.grams)} g` : '', macros.join(' · ')].filter(Boolean).join(' · ');
   }
 
+
+  function profileGoalLabel(value){return ({build_muscle:'Build muscle',strength:'Strength',maintain:'Maintain',fat_loss:'Fat loss',general:'General fitness'})[value]||'Build muscle';}
+  function profileExperienceLabel(value){return value?value.replace(/^./,c=>c.toUpperCase()):'Intermediate';}
+  function profileSplitLabel(value){return ({push_pull_legs:'Push / Pull / Legs',upper_lower:'Upper / Lower',full_body:'Full body',bro_split:'Body-part split',custom:'Custom'})[value]||'Push / Pull / Legs';}
+  function renderProfile(){
+    const profile=state.profile||defaultState().profile;
+    const displayName=document.getElementById('profile-display-name'); if(displayName) displayName.textContent=profile.name?.trim()||'Setline athlete';
+    const displayMeta=document.getElementById('profile-display-meta'); if(displayMeta) displayMeta.textContent=`${profileGoalLabel(profile.goal)} · ${profileExperienceLabel(profile.experience)} · ${profile.trainingDays} days/week`;
+    const values={
+      'profile-name-input':profile.name||'','profile-goal-input':profile.goal||'build_muscle','profile-experience-input':profile.experience||'intermediate','profile-split-input':profile.split||'push_pull_legs','profile-days-input':profile.trainingDays||4,'profile-notes-input':profile.notes||''
+    };
+    Object.entries(values).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.value=value;});
+    renderRegionTargetEditor();
+  }
+  function saveProfile(){
+    state.profile={
+      name:document.getElementById('profile-name-input')?.value.trim()||'',goal:document.getElementById('profile-goal-input')?.value||'build_muscle',experience:document.getElementById('profile-experience-input')?.value||'intermediate',split:document.getElementById('profile-split-input')?.value||'push_pull_legs',trainingDays:Math.min(7,Math.max(1,Number(document.getElementById('profile-days-input')?.value)||4)),notes:document.getElementById('profile-notes-input')?.value.trim()||''
+    };
+    saveState();setGreeting();renderProfile();renderMuscleRegionReport();render();showToast('Profile saved.');
+  }
+  function renderRegionTargetEditor(){
+    const holder=document.getElementById('region-target-grid');if(!holder)return;
+    holder.innerHTML=MUSCLE_REGIONS.map(region=>`<label>${escapeHtml(region.label)}<input data-region-target="${region.id}" type="number" min="0" max="30" step="0.5" inputmode="decimal" value="${round1(Number(state.regionTargets?.[region.id]??region.target))}"></label>`).join('');
+  }
+  function saveRegionTargets(){
+    state.regionTargets ||= defaultRegionTargets();
+    document.querySelectorAll('[data-region-target]').forEach(input=>{state.regionTargets[input.dataset.regionTarget]=Math.min(30,Math.max(0,Number(input.value)||0));});
+    saveState();renderMuscleRegionReport();showToast('Muscle-region targets saved.');
+  }
+  function resetRegionTargets(){state.regionTargets=defaultRegionTargets();saveState();renderRegionTargetEditor();renderMuscleRegionReport();showToast('Region targets reset.');}
+  function workingSetScore(workout){
+    return getWorkoutSetEntries(workout).filter(set=>set.done!==false&&(set.type||'working')!=='warmup').reduce((sum,set)=>sum+((set.type||'working')==='drop'?0.5:1),0);
+  }
+  function muscleRegionCoverage(days=7){
+    const totals=Object.fromEntries(MUSCLE_REGIONS.map(region=>[region.id,0]));const end=new Date();const start=new Date();start.setDate(end.getDate()-(days-1));let workoutSets=0;
+    for(let i=0;i<days;i++){const date=new Date(start);date.setDate(start.getDate()+i);(state.days[todayKey(date)]?.workouts||[]).forEach(workout=>{const sets=workingSetScore(workout);if(!sets)return;workoutSets+=sets;const mapping=workout.regionTags?.primary?workout.regionTags:getExerciseRegionMapping(workout.name,workout.details);(mapping.primary||[]).forEach(region=>{if(region in totals)totals[region]+=sets;});(mapping.secondary||[]).forEach(region=>{if(region in totals)totals[region]+=sets*.5;});});}
+    const results=MUSCLE_REGIONS.map(region=>{const target=Math.max(0,Number(state.regionTargets?.[region.id]??region.target)),value=round1(totals[region.id]||0),ratio=target?value/target:(value?2:1);let status='good';if(target&&value===0)status='missed';else if(target&&ratio<.75)status='low';else if(target&&ratio>1.6)status='high';return {...region,target,value,ratio,status};});
+    return {results,workoutSets,start:todayKey(start),end:todayKey(end)};
+  }
+  function renderMuscleRegionReport(){
+    const report=muscleRegionCoverage(7),active=report.results.filter(item=>item.target>0),adequate=active.filter(item=>item.status==='good'||item.status==='high').length,score=active.length?Math.round(adequate/active.length*100):0;
+    const scoreEl=document.getElementById('coverage-score');if(scoreEl)scoreEl.textContent=`${score}%`;
+    const range=document.getElementById('region-report-range');if(range)range.textContent=`${report.start.slice(5)} to ${report.end.slice(5)} · effective-set estimate`;
+    const counts={missed:active.filter(item=>item.status==='missed').length,low:active.filter(item=>item.status==='low').length,good:active.filter(item=>item.status==='good'||item.status==='high').length};
+    const overview=document.getElementById('region-overview');if(overview)overview.innerHTML=`<div class="coverage-stat missed"><b>${counts.missed}</b><span>Missed</span></div><div class="coverage-stat low"><b>${counts.low}</b><span>Low</span></div><div class="coverage-stat good"><b>${counts.good}</b><span>Covered</span></div>`;
+    const priorities=active.filter(item=>item.status==='missed'||item.status==='low').sort((a,b)=>a.ratio-b.ratio).slice(0,3);const action=document.getElementById('region-action');
+    if(action){if(report.workoutSets<4)action.innerHTML='<b>More data needed</b>Log a few working sets and Setline will produce a more useful weekly focus.';else if(priorities.length){const first=priorities[0],ideas=(REGION_SUGGESTIONS[first.id]||[]).slice(0,2).join(' or ');action.innerHTML=`<b>Next focus: ${escapeHtml(first.label)}</b>${escapeHtml(first.value)} of ${escapeHtml(first.target)} target sets. Consider ${escapeHtml(ideas)} next time this region fits your session.`;}else action.innerHTML='<b>Coverage looks balanced</b>Keep progressing your main lifts and avoid adding volume only to chase perfect scores.';}
+    const holder=document.getElementById('region-report-list');if(holder)holder.innerHTML=report.results.map(item=>{const pct=Math.min(100,Math.max(0,item.ratio*100));return `<div class="region-row ${item.status}"><div><div class="region-name">${escapeHtml(item.label)} <span class="region-status">${escapeHtml(item.status)}</span></div><div class="region-group">${escapeHtml(item.group)}</div></div><div class="region-value">${item.value} / ${item.target}</div><div class="region-meter"><span style="width:${pct}%"></span></div></div>`;}).join('');
+    const homeTitle=document.getElementById('home-focus-title'),homeText=document.getElementById('home-focus-text'),homeTags=document.getElementById('home-focus-tags');
+    if(homeTitle&&homeText&&homeTags){if(report.workoutSets<4){homeTitle.textContent='Build this week’s report';homeText.textContent='Log working sets to reveal neglected muscle regions.';homeTags.innerHTML='';}else if(priorities.length){homeTitle.textContent=`Prioritize ${priorities[0].label}`;homeText.textContent=`${priorities[0].value} of ${priorities[0].target} target effective sets this week.`;homeTags.innerHTML=priorities.map(item=>`<span>${escapeHtml(item.label)}</span>`).join('');}else{homeTitle.textContent='Coverage is on track';homeText.textContent='Your main muscle regions have reasonable weekly coverage.';homeTags.innerHTML='<span>Balanced week</span>';}}
+  }
+
+
   function calculateStreak(){
     let date = new Date();
     if(!(state.days[todayKey(date)]?.workouts?.length)) date.setDate(date.getDate()-1);
@@ -2338,6 +2546,8 @@
 
     renderWeeklyChart();
     renderLiveSession();
+    renderMuscleRegionReport();
+    renderProfile();
 
     const dEntries = document.getElementById('dashboard-entries');
     dEntries.innerHTML = combined.length ? combined.map(e => `
@@ -2370,12 +2580,14 @@
   startLiveSessionClock();
   render();
   renderProgressCharts();
+  renderMuscleRegionReport();
+  renderProfile();
   recoverIndexedBackupIfEmpty();
   window.addEventListener('pagehide', saveState);
 </script>
 
 <script>
-  // ---------- Setline v6.4 behaviour overrides ----------
+  // ---------- Setline v6.5 behaviour overrides ----------
   let activeWorkoutDate=todayKey();
   let activeCalorieDate=todayKey();
   let editingWorkoutDate=null;
@@ -2518,7 +2730,7 @@
     const newMaxWeightKg=Math.max(0,...setEntries.map(set=>set.weightKg)),newVolumeKg=setEntries.reduce((sum,set)=>sum+set.weightKg*(Number(set.reps)||0),0);
     let prType='';if(previousRecord.found&&newMaxWeightKg>previousRecord.maxWeightKg+0.001)prType='Weight PR';else if(previousRecord.found&&newVolumeKg>previousRecord.maxVolumeKg+0.001)prType='Volume PR';
     const existingIndex=editingWorkoutId?day.workouts.findIndex(w=>w.id===editingWorkoutId):-1,existingEntry=existingIndex>=0?day.workouts[existingIndex]:null;
-    const entry={id:editingWorkoutId||uniqueId(),loggedAt:existingEntry?.loggedAt||Date.now(),name,unit,duration,setEntries,details:selectedExercise?deepCopy(selectedExercise):existingEntry?.details||null,prType,superset,loadType:config.loadType,entryMode:config.entryMode,profileName:config.profileName,startWeightKg:toKg(config.startWeight,config.unit),profileKey,effortMode};
+    const entry={id:editingWorkoutId||uniqueId(),loggedAt:existingEntry?.loggedAt||Date.now(),name,unit,duration,setEntries,details:selectedExercise?deepCopy(selectedExercise):existingEntry?.details||null,regionTags:getExerciseRegionMapping(name,selectedExercise||existingEntry?.details),prType,superset,loadType:config.loadType,entryMode:config.entryMode,profileName:config.profileName,startWeightKg:toKg(config.startWeight,config.unit),profileKey,effortMode};
     saveMachineProfile(name,config);
     const wasEdit=existingIndex>=0;
     if(wasEdit){editedWorkoutUndo={date:dateKey,index:existingIndex,entry:deepCopy(existingEntry)};day.workouts[existingIndex]=entry;}
@@ -2601,7 +2813,7 @@
 
   function createSafetySnapshot(reason='manual'){
     try{
-      const payload={app:'Setline',version:'6.4',reason,backedUpAt:new Date().toISOString(),data:state},serialised=JSON.stringify(payload);
+      const payload={app:'Setline',version:'6.5',reason,backedUpAt:new Date().toISOString(),data:state},serialised=JSON.stringify(payload);
       localStorage.setItem('setline-before-update-v1',serialised);localStorage.setItem(STORAGE_BACKUP_KEY,JSON.stringify(state));saveIndexedBackup(JSON.stringify(state));
     }catch(err){}
   }

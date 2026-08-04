@@ -2,8 +2,8 @@
   "id": "./",
   "name": "Setline Fitness Tracker",
   "short_name": "Setline",
-  "description": "Setline workout, nutrition, and progress tracker.",
-  "start_url": "./?v=6.4",
+  "description": "A local-first workout, nutrition, progress, and muscle-region coverage tracker.",
+  "start_url": "./?v=6.5",
   "scope": "./",
   "display": "standalone",
   "display_override": [

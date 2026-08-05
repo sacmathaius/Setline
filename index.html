@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Setline">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Setline — Fitness Tracker v6.5.1</title>
+<title>Setline — Fitness Tracker v6.5.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -835,6 +835,51 @@
   @media(max-width:370px){.nutrition-insights{gap:5px}.nutrition-insights b{font-size:9.5px}.nutrition-serving-grid,.nutrition-serving-grid:has(#c-unit-weight-field:not(.hidden)){grid-template-columns:1fr 1fr}.nutrition-serving-grid #c-unit-weight-field:not(.hidden){grid-column:1/-1}.quick-add-grid{grid-template-columns:1fr 1fr}.template-grid,.recipe-grid{grid-template-columns:1fr}.macro-input-grid{gap:4px}.macro-input-grid input{padding:8px 4px}}
   @media(prefers-reduced-motion:reduce){.streak-flame,.feedback-pop,.completion-mark,.confetti-piece,.scanner-line{animation:none!important}.pulse-line path{animation:none!important;stroke-dashoffset:0!important}}
 
+
+  /* ---------- v6.5.2 planning, recovery and responsive visual refresh ---------- */
+  :root{
+    --black:#080B11;
+    --surface:#121823;
+    --surface-2:#1A2230;
+    --line:#283246;
+    --text:#F7F9FC;
+    --text-dim:#98A3B5;
+    --workout:#5B7CFF;
+    --workout-dim:#5B7CFF26;
+    --calorie:#FFB547;
+    --calorie-dim:#FFB54722;
+    --danger:#FF6577;
+    --success:#43D69E;
+    --rest:#9F8CFF;
+  }
+  html{-webkit-text-size-adjust:100%;background:var(--black)}
+  body{min-height:100dvh;background:var(--black);align-items:stretch;justify-content:center;overflow:hidden}
+  .device{width:100%;max-width:none;height:100dvh;max-height:none;border-radius:0;background:linear-gradient(180deg,#0B0F17 0%,var(--black) 32%);box-shadow:none}
+  .page{min-width:0;padding:calc(14px + env(safe-area-inset-top)) clamp(14px,4.8vw,22px) calc(30px + env(safe-area-inset-bottom));scroll-padding-top:calc(14px + env(safe-area-inset-top))}
+  .topbar{padding-top:4px}.topbar .title,.card-title,.profile-name{letter-spacing:-.02em}
+  .form-card,.stat-card,.quote-card,.focus-card,.weekly-card,.history-card,.progress-card,.profile-card,.goal-settings-card,.weight-card,.data-card,.about-card,.live-card,.timer-card,.date-editor-card,.region-report-card,.settings-details,.planner-card,.recovery-card{border-radius:18px;border-color:var(--line);box-shadow:0 12px 36px rgba(0,0,0,.16)}
+  .navbar{padding:8px max(5px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left));background:rgba(8,11,17,.94);border-color:var(--line)}
+  .nav-btn{min-width:0;min-height:48px}.nav-btn span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  input,select,textarea,button{min-width:0}.field-row>*{min-width:0}.entry-row,.calorie-entry-main,.calorie-entry-copy{min-width:0}.calorie-entry-main .amount{flex:0 0 auto;white-space:nowrap}.calorie-entry-copy .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .planner-card{background:var(--surface);border:1px solid var(--line);padding:15px;margin:0 0 16px}
+  .planner-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.planner-head-copy{min-width:0}.planner-head-copy b{display:block;font-size:13px}.planner-head-copy span{display:block;color:var(--text-dim);font-size:9px;margin-top:3px}
+  .planner-arrows{display:flex;gap:5px}.planner-arrows button{width:32px;height:32px;border-radius:10px;background:var(--surface-2);color:var(--text);font-size:18px}
+  .week-plan-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:13px}
+  .plan-day{position:relative;min-width:0;padding:8px 2px 7px;border-radius:11px;background:var(--surface-2);border:1px solid transparent;color:var(--text-dim);text-align:center}
+  .plan-day span,.plan-day b,.plan-day small{display:block}.plan-day span{font-size:7px;text-transform:uppercase}.plan-day b{font-family:'Space Mono',monospace;font-size:10px;margin:4px 0}.plan-day small{font-size:6.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .plan-day.selected{border-color:var(--workout);background:var(--workout-dim);color:var(--text)}.plan-day.today::after{content:'';position:absolute;left:50%;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--workout);transform:translateX(-50%)}
+  .plan-day.complete small{color:var(--success)}.plan-day.missed small{color:var(--danger)}.plan-day.rest small{color:var(--rest)}.plan-day.moved small{color:var(--calorie)}
+  .planner-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:7px;align-items:end;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .planner-editor label{min-width:0;color:var(--text-dim);font-size:7.5px;text-transform:uppercase}.planner-editor select,.planner-editor input{width:100%;margin-top:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px;color:var(--text);font-size:10px}.planner-editor-actions{display:flex;gap:5px}.planner-editor-actions button{height:36px;padding:0 9px;border-radius:9px;background:var(--workout);color:#fff;font-size:9px;font-weight:700}.planner-editor-actions button.secondary{background:var(--surface-2);color:var(--text-dim)}
+  .today-plan-banner{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:12px;margin-bottom:14px}.today-plan-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--workout-dim);font-size:19px}.today-plan-banner.rest .today-plan-icon{background:rgba(159,140,255,.16)}.today-plan-copy{min-width:0}.today-plan-copy b{display:block;font-size:11px}.today-plan-copy span{display:block;color:var(--text-dim);font-size:8.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.today-plan-badge{padding:5px 7px;border-radius:99px;background:var(--surface-2);font-size:7px;text-transform:uppercase;color:var(--text-dim)}
+  .recovery-card{background:var(--surface);border:1px solid var(--line);padding:14px;margin-bottom:17px}.recovery-card summary{display:flex;list-style:none;cursor:pointer;align-items:center;justify-content:space-between;gap:12px}.recovery-card summary::-webkit-details-marker{display:none}.recovery-summary-copy b{display:block;font-size:12px}.recovery-summary-copy span{display:block;color:var(--text-dim);font-size:8.5px;margin-top:3px}.recovery-status{padding:5px 8px;border-radius:99px;background:var(--surface-2);font-size:7px;text-transform:uppercase;color:var(--text-dim)}.recovery-status.ready{color:var(--success)}.recovery-status.moderate{color:var(--calorie)}.recovery-status.recover{color:var(--danger)}
+  .recovery-body{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}.recovery-date-row{display:grid;grid-template-columns:1fr auto;gap:7px}.recovery-date-row input,.recovery-grid input,.recovery-grid select,.recovery-note{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px;color:var(--text);font-size:10px}.recovery-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}.recovery-grid label{min-width:0;color:var(--text-dim);font-size:7px;text-transform:uppercase}.recovery-grid input,.recovery-grid select{margin-top:5px;padding:8px 4px}.recovery-note{margin-top:9px;resize:vertical;min-height:54px}.recovery-save{width:100%;margin-top:8px;padding:10px;border-radius:9px;background:var(--workout);color:#fff;font-size:10px;font-weight:700}
+  .weekly-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:13px}.weekly-template-grid label{min-width:0;color:var(--text-dim);font-size:8px;text-transform:uppercase}.weekly-template-grid select{width:100%;margin-top:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--text);font-size:10px}.weekly-template-grid label:last-child:nth-child(odd){grid-column:1/-1}
+  .plan-note{margin-top:10px;padding:10px;border-radius:10px;background:var(--surface-2);color:var(--text-dim);font-size:9px;line-height:1.45}
+  @media (min-width:700px){body{align-items:center;padding:18px}.device{max-width:430px;height:min(920px,calc(100dvh - 36px));border-radius:30px;box-shadow:0 35px 100px rgba(0,0,0,.55);overflow:hidden}}
+  @media (max-width:380px){.page{padding-left:12px;padding-right:12px}.week-plan-strip{gap:3px}.plan-day{padding-left:1px;padding-right:1px}.plan-day small{font-size:6px}.planner-editor{grid-template-columns:1fr 1fr}.planner-editor-actions{grid-column:1/-1}.planner-editor-actions button{flex:1}.recovery-grid{grid-template-columns:1fr 1fr}.stats-row,.quick-actions{gap:8px}.stat-card{padding:13px}.nav-btn span{font-size:7px}}
+  @media (min-width:400px) and (max-width:699px){.page{padding-left:20px;padding-right:20px}.plan-day{padding-top:9px;padding-bottom:8px}}
+
 </style>
 </head>
 <body>
@@ -847,7 +892,7 @@
     <div class="page" id="page-dashboard">
       <div class="topbar" style="padding-left:0;padding-right:0;">
         <div class="brand-row">
-          <img class="brand-mark" src="./setline-s.svg?v=6.5.1" alt="Setline logo">
+          <img class="brand-mark" src="./setline-s.svg?v=6.5.2" alt="Setline logo">
           <div class="brand-copy">
             <div class="greeting" id="greeting-text">Good evening</div>
             <div class="title">Setline</div>
@@ -884,6 +929,32 @@
         <button class="quick-btn calorie" onclick="goTo('calorie')">+ Log Nutrition</button>
       </div>
 
+      <div class="planner-card" id="home-planner-card">
+        <div class="planner-head"><div class="planner-head-copy"><b>Weekly training plan</b><span id="planner-week-range">This week</span></div><div class="planner-arrows"><button type="button" onclick="changePlannerWeek(-1)" aria-label="Previous week">‹</button><button type="button" onclick="changePlannerWeek(1)" aria-label="Next week">›</button></div></div>
+        <div class="week-plan-strip" id="week-plan-strip"></div>
+        <div class="planner-editor">
+          <label>Plan<select id="planner-type"></select></label>
+          <label>Note<input id="planner-note" type="text" maxlength="60" placeholder="Optional focus"></label>
+          <div class="planner-editor-actions"><button type="button" class="secondary" onclick="clearPlannerOverride()">Reset</button><button type="button" onclick="savePlannerDay()">Save</button></div>
+        </div>
+      </div>
+
+      <details class="recovery-card" id="recovery-card">
+        <summary><div class="recovery-summary-copy"><b>Recovery check-in</b><span>Sleep, soreness, energy and stress.</span></div><span class="recovery-status" id="recovery-status">Not checked</span></summary>
+        <div class="recovery-body">
+          <div class="recovery-date-row"><input id="recovery-date" type="date" onchange="loadRecoveryCheckIn(this.value)"><button type="button" class="compact-btn" onclick="jumpRecoveryToday()">Today</button></div>
+          <div class="recovery-grid">
+            <label>Sleep (h)<input id="recovery-sleep" type="number" min="0" max="16" step="0.5" inputmode="decimal" placeholder="7.5"></label>
+            <label>Soreness<select id="recovery-soreness"><option value="1">1 Low</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5 High</option></select></label>
+            <label>Energy<select id="recovery-energy"><option value="1">1 Low</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5 High</option></select></label>
+            <label>Stress<select id="recovery-stress"><option value="1">1 Low</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5 High</option></select></label>
+          </div>
+          <textarea id="recovery-note" class="recovery-note" maxlength="120" placeholder="Optional note"></textarea>
+          <button type="button" class="recovery-save" onclick="saveRecoveryCheckIn()">Save check-in</button>
+          <div class="source-note">This is a personal training check-in, not a medical assessment.</div>
+        </div>
+      </details>
+
       <div class="focus-card" id="home-region-focus">
         <div class="focus-icon">S</div>
         <div class="focus-copy">
@@ -918,6 +989,8 @@
         <div class="date-editor-row"><button type="button" class="date-arrow" onclick="changeWorkoutLogDate(-1)">‹</button><input id="workout-log-date" type="date" onchange="setWorkoutLogDate(this.value)"><button type="button" class="date-arrow" onclick="changeWorkoutLogDate(1)">›</button></div>
         <div class="date-actions-grid"><button type="button" class="compact-btn" onclick="copyPreviousWorkoutDay()">Copy previous workout</button><button type="button" class="compact-btn" onclick="jumpWorkoutToday()">Today</button></div>
       </div>
+
+      <div class="today-plan-banner" id="workout-plan-banner"><div class="today-plan-icon" id="workout-plan-icon">🏋️</div><div class="today-plan-copy"><b id="workout-plan-title">Training day</b><span id="workout-plan-text">Follow your planned session or update the calendar.</span></div><span class="today-plan-badge" id="workout-plan-badge">Planned</span></div>
 
       <div class="live-card" id="live-session-card">
         <div class="card-head"><div><div class="live-status"><span class="live-dot"></span><span id="live-status-text">Ready</span></div><div class="live-time" id="live-session-time">00:00</div><div class="live-name" id="live-session-name">Start when your first working set begins.</div></div></div>
@@ -1224,6 +1297,15 @@
         <div class="weight-row"><input id="quick-bodyweight" type="number" min="20" max="700" step="0.1" inputmode="decimal" placeholder="Today's weight"><button type="button" class="compact-btn primary" onclick="logBodyWeight()">Log</button></div>
       </div>
 
+      <details class="settings-details training-plan-settings">
+        <summary>Weekly training plan</summary>
+        <div class="card-sub">Choose the default plan for each weekday. Individual dates can be changed from Home.</div>
+        <div class="weekly-template-grid" id="weekly-template-grid"></div>
+        <label class="switch-label"><input id="auto-shift-missed" type="checkbox"> Move a missed training day forward automatically</label>
+        <div class="plan-note">Planned Rest and Active Recovery days count as following the plan and do not create a missed-workout warning. Deload remains a training day with reduced work.</div>
+        <button type="button" class="compact-btn primary full-width" onclick="saveWeeklyPlan()">Save weekly plan</button>
+      </details>
+
       <details class="settings-details">
         <summary>Muscle-region targets</summary>
         <div class="card-sub">Weekly effective-set targets used by the coverage report. Adjust only when needed.</div>
@@ -1254,7 +1336,7 @@
       </div>
 
       <div class="about-card">
-        <div class="brand-mini"><span>S</span><div><b>Setline v6.5.1</b><small>Local-first fitness tracking</small></div></div>
+        <div class="brand-mini"><span>S</span><div><b>Setline v6.5.2</b><small>Local-first fitness tracking</small></div></div>
         <p>Your records remain on this browser unless you export and import a backup. Keep a backup before clearing browser data or changing phones.</p>
       </div>
     </div>
@@ -1299,7 +1381,7 @@
 </div>
 
 <script>
-  // Setline v6.5.1: nutrition workflow, private habit counter, and feedback animations.
+  // Setline v6.5.2: nutrition workflow, private habit counter, and feedback animations.
   // This key is intentionally NOT versioned. Future app updates must keep using it.
   const STORAGE_KEY = 'setline-data-v1';
   const STORAGE_BACKUP_KEY = 'setline-data-last-good-v1';
@@ -1493,7 +1575,7 @@
     return `${y}-${m}-${d}`;
   }
 
-  function defaultState(){ return { days:{}, calorieGoal:3200, proteinGoal:160, carbsGoal:420, fatGoal:95, routines:{}, preferredUnit:'kg', bodyWeightKg:72, bodyWeights:{}, autoRest:true, restSeconds:90, machineProfiles:{}, liveSession:null, workoutDrafts:{}, profile:{name:'',goal:'build_muscle',experience:'intermediate',split:'push_pull_legs',trainingDays:4,notes:''}, regionTargets:defaultRegionTargets(), foodLibrary:[], favoriteFoods:[], recentFoods:[], savedMeals:[], privateHabit:{enabled:false,label:'Private habit',startDate:'',personalBest:0,hideCount:true}, schemaVersion:4, updatedAt:null }; }
+  function defaultState(){ return { days:{}, calorieGoal:3200, proteinGoal:160, carbsGoal:420, fatGoal:95, routines:{}, preferredUnit:'kg', bodyWeightKg:72, bodyWeights:{}, autoRest:true, restSeconds:90, machineProfiles:{}, liveSession:null, workoutDrafts:{}, profile:{name:'',goal:'build_muscle',experience:'intermediate',split:'push_pull_legs',trainingDays:4,notes:''}, regionTargets:defaultRegionTargets(), foodLibrary:[], favoriteFoods:[], recentFoods:[], savedMeals:[], privateHabit:{enabled:false,label:'Private habit',startDate:'',personalBest:0,hideCount:true}, schedule:{}, weeklyPlan:['push','pull','legs','rest','push','pull','rest'], autoShiftMissed:true, recovery:{}, scheduleMeta:{lastProcessed:'',configured:false}, schemaVersion:5, updatedAt:null }; }
 
   function normaliseState(parsed){
     const fallback = defaultState();
@@ -1520,6 +1602,11 @@
       recentFoods:Array.isArray(parsed.recentFoods) ? parsed.recentFoods : [],
       savedMeals:Array.isArray(parsed.savedMeals) ? parsed.savedMeals : [],
       privateHabit:parsed.privateHabit && typeof parsed.privateHabit === 'object' ? {...fallback.privateHabit,...parsed.privateHabit,personalBest:Math.max(0,Number(parsed.privateHabit.personalBest)||0)} : fallback.privateHabit,
+      schedule:parsed.schedule && typeof parsed.schedule === 'object' ? parsed.schedule : {},
+      weeklyPlan:Array.isArray(parsed.weeklyPlan) && parsed.weeklyPlan.length===7 ? parsed.weeklyPlan.slice(0,7) : fallback.weeklyPlan,
+      autoShiftMissed:parsed.autoShiftMissed !== false,
+      recovery:parsed.recovery && typeof parsed.recovery === 'object' ? parsed.recovery : {},
+      scheduleMeta:parsed.scheduleMeta && typeof parsed.scheduleMeta === 'object' ? {...fallback.scheduleMeta,...parsed.scheduleMeta} : fallback.scheduleMeta,
       schemaVersion:Number.isFinite(Number(parsed.schemaVersion)) ? Number(parsed.schemaVersion) : 1,
       updatedAt:typeof parsed.updatedAt === 'string' ? parsed.updatedAt : null
     };
@@ -1583,6 +1670,10 @@
     result.recentFoods=mergeNamed(result.recentFoods,other.recentFoods).slice(0,20);
     result.savedMeals=mergeNamed(result.savedMeals,other.savedMeals);
     result.privateHabit={...(other.privateHabit||{}),...(result.privateHabit||{})};
+    result.schedule={...(other.schedule||{}),...(result.schedule||{})};
+    result.weeklyPlan=Array.isArray(result.weeklyPlan)&&result.weeklyPlan.length===7?result.weeklyPlan:(Array.isArray(other.weeklyPlan)&&other.weeklyPlan.length===7?other.weeklyPlan:defaultState().weeklyPlan);
+    result.recovery={...(other.recovery||{}),...(result.recovery||{})};
+    result.scheduleMeta={...(other.scheduleMeta||{}),...(result.scheduleMeta||{})};
     if(!result.updatedAt && other.updatedAt) result.updatedAt=other.updatedAt;
     return result;
   }
@@ -1614,16 +1705,16 @@
     }
 
     // Preserve a complete snapshot before changing the data schema.
-    if(Number(loaded.schemaVersion||1)<4){
+    if(Number(loaded.schemaVersion||1)<5){
       try{
-        const snapshot=JSON.stringify({app:'Setline',reason:'pre-v6.5.1-migration',backedUpAt:new Date().toISOString(),data:loaded});
+        const snapshot=JSON.stringify({app:'Setline',reason:'pre-v6.5.2-migration',backedUpAt:new Date().toISOString(),data:loaded});
         localStorage.setItem('setline-pre-migration-backup-v1',snapshot);
         localStorage.setItem(STORAGE_BACKUP_KEY,JSON.stringify(loaded));
       }catch(err){}
     }
 
     loaded=normaliseState(loaded);
-    loaded.schemaVersion=4;
+    loaded.schemaVersion=5;
     try{
       const serialised=JSON.stringify(loaded);
       localStorage.setItem(STORAGE_KEY,serialised);
@@ -1697,7 +1788,7 @@
   }
 
   function saveState(){
-    state.schemaVersion=4;
+    state.schemaVersion=5;
     state.updatedAt=new Date().toISOString();
     try{
       const serialised=JSON.stringify(state);
@@ -2939,7 +3030,7 @@
 
   function createSafetySnapshot(reason='manual'){
     try{
-      const payload={app:'Setline',version:'6.5',reason,backedUpAt:new Date().toISOString(),data:state},serialised=JSON.stringify(payload);
+      const payload={app:'Setline',version:'6.5.2',reason,backedUpAt:new Date().toISOString(),data:state},serialised=JSON.stringify(payload);
       localStorage.setItem('setline-before-update-v1',serialised);localStorage.setItem(STORAGE_BACKUP_KEY,JSON.stringify(state));saveIndexedBackup(JSON.stringify(state));
     }catch(err){}
   }
@@ -3195,6 +3286,142 @@
   render=function(){baseRender651();renderNutritionExtras();renderPrivateHabit();const streak=document.querySelector('.streak');if(streak)streak.classList.toggle('zero',calculateStreak()===0);};
 
   updateServingUnitUI();render();saveState();
+</script>
+
+
+<script>
+  // ---------- v6.5.2 rest days, weekly plan and recovery check-in ----------
+  const PLAN_TYPES={
+    push:{label:'Push',short:'Push',icon:'↗',kind:'training'},
+    pull:{label:'Pull',short:'Pull',icon:'↙',kind:'training'},
+    legs:{label:'Legs',short:'Legs',icon:'◆',kind:'training'},
+    upper:{label:'Upper',short:'Upper',icon:'▲',kind:'training'},
+    lower:{label:'Lower',short:'Lower',icon:'▼',kind:'training'},
+    full_body:{label:'Full body',short:'Full',icon:'●',kind:'training'},
+    custom:{label:'Custom workout',short:'Custom',icon:'＋',kind:'training'},
+    deload:{label:'Deload',short:'Deload',icon:'◌',kind:'training'},
+    rest:{label:'Rest day',short:'Rest',icon:'☾',kind:'rest'},
+    active_recovery:{label:'Active recovery',short:'Recover',icon:'◇',kind:'rest'}
+  };
+  const WEEKDAY_NAMES=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const DEFAULT_WEEKLY_PLAN=['push','pull','legs','rest','push','pull','rest'];
+  state.schedule ||= {};
+  state.weeklyPlan=Array.isArray(state.weeklyPlan)&&state.weeklyPlan.length===7?state.weeklyPlan.slice(0,7):DEFAULT_WEEKLY_PLAN.slice();
+  state.autoShiftMissed=state.autoShiftMissed!==false;
+  state.recovery ||= {};
+  state.scheduleMeta={lastProcessed:'',configured:false,...(state.scheduleMeta||{})};
+  state.schemaVersion=5;
+  let plannerWeekOffset=0;
+  let plannerSelectedDate=todayKey();
+  let recoverySelectedDate=todayKey();
+
+  function dateFromKey(key){return new Date(`${key}T12:00:00`);}
+  function addDaysKey(key,amount){const d=dateFromKey(key);d.setDate(d.getDate()+amount);return todayKey(d);}
+  function mondayIndex(date){return (date.getDay()+6)%7;}
+  function startOfPlannerWeek(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-mondayIndex(d)+(offset*7));return d;}
+  function validPlanType(type){return PLAN_TYPES[type]?type:'rest';}
+  function planForDate(dateKey){
+    const explicit=state.schedule?.[dateKey];
+    if(explicit&&PLAN_TYPES[explicit.type])return {...explicit,type:validPlanType(explicit.type),explicit:true};
+    const d=dateFromKey(dateKey),type=validPlanType(state.weeklyPlan?.[mondayIndex(d)]||DEFAULT_WEEKLY_PLAN[mondayIndex(d)]);
+    return {type,note:'',explicit:false};
+  }
+  function planIsRest(plan){return PLAN_TYPES[plan?.type]?.kind==='rest';}
+  function dayHasWorkout(dateKey){return Boolean(state.days?.[dateKey]?.workouts?.length||state.days?.[dateKey]?.sessions?.length);}
+  function planDayStatus(dateKey){
+    const plan=planForDate(dateKey),today=todayKey();
+    if(plan.movedTo)return 'moved';
+    if(dayHasWorkout(dateKey))return 'complete';
+    if(planIsRest(plan)&&dateKey<=today)return 'complete';
+    if(dateKey<today&&!planIsRest(plan))return 'missed';
+    return dateKey===today?'today':'planned';
+  }
+  function planOptions(selected=''){
+    return Object.entries(PLAN_TYPES).map(([value,item])=>`<option value="${value}"${value===selected?' selected':''}>${escapeHtml(item.label)}</option>`).join('');
+  }
+  function planGuidance(plan){
+    const note=plan.note?.trim();if(note)return note;
+    if(plan.type==='rest')return 'No workout required. Prioritize sleep, food and normal daily movement.';
+    if(plan.type==='active_recovery')return 'Keep it easy: walking, light mobility or relaxed cardio.';
+    if(plan.type==='deload')return 'Use lighter loads or fewer working sets and leave more reps in reserve.';
+    return `Follow your ${PLAN_TYPES[plan.type]?.label||'planned'} session.`;
+  }
+  function processMissedWorkoutPlan(){
+    const today=todayKey();
+    if(!state.scheduleMeta.configured||!state.autoShiftMissed||state.scheduleMeta.lastProcessed===today){return;}
+    const yesterday=addDaysKey(today,-1),missed=planForDate(yesterday);
+    if(PLAN_TYPES[missed.type]?.kind==='training'&&!dayHasWorkout(yesterday)&&!state.schedule?.[yesterday]?.movedTo){
+      const horizon=7,keys=Array.from({length:horizon},(_,i)=>addDaysKey(today,i)),plans=keys.map(planForDate);
+      for(let i=horizon-1;i>=1;i--)state.schedule[keys[i]]={type:plans[i-1].type,note:plans[i-1].note||'',shifted:true,movedFrom:i===1?today:keys[i-1]};
+      state.schedule[today]={type:missed.type,note:missed.note||'',shifted:true,movedFrom:yesterday};
+      state.schedule[yesterday]={type:missed.type,note:missed.note||'',movedTo:today,missed:true};
+      showToast(`${PLAN_TYPES[missed.type].label} moved to today.`);
+    }
+    state.scheduleMeta.lastProcessed=today;
+    saveState();
+  }
+  function renderWeeklyPlanner(){
+    const holder=document.getElementById('week-plan-strip');if(!holder)return;
+    const start=startOfPlannerWeek(plannerWeekOffset),end=new Date(start);end.setDate(start.getDate()+6);
+    document.getElementById('planner-week-range').textContent=`${new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric'}).format(start)} – ${new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric'}).format(end)}`;
+    const keys=Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return todayKey(d);});
+    if(!keys.includes(plannerSelectedDate))plannerSelectedDate=keys.includes(todayKey())?todayKey():keys[0];
+    holder.innerHTML=keys.map((key,i)=>{const plan=planForDate(key),status=planDayStatus(key),cls=['plan-day',status,planIsRest(plan)?'rest':'',key===plannerSelectedDate?'selected':'',key===todayKey()?'today':''].filter(Boolean).join(' ');return `<button type="button" class="${cls}" onclick="selectPlannerDate('${key}')"><span>${WEEKDAY_NAMES[i].slice(0,3)}</span><b>${dateFromKey(key).getDate()}</b><small>${escapeHtml(PLAN_TYPES[plan.type].short)}</small></button>`;}).join('');
+    const selected=planForDate(plannerSelectedDate),type=document.getElementById('planner-type'),note=document.getElementById('planner-note');
+    if(type){type.innerHTML=planOptions(selected.type);type.value=selected.type;}if(note)note.value=selected.note||'';
+    renderWorkoutPlanBanner();
+  }
+  function selectPlannerDate(dateKey){plannerSelectedDate=dateKey;renderWeeklyPlanner();}
+  function changePlannerWeek(offset){plannerWeekOffset+=offset;const start=startOfPlannerWeek(plannerWeekOffset);plannerSelectedDate=todayKey(start);renderWeeklyPlanner();}
+  function savePlannerDay(){const type=validPlanType(document.getElementById('planner-type').value),note=document.getElementById('planner-note').value.trim();state.schedule[plannerSelectedDate]={type,note,updatedAt:new Date().toISOString()};state.scheduleMeta.configured=true;saveState();renderWeeklyPlanner();showSaveFeedback('Plan saved');}
+  function clearPlannerOverride(){delete state.schedule[plannerSelectedDate];saveState();renderWeeklyPlanner();showToast('Date reset to weekly plan.');}
+  function renderWorkoutPlanBanner(){
+    const banner=document.getElementById('workout-plan-banner');if(!banner)return;const dateKey=typeof activeWorkoutDate==='string'?activeWorkoutDate:todayKey(),plan=planForDate(dateKey),item=PLAN_TYPES[plan.type],status=planDayStatus(dateKey);
+    banner.classList.toggle('rest',planIsRest(plan));document.getElementById('workout-plan-icon').textContent=item.icon;document.getElementById('workout-plan-title').textContent=item.label;document.getElementById('workout-plan-text').textContent=planGuidance(plan);document.getElementById('workout-plan-badge').textContent=status==='complete'?'Done':status==='missed'?'Missed':plan.shifted?'Moved':'Planned';
+  }
+  function renderWeeklyPlanSettings(){
+    const holder=document.getElementById('weekly-template-grid');if(!holder)return;holder.innerHTML=WEEKDAY_NAMES.map((name,i)=>`<label>${name}<select id="weekly-plan-${i}">${planOptions(validPlanType(state.weeklyPlan[i]))}</select></label>`).join('');document.getElementById('auto-shift-missed').checked=state.autoShiftMissed!==false;
+  }
+  function saveWeeklyPlan(){state.weeklyPlan=WEEKDAY_NAMES.map((_,i)=>validPlanType(document.getElementById(`weekly-plan-${i}`).value));state.autoShiftMissed=document.getElementById('auto-shift-missed').checked;state.scheduleMeta.configured=true;state.scheduleMeta.lastProcessed='';saveState();renderWeeklyPlanner();showToast('Weekly plan saved.');}
+
+  function recoveryStatusFor(entry){
+    if(!entry||!Number.isFinite(Number(entry.sleep)))return {label:'Not checked',className:''};
+    const sleep=Number(entry.sleep),soreness=Number(entry.soreness)||3,energy=Number(entry.energy)||3,stress=Number(entry.stress)||3;
+    if(sleep<5.5||soreness>=5||energy<=1)return {label:'Recovery first',className:'recover'};
+    if(sleep>=7&&soreness<=2&&energy>=4&&stress<=2)return {label:'Looks ready',className:'ready'};
+    return {label:'Moderate',className:'moderate'};
+  }
+  function renderRecoveryStatus(dateKey=recoverySelectedDate){const el=document.getElementById('recovery-status');if(!el)return;const status=recoveryStatusFor(state.recovery?.[dateKey]);el.textContent=status.label;el.className=`recovery-status ${status.className}`.trim();}
+  function loadRecoveryCheckIn(dateKey){recoverySelectedDate=dateKey&&dateKey<=todayKey()?dateKey:todayKey();const entry=state.recovery?.[recoverySelectedDate]||{};document.getElementById('recovery-date').value=recoverySelectedDate;document.getElementById('recovery-date').max=todayKey();document.getElementById('recovery-sleep').value=entry.sleep??'';document.getElementById('recovery-soreness').value=entry.soreness??3;document.getElementById('recovery-energy').value=entry.energy??3;document.getElementById('recovery-stress').value=entry.stress??3;document.getElementById('recovery-note').value=entry.note||'';renderRecoveryStatus(recoverySelectedDate);}
+  function jumpRecoveryToday(){loadRecoveryCheckIn(todayKey());}
+  function saveRecoveryCheckIn(){const sleep=Number(document.getElementById('recovery-sleep').value);if(!Number.isFinite(sleep)||sleep<0||sleep>16){showToast('Enter sleep between 0 and 16 hours.');return;}state.recovery[recoverySelectedDate]={sleep:round1(sleep),soreness:Number(document.getElementById('recovery-soreness').value),energy:Number(document.getElementById('recovery-energy').value),stress:Number(document.getElementById('recovery-stress').value),note:document.getElementById('recovery-note').value.trim(),updatedAt:new Date().toISOString()};saveState();renderRecoveryStatus();showSaveFeedback('Check-in saved');}
+
+  const legacyCalculateStreak652=calculateStreak;
+  calculateStreak=function(){
+    if(!state.scheduleMeta?.configured)return legacyCalculateStreak652();
+    let date=new Date();date.setHours(12,0,0,0);let key=todayKey(date),todayPlan=planForDate(key);
+    if(!dayHasWorkout(key)&&!planIsRest(todayPlan)&&!todayPlan.movedTo)date.setDate(date.getDate()-1);
+    let count=0,safety=0;
+    while(safety++<365){key=todayKey(date);const plan=planForDate(key);if(dayHasWorkout(key)||planIsRest(plan)||plan.movedTo){count++;date.setDate(date.getDate()-1);}else break;}
+    return count;
+  };
+
+  const baseRenderProfile652=renderProfile;
+  renderProfile=function(){baseRenderProfile652();renderWeeklyPlanSettings();};
+  const baseRender652=render;
+  render=function(){baseRender652();renderWeeklyPlanner();renderWorkoutPlanBanner();renderRecoveryStatus();};
+  const baseSetWorkoutLogDate652=setWorkoutLogDate;
+  setWorkoutLogDate=function(value){baseSetWorkoutLogDate652(value);renderWorkoutPlanBanner();};
+  const baseChangeWorkoutLogDate652=changeWorkoutLogDate;
+  changeWorkoutLogDate=function(offset){baseChangeWorkoutLogDate652(offset);renderWorkoutPlanBanner();};
+  const baseJumpWorkoutToday652=jumpWorkoutToday;
+  jumpWorkoutToday=function(){baseJumpWorkoutToday652();renderWorkoutPlanBanner();};
+
+  processMissedWorkoutPlan();
+  renderWeeklyPlanSettings();
+  loadRecoveryCheckIn(todayKey());
+  render();
+  saveState();
 </script>
 
 <script>

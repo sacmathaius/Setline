@@ -2,8 +2,8 @@
   "id": "./",
   "name": "Setline Fitness Tracker",
   "short_name": "Setline",
-  "description": "A local-first workout, nutrition, weekly planning, rest-day, recovery, progress, and muscle-region tracker.",
-  "start_url": "./?v=6.5.2",
+  "description": "A local-first workout, nutrition, recovery, planning, progress, and muscle-region fitness tracker.",
+  "start_url": "./?v=6.5.3",
   "scope": "./",
   "display": "standalone",
   "display_override": [
@@ -11,8 +11,8 @@
     "standalone"
   ],
   "orientation": "portrait-primary",
-  "background_color": "#080B11",
-  "theme_color": "#080B11",
+  "background_color": "#070A10",
+  "theme_color": "#070A10",
   "categories": [
     "fitness",
     "health",

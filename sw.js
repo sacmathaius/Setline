@@ -1,4 +1,4 @@
-const CACHE_NAME = 'setline-v6-5-2-shell-v1';
+const CACHE_NAME = 'setline-v6-5-3-shell-v1';
 const APP_SHELL = [
   './',
   './index.html',

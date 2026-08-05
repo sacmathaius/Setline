@@ -1,0 +1,39 @@
+:root{color-scheme:dark light;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+html,body,#root{margin:0;min-height:100%;width:100%}
+body{min-height:100dvh;background:#07111f;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;overflow-x:hidden}
+button,input,select,textarea{font:inherit}
+.boot-shell{min-height:100dvh;display:grid;place-content:center;justify-items:center;gap:10px;background:radial-gradient(circle at 50% 15%,#152a4a 0,#07111f 55%);color:#f7f9fc}
+.boot-shell img{border-radius:20px}.boot-shell strong{font-size:28px}.boot-shell span{font-size:13px;color:#9aabc0}
+#app-shell{min-height:100dvh;padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+.page-wrap{width:min(100%,980px);margin:0 auto;padding:14px clamp(14px,4vw,28px) 34px}
+.top-safe{height:2px}
+.material-card{overflow:visible!important}
+.metric-number{font-variant-numeric:tabular-nums}
+.streak-flame{display:inline-block;transform-origin:50% 85%;animation:flame-flicker 1.4s ease-in-out infinite}
+@keyframes flame-flicker{0%,100%{transform:rotate(-2deg) scale(1);filter:drop-shadow(0 0 0 rgba(255,181,71,0))}40%{transform:rotate(2deg) scale(1.08);filter:drop-shadow(0 0 8px rgba(255,181,71,.45))}70%{transform:rotate(-1deg) scale(1.03)}}
+.completion-overlay{position:fixed;inset:0;z-index:1600;display:grid;place-items:center;padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));background:rgba(2,7,14,.82);backdrop-filter:blur(12px);overflow:auto}
+.completion-card{width:min(100%,430px);max-height:calc(100dvh - 48px);overflow:auto;text-align:center;border-radius:28px!important;padding:26px 20px!important}
+.completion-flame{font-size:70px;line-height:1;animation:celebrate-flame .9s cubic-bezier(.2,.9,.25,1.3) both}
+@keyframes celebrate-flame{0%{opacity:0;transform:translateY(30px) scale(.25) rotate(-12deg)}55%{opacity:1;transform:translateY(-8px) scale(1.22) rotate(6deg)}100%{transform:translateY(0) scale(1) rotate(0)}}
+.save-pop{position:fixed;left:50%;top:42%;z-index:1700;transform:translate(-50%,-50%);min-width:150px;max-width:min(86vw,360px);padding:16px 20px;border-radius:20px;background:rgba(7,17,31,.96);color:#fff;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45);animation:save-pop .78s ease both;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+@keyframes save-pop{0%{opacity:0;transform:translate(-50%,-35%) scale(.75)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}75%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(.96)}}
+.region-bar{height:8px;border-radius:999px;overflow:hidden;background:rgba(127,143,165,.16)}
+.region-bar>span{display:block;height:100%;border-radius:inherit;transition:width .35s ease}
+.chart-svg{width:100%;height:170px;display:block;overflow:visible}
+.chart-grid{stroke:currentColor;opacity:.10}.chart-line{fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.chart-dot{fill:currentColor}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.calendar-day{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;font-size:11px;font-weight:700;background:rgba(127,143,165,.08)}.calendar-day.active{background:rgba(91,124,255,.23);color:#6f8dff}.calendar-day.today{outline:2px solid currentColor}
+.food-name,.exercise-title{min-width:0;overflow-wrap:anywhere;word-break:normal}
+.food-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}.food-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap}.food-kcal{white-space:nowrap;font-variant-numeric:tabular-nums}
+.set-grid{display:grid;grid-template-columns:34px minmax(62px,1fr) minmax(58px,.9fr) 42px;gap:7px;align-items:center}.set-grid.advanced{grid-template-columns:34px minmax(58px,1fr) minmax(54px,.9fr) minmax(70px,1fr) 42px}
+.set-grid>*{min-width:0}.set-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.65;padding:0 4px}.set-input input{font-variant-numeric:tabular-nums;text-align:center}
+.date-strip{position:sticky;top:0;z-index:5;padding-top:6px;padding-bottom:8px;backdrop-filter:blur(12px)}
+.offline-pill{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:1500;padding:7px 12px;border-radius:999px;background:#f15b6c;color:white;font-size:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.update-banner{position:fixed;left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:calc(82px + env(safe-area-inset-bottom));z-index:1450;border-radius:18px!important}
+.guide-copy{line-height:1.6}.guide-example{border-left:3px solid currentColor;padding-left:12px;margin-top:10px;opacity:.9}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:390px){.page-wrap{padding-left:12px;padding-right:12px}.set-grid{grid-template-columns:30px minmax(54px,1fr) minmax(50px,.85fr) 38px;gap:5px}.set-grid.advanced{grid-template-columns:30px minmax(50px,1fr) minmax(47px,.85fr) minmax(62px,1fr) 38px}.completion-card{padding:22px 16px!important}}
+@media(min-width:760px){#app-shell{padding-bottom:24px}.page-wrap{padding-bottom:28px}.desktop-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}.desktop-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.bottom-nav-mobile{display:none!important}}
+@media(max-width:759px){.side-nav-desktop{display:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}

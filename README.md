@@ -1,27 +1,47 @@
-# Setline PWA v6.5.3
+# Setline 6.6
 
-## What changed
-- Refreshed the interface with a deeper navy-black theme, slate surfaces, cobalt actions, amber streak accents and mint success feedback.
-- Rebuilt logging feedback as a responsive card so long messages wrap instead of clipping.
-- Added an original Setline workout-completion streak moment with a flame animation, count-up, glow and optional device vibration.
-- Made the workout-completion dialog scroll-safe on short screens and safe-area aware on iPhone and Android.
-- Added a compact readiness score derived from the user's recovery check-in, with neutral Normal / Reduce / Recover guidance.
-- Added Profile reliability tools: connection status, manual update check, local data integrity check and non-destructive automatic-backup merge.
-- Kept the permanent `setline-data-v1` storage key and schema 5; this visual update does not rename or reset user data.
+Setline 6.6 is a GitHub Pages-ready React + Material UI PWA rebuild.
 
-## Update GitHub Pages
-1. Export a backup from Setline.
+## Publish the update
+
+1. Open the current Setline app and export a backup from **Profile → Data and reliability**.
 2. Unzip this package.
-3. Replace every file in the GitHub repository root with the files inside this folder.
-4. Commit the update and wait for GitHub Pages to redeploy.
-5. Open the website once in the browser. Tap Setline's **Update** banner if the installed PWA still shows the old version.
+3. In the GitHub `Setline` repository, upload **all files inside this folder** to the repository root.
+4. Replace files with matching names and commit directly to `main`.
+5. Wait for GitHub Pages to deploy, then open the website once in the browser and refresh.
+6. Reopen the installed app. Use the in-app **Update** button when it appears.
+
+Do not upload the ZIP itself and do not place the files inside another folder.
 
 ## Data safety
-- Existing workouts, nutrition, profiles, schedules, meal templates and habit data remain under the same permanent storage key.
-- Repository updates do not erase browser storage.
-- The automatic-backup merge adds missing records without deliberately deleting current records.
-- Keep exported backups before clearing site data, uninstalling with storage removal, or changing phones.
 
-## Guidance limits
-- The readiness score is a simple personal training guide based on sleep, soreness, energy and stress entries.
-- It is not a medical, injury or recovery diagnosis.
+- Setline continues to use the permanent `setline-data-v1` browser-storage key.
+- Version 6.6 creates `setline-pre-v6.6-backup` before migration.
+- Each normal save copies the previous state to `setline-data-last-good-v1`.
+- An unexpected empty-state overwrite is blocked when existing records are detected.
+- Updating GitHub files does not itself remove browser data.
+- Exported JSON backups can be merged back into the app.
+
+## First load and offline use
+
+The interface uses pinned React, Material UI and HTM browser builds from `unpkg.com`. Internet is required the first time 6.6 loads. The service worker caches those dependencies for later offline use.
+
+## Main features
+
+- Light, dark and system themes
+- Mobile and desktop Material UI layouts
+- Fast set logging with previous-performance prefilling
+- RIR, RPE, AMRAP, drop-set and training-term guide
+- Rest, active-recovery and deload scheduling
+- Recovery check-ins and readiness guidance
+- Weekly muscle-region coaching report
+- Nutrition by meal, favourites, recent foods, templates and barcode lookup
+- Progress charts, personal records, bodyweight and consistency calendar
+- Onboarding, changelog, backups and data-integrity tools
+
+## Limitations
+
+- Data remains local to each browser/device; accounts and cloud sync are not included.
+- Food and barcode searches require internet access and use Open Food Facts.
+- Camera barcode detection depends on browser support.
+- Training recommendations are general guidance, not medical advice.

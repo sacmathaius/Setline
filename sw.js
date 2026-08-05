@@ -1,5 +1,5 @@
-const CACHE_NAME = 'setline-v6-6-shell-v1';
-const RUNTIME_CACHE = 'setline-v6-6-runtime-v1';
+const CACHE_NAME = 'setline-v6-6-1-shell-v1';
+const RUNTIME_CACHE = 'setline-v6-6-1-runtime-v1';
 const CDN_ASSETS = [
   'https://unpkg.com/react@18.3.1/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js',

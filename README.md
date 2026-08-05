@@ -1,47 +1,41 @@
-# Setline 6.6
+# Setline 6.6.1
 
-Setline 6.6 is a GitHub Pages-ready React + Material UI PWA rebuild.
+Setline 6.6.1 is a GitHub Pages-ready PWA patch for the React + Material UI rebuild.
 
 ## Publish the update
 
-1. Open the current Setline app and export a backup from **Profile → Data and reliability**.
+1. Open Setline and export a backup from **Profile → Data and reliability**.
 2. Unzip this package.
-3. In the GitHub `Setline` repository, upload **all files inside this folder** to the repository root.
-4. Replace files with matching names and commit directly to `main`.
-5. Wait for GitHub Pages to deploy, then open the website once in the browser and refresh.
-6. Reopen the installed app. Use the in-app **Update** button when it appears.
+3. Upload **all files inside this folder** to the root of the GitHub `Setline` repository.
+4. Replace matching files and commit to `main`.
+5. Wait for GitHub Pages to deploy, open the website in the browser, and refresh once.
+6. Reopen the installed app and use the **Update** banner when it appears.
 
-Do not upload the ZIP itself and do not place the files inside another folder.
+Do not upload the ZIP itself or place these files inside another folder.
 
 ## Data safety
 
-- Setline continues to use the permanent `setline-data-v1` browser-storage key.
-- Version 6.6 creates `setline-pre-v6.6-backup` before migration.
-- Each normal save copies the previous state to `setline-data-last-good-v1`.
-- An unexpected empty-state overwrite is blocked when existing records are detected.
-- Updating GitHub files does not itself remove browser data.
-- Exported JSON backups can be merged back into the app.
+- The permanent storage key remains `setline-data-v1`.
+- Updating GitHub files does not delete browser storage.
+- Normal saves keep a last-good backup.
+- Exported JSON backups can be merged into the app.
+
+## 6.6.1 highlights
+
+- Fixed Profile, Progress, Nutrition, and bottom-navigation clipping
+- Tappable Home metrics with quick actions and detail sheets
+- Seven-day mini trends and customizable Home card order
+- Push, Pull, Legs, Upper, Lower, and Full Body starter workouts
+- Random built-in streak Easter-egg messages
+- Light, dark, and system themes retained
 
 ## First load and offline use
 
-The interface uses pinned React, Material UI and HTM browser builds from `unpkg.com`. Internet is required the first time 6.6 loads. The service worker caches those dependencies for later offline use.
-
-## Main features
-
-- Light, dark and system themes
-- Mobile and desktop Material UI layouts
-- Fast set logging with previous-performance prefilling
-- RIR, RPE, AMRAP, drop-set and training-term guide
-- Rest, active-recovery and deload scheduling
-- Recovery check-ins and readiness guidance
-- Weekly muscle-region coaching report
-- Nutrition by meal, favourites, recent foods, templates and barcode lookup
-- Progress charts, personal records, bodyweight and consistency calendar
-- Onboarding, changelog, backups and data-integrity tools
+The app uses pinned React, Material UI, and HTM browser builds. Internet is required on the first load; the service worker then caches them for offline use.
 
 ## Limitations
 
-- Data remains local to each browser/device; accounts and cloud sync are not included.
-- Food and barcode searches require internet access and use Open Food Facts.
+- Data stays local to each browser/device; cloud sync is not included.
+- Food and barcode searches require internet access.
 - Camera barcode detection depends on browser support.
-- Training recommendations are general guidance, not medical advice.
+- Training suggestions are general guidance, not medical advice.

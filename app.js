@@ -19,7 +19,7 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '6.6.0';
+  const APP_VERSION = '6.6.1';
   const RELEASE_DATE = 'August 5, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
@@ -121,6 +121,7 @@
   ];
 
   const CHANGELOG = [
+    {version:'6.6.1',date:RELEASE_DATE,items:['Fixed profile, progress and nutrition clipping and spacing','Tappable Home metrics with compact bottom-sheet details and shortcuts','Seven-day mini trends and customizable Home metric order','Upper and Lower starter workout templates alongside Push, Pull and Legs','Random streak-tap Easter-egg motivation lines','Improved bottom-navigation clearance and small-screen layout']},
     {version:'6.6.0',date:RELEASE_DATE,items:['Complete React and Material UI interface rebuild','Light, dark and system themes','Faster workout logging with previous-set prefilling','Searchable Training Guide with contextual explanations','Explainable weekly muscle-region coaching','Redesigned nutrition day view and food editor','Unified Progress hub, onboarding, changelog and data tools','Automatic pre-migration backup and non-destructive storage migration']},
     {version:'6.5.3',date:'August 2026',items:['Readiness guidance','Completion and streak animations','Deep navy visual refresh','Update and data-integrity tools']},
     {version:'6.5.2',date:'August 2026',items:['Rest days, active recovery and deloads','Weekly training calendar','Recovery check-in','Responsive safe-area layout']},
@@ -137,7 +138,7 @@
       privateHabit:{enabled:false,label:'Private habit',startDate:'',personalBest:0,hideCount:true},
       schedule:{}, weeklyPlan:['push','pull','legs','rest','push','pull','rest'], autoShiftMissed:true,
       recovery:{}, scheduleMeta:{configured:false,lastProcessed:''},
-      settings:{theme:'system',reducedMotion:false,haptics:true,advancedDefault:false,highContrast:false},
+      settings:{theme:'system',reducedMotion:false,haptics:true,advancedDefault:false,highContrast:false,homeCardOrder:['calories','protein','readiness','bodyweight'],hiddenHomeCards:[]},
       onboardingComplete:false, changelogSeen:'', schemaVersion:6, updatedAt:null
     };
   }
@@ -320,8 +321,8 @@
   function PageHeader({eyebrow,title,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:2,mb:2}}><${Box}><${Typography} variant="overline" color="text.secondary" sx=${{fontWeight:800,letterSpacing:1.2}}>${eyebrow}</${Typography}><${Typography} variant="h4">${title}</${Typography}></${Box}>${action||null}</${Box}>`;}
   function SectionHeading({title,subtitle,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:1.5,mb:1.2}}><${Box} sx=${{minWidth:0}}><${Typography} variant="h6">${title}</${Typography}>${subtitle?html`<${Typography} variant="body2" color="text.secondary">${subtitle}</${Typography}>`:null}</${Box}>${action||null}</${Box}>`;}
   function InfoButton({term,onOpen}){return html`<${Tooltip} title=${`Explain ${term}`}><${IconButton} size="small" aria-label=${`Explain ${term}`} onClick=${()=>onOpen(term)}><${Icon} name="info" fontSize="small"/></${IconButton}></${Tooltip}>`;}
-  function DateBar({value,onChange,label='Editing'}){
-    return html`<${Paper} className="date-strip" elevation=${0} sx=${{display:'flex',alignItems:'center',gap:1,p:1,mb:1.5,bgcolor:'background.default',backgroundImage:'none'}}>
+  function DateBar({value,onChange,label='Editing',sticky=true}){
+    return html`<${Paper} className=${sticky?'date-strip date-strip-sticky':'date-strip'} elevation=${0} sx=${{display:'flex',alignItems:'center',gap:1,p:1,mb:1.8,bgcolor:'background.default',backgroundImage:'none'}}>
       <${IconButton} aria-label="Previous day" onClick=${()=>onChange(shiftDateKey(value,-1))}>‹</${IconButton}>
       <${Button} variant="outlined" startIcon=${html`<${Icon} name="calendar"/>`} sx=${{flex:1,justifyContent:'flex-start',minWidth:0}} component="label">
         <${Box} sx=${{minWidth:0,textAlign:'left'}}><${Typography} component="span" variant="caption" color="text.secondary" sx=${{display:'block',lineHeight:1}}>${label}</${Typography}><${Typography} component="span" variant="body2" fontWeight=${800} sx=${{display:'block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>${formatDate(value,{weekday:'long',month:'short',day:'numeric'})}</${Typography}></${Box}>
@@ -331,7 +332,21 @@
       <${IconButton} aria-label="Next day" disabled=${value>=localDateKey()} onClick=${()=>onChange(shiftDateKey(value,1))}>›</${IconButton}>
     </${Paper}>`;
   }
-  function MetricCard({label,value,sub,progress,color='primary'}){return html`<${CardShell} sx=${{height:'100%'}}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${label}</${Typography}><${Typography} className="metric-number" variant="h5" sx=${{mt:.3}}>${value}</${Typography}>${sub?html`<${Typography} variant="caption" color="text.secondary">${sub}</${Typography}>`:null}${Number.isFinite(progress)?html`<${LinearProgress} variant="determinate" value=${clamp(progress,0,100)} color=${color} sx=${{mt:1.2,height:7,borderRadius:99}}/>`:null}</${CardShell}>`;}
+  function MiniSparkline({values=[]}){
+    const nums=values.map(Number).filter(Number.isFinite); if(nums.length<2)return null;
+    const w=104,h=24,p=2,min=Math.min(...nums),max=Math.max(...nums),range=Math.max(1,max-min);
+    const points=nums.map((value,index)=>`${p+(w-p*2)*(index/(nums.length-1))},${h-p-(h-p*2)*((value-min)/range)}`).join(' ');
+    return html`<svg className="mini-sparkline" viewBox=${`0 0 ${w} ${h}`} aria-hidden="true"><polyline points=${points}></polyline></svg>`;
+  }
+  function MetricCard({label,value,sub,progress,color='primary',trend=[],onClick}){
+    const interactive=typeof onClick==='function';
+    return html`<${CardShell} role=${interactive?'button':undefined} tabIndex=${interactive?0:undefined} onClick=${onClick} onKeyDown=${interactive?(event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onClick();}}):undefined} sx=${{height:'100%',cursor:interactive?'pointer':'default',transition:'transform .16s ease, border-color .16s ease','&:hover':interactive?{transform:'translateY(-2px)',borderColor:'primary.main'}:{},'&:focus-visible':interactive?{outline:'3px solid',outlineColor:'primary.main',outlineOffset:2}:{}}}>
+      <${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${1}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${label}</${Typography}>${interactive?html`<${Typography} aria-hidden="true" color="text.secondary" sx=${{fontSize:18,lineHeight:1}}>›</${Typography}>`:null}</${Stack}>
+      <${Typography} className="metric-number" variant="h5" sx=${{mt:.3}}>${value}</${Typography}>${sub?html`<${Typography} variant="caption" color="text.secondary" sx=${{display:'block',minHeight:'1.5em'}}>${sub}</${Typography}>`:null}
+      ${trend?.length?html`<${Box} sx=${{mt:.7,color:color==='secondary'?'secondary.main':'primary.main'}}><${MiniSparkline} values=${trend}/></${Box}>`:null}
+      ${Number.isFinite(progress)?html`<${LinearProgress} variant="determinate" value=${clamp(progress,0,100)} color=${color} sx=${{mt:trend?.length?.5:1.2,height:7,borderRadius:99}}/>`:null}
+    </${CardShell}>`;
+  }
 
   function useSetlineState(){
     const [data,setData]=useState(()=>loadState());
@@ -368,7 +383,7 @@
     const finish=()=>{update(next=>{next.profile={...next.profile,...draft,trainingDays:Number(draft.trainingDays)||4};next.settings.theme=themeMode;next.weeklyPlan=generatePlan(draft.split,Number(draft.trainingDays)||4);next.scheduleMeta.configured=true;next.onboardingComplete=true;});onClose();};
     const steps=['Goal','Training','Preferences'];
     return html`<${Dialog} open=${open} fullScreen=${fullScreen} maxWidth="sm" fullWidth onClose=${onClose}>
-      <${DialogTitle}>Set up Setline 6.6</${DialogTitle}>
+      <${DialogTitle}>Set up Setline 6.6.1</${DialogTitle}>
       <${DialogContent}>
         <${Stepper} activeStep=${step} alternativeLabel sx=${{mb:3}}>${steps.map(label=>html`<${Step} key=${label}><${StepLabel}>${label}</${StepLabel}></${Step}>`)}</${Stepper}>
         ${step===0?html`<${Stack} spacing=${2}><${TextField} label="Your name" value=${draft.name||''} onChange=${e=>setDraft({...draft,name:e.target.value})}/><${TextField} select label="Primary goal" value=${draft.goal||'build_muscle'} onChange=${e=>setDraft({...draft,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}></${Stack}>`:null}
@@ -400,15 +415,81 @@
   function regionHex(status){return status==='good'?'#43D69E':status==='high'?'#FFB547':status==='low'?'#FFB547':'#FF7082';}
   function weightDisplay(data,kg){if(!Number.isFinite(Number(kg))||Number(kg)<=0)return '—';return data.preferredUnit==='lb'?round1(Number(kg)*2.20462)+' lb':round1(kg)+' kg';}
 
+  const STREAK_QUOTES = [
+    'Keep moving, especially when progress feels invisible.',
+    'A difficult day still counts when you refuse to quit.',
+    'Discipline is built on the days motivation stays silent.',
+    'The next rep is small. The person it builds is not.',
+    'Strength grows quietly before anyone else can see it.',
+    'Rest when it is planned. Return when it is time.',
+    'You do not need a perfect week. You need an honest one.',
+    'The path gets lighter only after you become stronger.',
+    'Today’s effort is a message to the person you are becoming.',
+    'Even a scar can become proof that you kept moving.',
+    'Do not chase the feeling of progress. Build the evidence.',
+    'One more disciplined choice can change the direction of a day.'
+  ];
+  const HOME_CARD_LABELS={calories:'Calories',protein:'Protein',readiness:'Readiness',bodyweight:'Bodyweight'};
+
+  function MetricDetailSheet({type,open,onClose,data,update,navigate,showFeedback}){
+    const today=localDateKey(),day=getDay(data,today),totals=nutritionTotals(day),ready=readiness(data.recovery?.[today]);
+    const recovery=data.recovery?.[today]||{};
+    const recentWeights=Object.entries(data.bodyWeights||{}).sort(([a],[b])=>a.localeCompare(b)).slice(-7);
+    const copyYesterday=()=>{const previous=getDay(data,shiftDateKey(today,-1)).calories;if(!previous.length){showFeedback('No food found yesterday');return;}update(next=>{const target=ensureDayMutable(next,today);target.calories.push(...previous.map(item=>({...deepClone(item),id:id('food'),loggedAt:new Date().toISOString()})));});showFeedback('Yesterday copied');onClose();};
+    const quickProtein=()=>{const raw=prompt('Protein to add (grams):','25');if(raw===null)return;const protein=Number(raw);if(!Number.isFinite(protein)||protein<=0)return;update(next=>ensureDayMutable(next,today).calories.push({id:id('food'),name:'Quick protein',meal:'Snack',kcal:Math.round(protein*4),protein:round1(protein),carbs:0,fat:0,amount:1,unit:'entry',loggedAt:new Date().toISOString()}));showFeedback('Protein added');onClose();};
+    const logWeight=()=>{const current=data.bodyWeights?.[today]||data.bodyWeightKg||'';const shown=data.preferredUnit==='lb'&&current?round1(current*2.20462):current;const raw=prompt(`Bodyweight in ${data.preferredUnit}:`,String(shown));if(raw===null)return;let value=Number(raw);if(!Number.isFinite(value)||value<=0)return;if(data.preferredUnit==='lb')value/=2.20462;update(next=>{next.bodyWeights[today]=round1(value);next.bodyWeightKg=round1(value);});showFeedback('Bodyweight saved');onClose();};
+    const title=HOME_CARD_LABELS[type]||'Details';
+    return html`<${Drawer} anchor="bottom" open=${open} onClose=${onClose} PaperProps=${{sx:{borderTopLeftRadius:26,borderTopRightRadius:26,maxHeight:'82dvh',pb:'calc(14px + env(safe-area-inset-bottom))'}}}>
+      <${Box} sx=${{width:'min(100%,680px)',mx:'auto',p:2.2,overflow:'auto'}}>
+        <${Stack} direction="row" justifyContent="space-between" alignItems="center" sx=${{mb:1.5}}><${Box}><${Typography} variant="overline" color="text.secondary" fontWeight=${800}>TODAY</${Typography}><${Typography} variant="h5">${title}</${Typography}></${Box}><${IconButton} onClick=${onClose}><${Icon} name="close"/></${IconButton}></${Stack}>
+        ${type==='calories'?html`<${Stack} spacing=${1.4}><${Alert} severity=${totals.kcal>data.calorieGoal?'warning':'info'}>${Math.round(totals.kcal)} of ${data.calorieGoal} kcal · ${Math.max(0,Math.round(data.calorieGoal-totals.kcal))} remaining</${Alert}>${day.calories.length?html`<${Stack} spacing=${.8}>${day.calories.slice(-5).reverse().map(item=>html`<${Paper} key=${item.id} variant="outlined" sx=${{p:1.2,borderRadius:2,display:'flex',justifyContent:'space-between',gap:1.5}}><${Typography} className="food-name" variant="body2" fontWeight=${700}>${item.name}</${Typography}><${Typography} variant="body2" color="secondary.main" fontWeight=${800} sx=${{whiteSpace:'nowrap'}}>${Math.round(item.kcal||0)} kcal</${Typography}></${Paper}>`)}</${Stack}>`:html`<${Typography} variant="body2" color="text.secondary">No food logged today.</${Typography}>`}<${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1}><${Button} variant="contained" color="secondary" onClick=${()=>{onClose();navigate('nutrition');}}>Add food</${Button}><${Button} variant="outlined" onClick=${copyYesterday}>Copy yesterday</${Button}><${Button} onClick=${()=>{onClose();navigate('nutrition');}}>View nutrition</${Button}></${Stack}></${Stack}>`:null}
+        ${type==='protein'?html`<${Stack} spacing=${1.4}><${Alert} severity=${totals.protein>=data.proteinGoal?'success':'info'}>${Math.round(totals.protein)} of ${data.proteinGoal} g · ${Math.max(0,Math.round(data.proteinGoal-totals.protein))} g remaining</${Alert}>${day.calories.filter(x=>Number(x.protein)>0).sort((a,b)=>Number(b.protein)-Number(a.protein)).slice(0,5).map(item=>html`<${Paper} key=${item.id} variant="outlined" sx=${{p:1.2,borderRadius:2,display:'flex',justifyContent:'space-between',gap:1.5}}><${Typography} className="food-name" variant="body2" fontWeight=${700}>${item.name}</${Typography}><${Typography} variant="body2" color="primary.main" fontWeight=${800} sx=${{whiteSpace:'nowrap'}}>${round1(item.protein)} g</${Typography}></${Paper}>`)}<${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1}><${Button} variant="contained" onClick=${quickProtein}>Quick-add protein</${Button}><${Button} variant="outlined" onClick=${()=>{onClose();navigate('nutrition');}}>Open nutrition</${Button}></${Stack}></${Stack}>`:null}
+        ${type==='readiness'?html`<${Stack} spacing=${1.4}>${ready?html`<${Alert} severity=${ready.tone}><b>${ready.score} · ${ready.label}</b><br/>${ready.message}</${Alert}><${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr',gap:1}}>${[['Sleep',recovery.sleep?`${recovery.sleep} h`:'—'],['Soreness',recovery.soreness||'—'],['Energy',recovery.energy||'—'],['Stress',recovery.stress||'—']].map(([label,value])=>html`<${Paper} key=${label} variant="outlined" sx=${{p:1.3,borderRadius:2}}><${Typography} variant="caption" color="text.secondary">${label}</${Typography}><${Typography} variant="h6">${value}</${Typography}></${Paper}>`)}</${Box}>`:html`<${Alert} severity="info">Complete today’s recovery check-in to calculate readiness.</${Alert}>`}<${Button} variant="contained" onClick=${()=>{onClose();navigate('profile');}}>Open recovery check-in</${Button}></${Stack}>`:null}
+        ${type==='bodyweight'?html`<${Stack} spacing=${1.4}><${Alert} severity="info">Latest: ${weightDisplay(data,data.bodyWeights?.[today]||data.bodyWeightKg)}</${Alert}>${recentWeights.length?html`<${SimpleLineChart} values=${recentWeights.map(([,v])=>data.preferredUnit==='lb'?round1(Number(v)*2.20462):Number(v))} labels=${recentWeights.map(([key])=>formatDate(key,{month:'numeric',day:'numeric'}))} color="secondary.main" unit=${data.preferredUnit}/>`:html`<${Typography} variant="body2" color="text.secondary">Log weight to start a trend.</${Typography}>`}<${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1}><${Button} variant="contained" onClick=${logWeight}>Log bodyweight</${Button}><${Button} variant="outlined" onClick=${()=>{onClose();navigate('progress');}}>Open progress</${Button}></${Stack}></${Stack}>`:null}
+      </${Box}>
+    </${Drawer}>`;
+  }
+
+  function HomeCustomizeDialog({open,onClose,data,update}){
+    const fallback=['calories','protein','readiness','bodyweight'];
+    const order=(data.settings.homeCardOrder||fallback).filter(x=>fallback.includes(x));
+    for(const key of fallback)if(!order.includes(key))order.push(key);
+    const hidden=new Set(data.settings.hiddenHomeCards||[]);
+    const move=(index,amount)=>{const nextIndex=index+amount;if(nextIndex<0||nextIndex>=order.length)return;const nextOrder=[...order];[nextOrder[index],nextOrder[nextIndex]]=[nextOrder[nextIndex],nextOrder[index]];update(next=>next.settings.homeCardOrder=nextOrder);};
+    const toggle=key=>update(next=>{const current=new Set(next.settings.hiddenHomeCards||[]);if(current.has(key))current.delete(key);else if(current.size<order.length-1)current.add(key);next.settings.hiddenHomeCards=[...current];});
+    return html`<${Dialog} open=${open} onClose=${onClose} maxWidth="xs" fullWidth><${DialogTitle}>Customize Home cards</${DialogTitle}><${DialogContent} dividers><${Stack} spacing=${1}>${order.map((key,index)=>html`<${Paper} key=${key} variant="outlined" sx=${{p:1,pl:1.5,borderRadius:2,display:'flex',alignItems:'center',gap:1}}><${Box} sx=${{flex:1}}><${Typography} fontWeight=${800}>${HOME_CARD_LABELS[key]}</${Typography}><${Typography} variant="caption" color="text.secondary">${hidden.has(key)?'Hidden':'Visible'}</${Typography}></${Box}><${Switch} checked=${!hidden.has(key)} onChange=${()=>toggle(key)} inputProps=${{'aria-label':`Show ${HOME_CARD_LABELS[key]}`}}/><${IconButton} disabled=${index===0} onClick=${()=>move(index,-1)} aria-label="Move up">↑</${IconButton}><${IconButton} disabled=${index===order.length-1} onClick=${()=>move(index,1)} aria-label="Move down">↓</${IconButton}></${Paper}>`)}</${Stack}></${DialogContent}><${DialogActions}><${Button} onClick=${onClose}>Done</${Button}></${DialogActions}></${Dialog}>`;
+  }
+
+  function StreakEasterEgg({quote,open,onClose,streak}){
+    return html`<${Drawer} anchor="bottom" open=${open} onClose=${onClose} PaperProps=${{sx:{borderTopLeftRadius:28,borderTopRightRadius:28,pb:'calc(16px + env(safe-area-inset-bottom))'}}}><${Box} sx=${{width:'min(100%,620px)',mx:'auto',p:2.5,textAlign:'center'}}><div className="easter-flame">🔥</div><${Typography} variant="overline" color="secondary.main" fontWeight=${900}>${streak} DAY STREAK</${Typography}><${Typography} variant="h6" sx=${{mt:1,lineHeight:1.45}}>“${quote}”</${Typography}><${Typography} variant="caption" color="text.secondary" sx=${{display:'block',mt:1.2}}>A hidden Setline message</${Typography}><${Button} sx=${{mt:2}} onClick=${onClose}>Keep going</${Button}></${Box}></${Drawer}>`;
+  }
+
   function HomePage({data,update,navigate,openGuide,showFeedback}){
     const today=localDateKey(),day=getDay(data,today),totals=nutritionTotals(day),streak=calculateStreak(data),plan=planForDate(data,today),ready=readiness(data.recovery?.[today]),report=regionReport(data,today),priority=report.priorities[0];
+    const [metricSheet,setMetricSheet]=useState(''); const [customizeOpen,setCustomizeOpen]=useState(false); const [quote,setQuote]=useState(STREAK_QUOTES[0]); const [quoteOpen,setQuoteOpen]=useState(false); const lastQuote=useRef(-1);
     const firstName=(data.profile?.name||'').trim().split(/\s+/)[0];
     const greeting=new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening';
     const todayWeight=data.bodyWeights?.[today]||data.bodyWeightKg;
-    return html`<div className="page-wrap">
+    const trendDates=Array.from({length:7},(_,i)=>shiftDateKey(today,-(6-i)));
+    const trends={
+      calories:trendDates.map(key=>nutritionTotals(getDay(data,key)).kcal),
+      protein:trendDates.map(key=>nutritionTotals(getDay(data,key)).protein),
+      readiness:trendDates.map(key=>readiness(data.recovery?.[key])?.score||0),
+      bodyweight:trendDates.map(key=>Number(data.bodyWeights?.[key]||0)).filter(Boolean)
+    };
+    const openQuote=()=>{let index=Math.floor(Math.random()*STREAK_QUOTES.length);if(STREAK_QUOTES.length>1&&index===lastQuote.current)index=(index+1)%STREAK_QUOTES.length;lastQuote.current=index;setQuote(STREAK_QUOTES[index]);setQuoteOpen(true);};
+    const order=(data.settings.homeCardOrder||['calories','protein','readiness','bodyweight']); const hidden=new Set(data.settings.hiddenHomeCards||[]);
+    const cardMap={
+      calories:html`<${MetricCard} label="CALORIES" value=${Math.round(totals.kcal)} sub=${`${Math.max(0,data.calorieGoal-totals.kcal)} remaining`} progress=${totals.kcal/data.calorieGoal*100} color="secondary" trend=${trends.calories} onClick=${()=>setMetricSheet('calories')}/>` ,
+      protein:html`<${MetricCard} label="PROTEIN" value=${`${Math.round(totals.protein)} g`} sub=${`${Math.max(0,data.proteinGoal-totals.protein)} g remaining`} progress=${totals.protein/data.proteinGoal*100} trend=${trends.protein} onClick=${()=>setMetricSheet('protein')}/>` ,
+      readiness:html`<${MetricCard} label="READINESS" value=${ready?ready.score:'—'} sub=${ready?ready.label:'Check in first'} progress=${ready?.score} trend=${trends.readiness} onClick=${()=>setMetricSheet('readiness')}/>` ,
+      bodyweight:html`<${MetricCard} label="BODYWEIGHT" value=${weightDisplay(data,todayWeight)} sub="Latest entry" trend=${trends.bodyweight} onClick=${()=>setMetricSheet('bodyweight')}/>`
+    };
+    const visibleOrder=order.filter(key=>cardMap[key]&&!hidden.has(key));
+    return html`<div className="page-wrap home-page">
       <${Box} sx=${{display:'flex',alignItems:'center',justifyContent:'space-between',gap:2,mb:2}}>
         <${Stack} direction="row" spacing=${1.4} alignItems="center" sx=${{minWidth:0}}><${Avatar} src="./setline-s.svg" variant="rounded" sx=${{width:48,height:48,bgcolor:'primary.main'}}/><${Box} sx=${{minWidth:0}}><${Typography} variant="caption" color="text.secondary" fontWeight=${700}>${greeting}${firstName?`, ${firstName}`:''}</${Typography}><${Typography} variant="h4">Setline</${Typography}></${Box}></${Stack}>
-        <${Chip} icon=${html`<span className="streak-flame">🔥</span>`} label=${`${streak} day${streak===1?'':'s'}`} color="warning" variant="outlined"/>
+        <${Chip} clickable onClick=${openQuote} aria-label="Open streak Easter egg" icon=${html`<span className="streak-flame">🔥</span>`} label=${`${streak} day${streak===1?'':'s'}`} color="warning" variant="outlined"/>
       </${Box}>
 
       <${CardShell} sx=${{mb:2,background:theme=>theme.palette.mode==='dark'?'linear-gradient(135deg,#162a4a,#101c2d)':'linear-gradient(135deg,#e7efff,#ffffff)'}}>
@@ -419,15 +500,11 @@
         <${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1} sx=${{mt:2}}><${Button} variant="contained" startIcon=${html`<${Icon} name=${isRestType(plan)?'rest':'workout'}/>`} onClick=${()=>navigate('workout')}>${isRestType(plan)?'View recovery day':'Open workout'}</${Button}><${Button} variant="outlined" onClick=${()=>navigate('nutrition')}>Log nutrition</${Button}></${Stack}>
       </${CardShell}>
 
-      <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},gap:1.3,mb:2}}>
-        <${MetricCard} label="CALORIES" value=${Math.round(totals.kcal)} sub=${`${Math.max(0,data.calorieGoal-totals.kcal)} remaining`} progress=${totals.kcal/data.calorieGoal*100} color="secondary"/>
-        <${MetricCard} label="PROTEIN" value=${`${Math.round(totals.protein)} g`} sub=${`${Math.max(0,data.proteinGoal-totals.protein)} g remaining`} progress=${totals.protein/data.proteinGoal*100}/>
-        <${MetricCard} label="READINESS" value=${ready?ready.score:'—'} sub=${ready?ready.label:'Check in first'} progress=${ready?.score}/>
-        <${MetricCard} label="BODYWEIGHT" value=${weightDisplay(data,todayWeight)} sub="Latest entry"/>
-      </${Box}>
+      <${Stack} direction="row" justifyContent="space-between" alignItems="center" sx=${{mb:1}}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>TAP A CARD FOR DETAILS</${Typography}><${Button} size="small" onClick=${()=>setCustomizeOpen(true)}>Customize</${Button}></${Stack}>
+      <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},gap:1.3,mb:2}}>${visibleOrder.map(key=>html`<${React.Fragment} key=${key}>${cardMap[key]}</${React.Fragment}>`)}</${Box}>
 
       <div className="desktop-grid">
-        <${Stack} spacing=${2}>
+        <${Stack} spacing=${2.25}>
           <${CardShell}>
             <${SectionHeading} title="Weekly focus" subtitle="Explainable muscle-region coverage" action=${html`<${Button} size="small" onClick=${()=>navigate('progress')}>View report</${Button}>`}/>
             ${report.workingSets<4?html`<${Alert} severity="info">Log a few working sets to unlock a useful weekly focus.</${Alert}>`:priority?html`<${Box}><${Stack} direction="row" justifyContent="space-between" alignItems="center"><${Box}><${Typography} variant="h6">Prioritize ${priority.label}</${Typography}><${Typography} variant="body2" color="text.secondary">${priority.value} of ${priority.target} target effective sets in the last 7 days.</${Typography}></${Box}><${Chip} label=${priority.status.toUpperCase()} color=${priority.status==='missed'?'error':'warning'} size="small"/></${Stack}><${Typography} variant="body2" sx=${{mt:1.4}}>Consider ${REGION_SUGGESTIONS[priority.key]?.slice(0,2).join(' or ')} when this region fits your next session.</${Typography}><${Button} size="small" sx=${{mt:1}} startIcon=${html`<${Icon} name="info"/>`} onClick=${()=>openGuide('Working set')}>How coverage is counted</${Button}></${Box}>`:html`<${Alert} severity="success">Your major regions have reasonable coverage. Progress the exercises already working.</${Alert}>`}
@@ -444,7 +521,7 @@
           </${CardShell}>
         </${Stack}>
 
-        <${Stack} spacing=${2}>
+        <${Stack} spacing=${2.25}>
           <${CardShell}>
             <${SectionHeading} title="Recovery" subtitle=${formatDate(today,{weekday:'long',month:'short',day:'numeric'})}/>
             ${ready?html`<${Box}><${Stack} direction="row" spacing=${2} alignItems="center"><${Box} sx=${{position:'relative',display:'inline-flex'}}><${CircularProgress} variant="determinate" value=${ready.score} size=${72} thickness=${5} color=${ready.tone}/><${Box} sx=${{position:'absolute',inset:0,display:'grid',placeItems:'center'}}><${Typography} fontWeight=${800}>${ready.score}</${Typography}></${Box}></${Box}><${Box}><${Typography} variant="h6">${ready.label}</${Typography}><${Typography} variant="body2" color="text.secondary">${ready.message}</${Typography}></${Box}></${Stack}></${Box}>`:html`<${Alert} severity="info" action=${html`<${Button} color="inherit" size="small" onClick=${()=>navigate('profile')}>Check in</${Button}>`}>Add sleep, soreness, energy and stress to get recovery guidance.</${Alert}>`}
@@ -456,21 +533,34 @@
           </${CardShell}>
         </${Stack}>
       </div>
+      <${MetricDetailSheet} type=${metricSheet} open=${!!metricSheet} onClose=${()=>setMetricSheet('')} data=${data} update=${update} navigate=${navigate} showFeedback=${showFeedback}/>
+      <${HomeCustomizeDialog} open=${customizeOpen} onClose=${()=>setCustomizeOpen(false)} data=${data} update=${update}/>
+      <${StreakEasterEgg} quote=${quote} open=${quoteOpen} onClose=${()=>setQuoteOpen(false)} streak=${streak}/>
     </div>`;
   }
 
   const COMMON_EXERCISES=['Incline Dumbbell Press','Chest Press','Cable Fly','Shoulder Press','Cable Lateral Raise','Rear Delt Fly','Rope Triceps Pushdown','Overhead Triceps Extension','Lat Pulldown','Seated Cable Row','Chest-Supported Row','Face Pull','Preacher Curl','Hammer Curl','Hack Squat','Leg Press','Romanian Deadlift','Leg Curl','Leg Extension','Hip Thrust','Calf Raise','Cable Crunch'];
+  const WORKOUT_TEMPLATES={
+    push:['Incline Dumbbell Press','Chest Press','Cable Lateral Raise','Rope Triceps Pushdown'],
+    pull:['Lat Pulldown','Chest-Supported Row','Rear Delt Fly','Preacher Curl'],
+    legs:['Hack Squat','Romanian Deadlift','Leg Curl','Calf Raise'],
+    upper:['Incline Dumbbell Press','Lat Pulldown','Shoulder Press','Seated Cable Row','Cable Lateral Raise','Rope Triceps Pushdown','Preacher Curl'],
+    lower:['Hack Squat','Romanian Deadlift','Leg Curl','Hip Thrust','Calf Raise','Cable Crunch'],
+    full_body:['Chest Press','Lat Pulldown','Hack Squat','Romanian Deadlift','Cable Lateral Raise','Cable Crunch']
+  };
 
-  function AddExerciseDialog({open,onClose,data,dateKey,onAdd,initial=null}){
+  function AddExerciseDialog({open,onClose,data,dateKey,onAdd,initial=null,plan='workout'}){
     const [name,setName]=useState(''); const [count,setCount]=useState(3); const [load,setLoad]=useState(''); const [reps,setReps]=useState(10); const [group,setGroup]=useState(''); const [usePrevious,setUsePrevious]=useState(true);
     useEffect(()=>{if(open){setName(initial?.name||'');setCount(initial?getSets(initial).length:3);setLoad(initial?getSets(initial)[0]?.load||'':'');setReps(initial?getSets(initial)[0]?.reps||10:10);setGroup(initial?.group||'');setUsePrevious(!initial);}},[open,initial]);
     const previous=name?previousWorkout(data,name,dateKey):null;
     const submit=()=>{if(!name.trim())return;let sets;if(usePrevious&&previous){sets=getSets(previous).map(set=>({...set,id:id('set'),done:false,note:''}));}else{sets=Array.from({length:clamp(count,1,12)},()=>({id:id('set'),load:Number(load)||0,reps:Number(reps)||0,done:false,type:'working',rir:'',rpe:'',note:''}));}onAdd({id:initial?.id||id('workout'),name:name.trim(),group:group.trim(),setEntries:sets,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()},initial);onClose();};
+    const suggestions=[...(WORKOUT_TEMPLATES[plan]||[]),...COMMON_EXERCISES].filter((item,index,array)=>array.indexOf(item)===index);
     return html`<${Dialog} open=${open} onClose=${onClose} maxWidth="sm" fullWidth>
       <${DialogTitle}>${initial?'Edit exercise':'Add exercise'}</${DialogTitle}>
       <${DialogContent}><${Stack} spacing=${2} sx=${{pt:.5}}>
         <${TextField} label="Exercise name" value=${name} onChange=${e=>setName(e.target.value)} autoFocus inputProps=${{list:'exercise-suggestions'}}/><datalist id="exercise-suggestions">${COMMON_EXERCISES.map(x=>html`<option value=${x}></option>`)}</datalist>
-        <${Box} sx=${{display:'flex',gap:.7,flexWrap:'wrap'}}>${COMMON_EXERCISES.slice(0,8).map(item=>html`<${Chip} key=${item} label=${item} size="small" variant="outlined" onClick=${()=>setName(item)}/>` )}</${Box}>
+        <${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${WORKOUT_TEMPLATES[plan]?`${planLabel(plan).toUpperCase()} SUGGESTIONS`:'COMMON EXERCISES'}</${Typography}>
+        <${Box} sx=${{display:'flex',gap:.7,flexWrap:'wrap'}}>${suggestions.slice(0,10).map(item=>html`<${Chip} key=${item} label=${item} size="small" variant="outlined" onClick=${()=>setName(item)}/>` )}</${Box}>
         ${previous&&!initial?html`<${Alert} severity="info"><b>Previous:</b> ${getSets(previous).map(s=>`${s.load||0}×${s.reps||0}`).join(', ')}<${FormControlLabel} sx=${{display:'block',mt:.5}} control=${html`<${Checkbox} checked=${usePrevious} onChange=${e=>setUsePrevious(e.target.checked)}/>`} label="Prefill previous sets as incomplete"/></${Alert}>`:null}
         ${!usePrevious||!previous||initial?html`<${Box} sx=${{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:1}}><${TextField} label="Sets" type="number" value=${count} onChange=${e=>setCount(e.target.value)} inputProps=${{min:1,max:12}}/><${TextField} label=${`Load (${data.preferredUnit})`} type="number" value=${load} onChange=${e=>setLoad(e.target.value)} inputProps=${{min:0,step:.5}}/><${TextField} label="Reps" type="number" value=${reps} onChange=${e=>setReps(e.target.value)} inputProps=${{min:0,max:100}}/></${Box}>`:null}
         <${TextField} label="Superset group (optional)" value=${group} onChange=${e=>setGroup(e.target.value.toUpperCase().slice(0,2))} helperText="Exercises with the same letter are performed back-to-back."/>
@@ -497,6 +587,7 @@
     const addSet=(wi)=>mutateWorkout(wi,workout=>{if(!Array.isArray(workout.setEntries))workout.setEntries=getSets(workout);const last=workout.setEntries.at(-1)||{};workout.setEntries.push({...last,id:id('set'),done:false,note:''});});
     const deleteExercise=wi=>{if(!confirm('Delete this exercise from the selected session?'))return;update(next=>ensureDayMutable(next,selectedDate).workouts.splice(wi,1));showFeedback('Exercise removed');};
     const duplicateExercise=wi=>update(next=>{const target=ensureDayMutable(next,selectedDate);const copy=deepClone(target.workouts[wi]);copy.id=id('workout');copy.name=`${copy.name}`;copy.setEntries=getSets(copy).map(s=>({...s,id:id('set'),done:false}));target.workouts.splice(wi+1,0,copy);});
+    const addStarterTemplate=()=>{const template=WORKOUT_TEMPLATES[plan];if(!template?.length)return;const existing=new Set(currentWorkouts.map(workout=>String(workout.name).toLowerCase()));update(next=>{const target=ensureDayMutable(next,selectedDate);for(const name of template){if(existing.has(name.toLowerCase()))continue;target.workouts.push({id:id('workout'),name,group:'',setEntries:Array.from({length:3},()=>({id:id('set'),load:0,reps:10,done:false,type:'working',rir:'',rpe:'',note:''})),loggedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}});showFeedback(`${planLabel(plan)} starter added`);};
     const completeWorkout=()=>{
       if(!currentWorkouts.length)return;
       const sets=currentWorkouts.flatMap(getSets).filter(s=>s.done!==false&&s.type!=='warmup'); const volume=sets.reduce((sum,s)=>sum+setVolume(s),0); const regions=new Set(currentWorkouts.flatMap(w=>classifyExercise(w.name).primary));
@@ -508,7 +599,7 @@
       <${PageHeader} eyebrow="TRAIN" title="Workout" action=${html`<${Button} variant="contained" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>setAddOpen(true)}>Exercise</${Button}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Workout date"/>
 
-      <${CardShell} sx=${{mb:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.2} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="overline" color=${isRestType(plan)?'secondary.main':'primary.main'} fontWeight=${800}>PLANNED SESSION</${Typography}><${Typography} variant="h6">${planLabel(plan)}</${Typography}><${Typography} variant="body2" color="text.secondary">${isRestType(plan)?'No missed-workout warning will be created for this planned recovery day.':'Log working sets; warm-ups are excluded from region coverage.'}</${Typography}></${Box}><${TextField} select size="small" label="Change" value=${plan} onChange=${e=>changePlan(e.target.value)} sx=${{minWidth:155}}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}></${CardShell}>
+      <${CardShell} sx=${{mb:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.4} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="overline" color=${isRestType(plan)?'secondary.main':'primary.main'} fontWeight=${800}>PLANNED SESSION</${Typography}><${Typography} variant="h6">${planLabel(plan)}</${Typography}><${Typography} variant="body2" color="text.secondary">${isRestType(plan)?'No missed-workout warning will be created for this planned recovery day.':'Log working sets; warm-ups are excluded from region coverage.'}</${Typography}></${Box}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1} sx=${{width:{xs:'100%',sm:'auto'}}}>${WORKOUT_TEMPLATES[plan]?html`<${Button} variant="outlined" onClick=${addStarterTemplate}>Add ${planLabel(plan)} starter</${Button}>`:null}<${TextField} select size="small" label="Change" value=${plan} onChange=${e=>changePlan(e.target.value)} sx=${{minWidth:{xs:'100%',sm:155}}}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}></${Stack}></${CardShell}>
 
       ${isRestType(plan)&&!currentWorkouts.length?html`<${Alert} severity="info" icon=${html`<${Icon} name="rest"/>`} sx=${{mb:2}}>${plan==='rest'?'Rest completely or take an easy walk.':plan==='active_recovery'?'Keep movement light enough that it supports recovery.':'Reduce training stress by lowering sets, load, or effort.'}</${Alert}>`:null}
 
@@ -537,7 +628,7 @@
         }):html`<${CardShell}><${Box} sx=${{textAlign:'center',py:4}}><${Avatar} sx=${{mx:'auto',mb:1.5,bgcolor:'primary.main',width:56,height:56}}><${Icon} name=${isRestType(plan)?'rest':'workout'}/></${Avatar}><${Typography} variant="h6">${isRestType(plan)?'Planned recovery day':'No exercises yet'}</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:.5,mb:2}}>${isRestType(plan)?'You can leave this day empty or log optional light work.':'Add the first exercise. Setline can prefill your previous performance.'}</${Typography}><${Button} variant="contained" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>setAddOpen(true)}>Add exercise</${Button}></${Box}></${CardShell}>`}
       </${Stack}>
       ${currentWorkouts.length?html`<${CardShell} sx=${{mt:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.2} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="h6">Finish the session</${Typography}><${Typography} variant="body2" color="text.secondary">Completed sets are saved continuously. This creates the final summary and streak moment.</${Typography}></${Box}><${Button} variant="contained" color="success" startIcon=${html`<${Icon} name="check"/>`} onClick=${completeWorkout}>Complete workout</${Button}></${Stack}></${CardShell}>`:null}
-      <${AddExerciseDialog} open=${addOpen} onClose=${()=>{setAddOpen(false);setEditIndex(null);}} data=${data} dateKey=${selectedDate} initial=${editIndex===null?null:currentWorkouts[editIndex]} onAdd=${addExercise}/>
+      <${AddExerciseDialog} open=${addOpen} onClose=${()=>{setAddOpen(false);setEditIndex(null);}} data=${data} dateKey=${selectedDate} initial=${editIndex===null?null:currentWorkouts[editIndex]} onAdd=${addExercise} plan=${plan}/>
       ${restUntil?html`<${RestTimer} until=${restUntil} onStop=${()=>setRestUntil(0)}/>`:null}
     </div>`;
   }
@@ -596,7 +687,7 @@
 
           ${meals.map(meal=>{const entries=day.calories.filter(item=>(item.meal||'Snack')===meal),mealTotals=nutritionTotals({calories:entries});return html`<${CardShell} key=${meal}>
             <${SectionHeading} title=${meal} subtitle=${entries.length?`${Math.round(mealTotals.kcal)} kcal · ${Math.round(mealTotals.protein)} g protein`:'Nothing logged'} action=${html`<${IconButton} color="secondary" aria-label=${`Add ${meal}`} onClick=${()=>{setEditItem(null);setDefaultMeal(meal);setDialogOpen(true);}}><${Icon} name="add"/></${IconButton}>`}/>
-            ${entries.length?html`<${Stack} spacing=${1}>${entries.map(item=>html`<${Paper} key=${item.id} variant="outlined" sx=${{p:1.3,borderRadius:3}}><div className="food-row"><div><${Typography} className="food-name" fontWeight=${750}>${item.name}</${Typography}><${Typography} variant="caption" color="text.secondary">${item.amount||1} ${item.unit||'serving'} · P ${round1(item.protein||0)} · C ${round1(item.carbs||0)} · F ${round1(item.fat||0)}</${Typography}></div><${Typography} className="food-kcal" fontWeight=${800} color="secondary.main">${Math.round(item.kcal||0)} kcal</${Typography}><div className="food-actions"><${IconButton} size="small" onClick=${()=>{setEditItem(item);setDefaultMeal(meal);setDialogOpen(true);}}><${Icon} name="edit" fontSize="small"/></${IconButton}><${IconButton} size="small" color="error" onClick=${()=>removeFood(item)}><${Icon} name="delete" fontSize="small"/></${IconButton}></div></div></${Paper}>`)}</${Stack}>`:html`<${Button} fullWidth variant="outlined" color="secondary" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>{setEditItem(null);setDefaultMeal(meal);setDialogOpen(true);}}>Add ${meal.toLowerCase()}</${Button}>`}
+            ${entries.length?html`<${Stack} spacing=${.9}>${entries.map(item=>html`<${Paper} key=${item.id} variant="outlined" sx=${{p:1.2,borderRadius:2}}><div className="food-row"><div className="food-copy"><${Typography} className="food-name" fontWeight=${750}>${item.name}</${Typography}><${Typography} className="food-meta" variant="caption" color="text.secondary">${item.amount||1} ${item.unit||'serving'} · P ${round1(item.protein||0)} · C ${round1(item.carbs||0)} · F ${round1(item.fat||0)}</${Typography}></div><${Typography} className="food-kcal" fontWeight=${800} color="secondary.main">${Math.round(item.kcal||0)} kcal</${Typography}><div className="food-actions"><${IconButton} size="small" aria-label=${`Edit ${item.name}`} onClick=${()=>{setEditItem(item);setDefaultMeal(meal);setDialogOpen(true);}}><${Icon} name="edit" fontSize="small"/></${IconButton}><${IconButton} size="small" color="error" aria-label=${`Delete ${item.name}`} onClick=${()=>removeFood(item)}><${Icon} name="delete" fontSize="small"/></${IconButton}></div></div></${Paper}>`)}</${Stack}>`:html`<${Button} fullWidth variant="outlined" color="secondary" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>{setEditItem(null);setDefaultMeal(meal);setDialogOpen(true);}}>Add ${meal.toLowerCase()}</${Button}>`}
           </${CardShell}>`;})}
         </${Stack}>
 
@@ -630,7 +721,7 @@
     const calendarDates=Array.from({length:28},(_,i)=>shiftDateKey(selectedDate,-(27-i)));
     return html`<div className="page-wrap">
       <${PageHeader} eyebrow="REVIEW" title="Progress" action=${html`<${ToggleButtonGroup} size="small" exclusive value=${period} onChange=${(_,v)=>v&&setPeriod(v)}><${ToggleButton} value=${7}>7D</${ToggleButton}><${ToggleButton} value=${30}>30D</${ToggleButton}></${ToggleButtonGroup}>`}/>
-      <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Report ending"/>
+      <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Report ending" sticky=${false}/>
       <div className="desktop-grid">
         <${Stack} spacing=${2}>
           <${CardShell}>
@@ -663,7 +754,7 @@
 
           <${CardShell}>
             <${SectionHeading} title="Action plan" subtitle="Based on the last seven days"/>
-            ${actionItems.length?html`<${Stack} spacing=${1}>${actionItems.map((item,index)=>html`<${Paper} key=${item.key} variant="outlined" sx=${{p:1.3,borderRadius:3}}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>PRIORITY ${index+1}</${Typography}><${Typography} fontWeight=${800}>${item.label}</${Typography}><${Typography} variant="body2" color="text.secondary">${item.value} of ${item.target} target sets. Consider ${REGION_SUGGESTIONS[item.key]?.slice(0,2).join(' or ')}.</${Typography}></${Paper}>`)}</${Stack}>`:html`<${Typography} variant="body2" color="text.secondary">No major low-coverage region is currently flagged.</${Typography}>`}
+            ${actionItems.length?html`<${Stack} spacing=${1.35}>${actionItems.map((item,index)=>html`<${Paper} key=${item.key} variant="outlined" sx=${{p:1.7,borderRadius:2,minWidth:0}}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>PRIORITY ${index+1}</${Typography}><${Typography} fontWeight=${800} sx=${{mt:.25}}>${item.label}</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:.45,lineHeight:1.55}}>${item.value} of ${item.target} target sets. Consider ${REGION_SUGGESTIONS[item.key]?.slice(0,2).join(' or ')}.</${Typography}></${Paper}>`)}</${Stack}>`:html`<${Typography} variant="body2" color="text.secondary">No major low-coverage region is currently flagged.</${Typography}>`}
           </${CardShell}>
         </${Stack}>
       </div>
@@ -700,11 +791,11 @@
     const habit=data.privateHabit||{}; const habitDays=habit.enabled&&habit.startDate?Math.max(0,Math.floor((dateFromKey(localDateKey())-dateFromKey(habit.startDate))/86400000)+1):0;
     const resetHabit=()=>{if(!confirm('Reset this private habit counter today?'))return;update(next=>{next.privateHabit.personalBest=Math.max(Number(next.privateHabit.personalBest)||0,habitDays);next.privateHabit.startDate=localDateKey();});showFeedback('Counter reset');};
     const weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-    return html`<div className="page-wrap">
+    return html`<div className="page-wrap profile-page">
       <${PageHeader} eyebrow="YOU" title="Profile" action=${html`<${Chip} label=${`v${APP_VERSION}`} variant="outlined"/>`}/>
       ${updateReady?html`<${Alert} severity="info" action=${html`<${Button} color="inherit" size="small" onClick=${applyUpdate}>Update now</${Button}>`} sx=${{mb:2}}>A new Setline version is ready. Your current data will remain in the permanent storage key.</${Alert}>`:null}
-      <div className="desktop-grid">
-        <${Stack} spacing=${2}>
+      <div className="desktop-grid profile-grid">
+        <${Stack} spacing=${2.5}>
           <${CardShell}>
             <${SectionHeading} title="Your profile" subtitle=${goalLabel(data.profile.goal)+' · '+data.profile.experience} action=${html`<${Button} size="small" onClick=${openOnboarding}>Run setup</${Button}>`}/>
             <${Stack} spacing=${1.5}><${TextField} label="Name" value=${profile.name||''} onChange=${e=>setProfile({...profile,name:e.target.value})}/><${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr',sm:'1fr 1fr'},gap:1}}><${TextField} select label="Goal" value=${profile.goal||'build_muscle'} onChange=${e=>setProfile({...profile,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}><${TextField} select label="Experience" value=${profile.experience||'intermediate'} onChange=${e=>setProfile({...profile,experience:e.target.value})}><${MenuItem} value="beginner">Beginner</${MenuItem}><${MenuItem} value="intermediate">Intermediate</${MenuItem}><${MenuItem} value="advanced">Advanced</${MenuItem}></${TextField}></${Box}><${TextField} label="Equipment" value=${(profile.equipment||[]).join(', ')} onChange=${e=>setProfile({...profile,equipment:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)})}/><${TextField} label="Movements to avoid" value=${profile.avoid||''} onChange=${e=>setProfile({...profile,avoid:e.target.value})}/><${Button} variant="contained" onClick=${saveProfile}>Save profile</${Button}></${Stack}>
@@ -731,11 +822,11 @@
           </${CardShell}>
         </${Stack}>
 
-        <${Stack} spacing=${2}>
+        <${Stack} spacing=${2.5}>
           <${CardShell}>
             <${SectionHeading} title="Daily targets" subtitle="Nutrition dashboard goals"/>
-            <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr',gap:1}}><${TextField} label="Calories" type="number" value=${data.calorieGoal} onChange=${e=>update(next=>next.calorieGoal=Number(e.target.value)||0)}/><${TextField} label="Protein (g)" type="number" value=${data.proteinGoal} onChange=${e=>update(next=>next.proteinGoal=Number(e.target.value)||0)}/><${TextField} label="Carbs (g)" type="number" value=${data.carbsGoal} onChange=${e=>update(next=>next.carbsGoal=Number(e.target.value)||0)}/><${TextField} label="Fat (g)" type="number" value=${data.fatGoal} onChange=${e=>update(next=>next.fatGoal=Number(e.target.value)||0)}/></${Box}>
-            <${TextField} select fullWidth label="Weight unit" value=${data.preferredUnit} onChange=${e=>update(next=>next.preferredUnit=e.target.value)} sx=${{mt:1}}><${MenuItem} value="kg">Kilograms</${MenuItem}><${MenuItem} value="lb">Pounds</${MenuItem}></${TextField}>
+            <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'1fr 1fr'},columnGap:1.5,rowGap:2}}><${TextField} label="Calories" type="number" value=${data.calorieGoal} onChange=${e=>update(next=>next.calorieGoal=Number(e.target.value)||0)}/><${TextField} label="Protein (g)" type="number" value=${data.proteinGoal} onChange=${e=>update(next=>next.proteinGoal=Number(e.target.value)||0)}/><${TextField} label="Carbs (g)" type="number" value=${data.carbsGoal} onChange=${e=>update(next=>next.carbsGoal=Number(e.target.value)||0)}/><${TextField} label="Fat (g)" type="number" value=${data.fatGoal} onChange=${e=>update(next=>next.fatGoal=Number(e.target.value)||0)}/></${Box}>
+            <${TextField} select fullWidth label="Weight unit" value=${data.preferredUnit} onChange=${e=>update(next=>next.preferredUnit=e.target.value)} sx=${{mt:2}}><${MenuItem} value="kg">Kilograms</${MenuItem}><${MenuItem} value="lb">Pounds</${MenuItem}></${TextField}>
           </${CardShell}>
 
           <${CardShell}>
@@ -797,7 +888,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1}}><${Typography} fontWeight=${800}>Setline 6.6 is here</${Typography}><${Typography} variant="caption" color="text.secondary">The biggest Setline update yet.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Layout fixes, tappable metrics and new workout starters.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

@@ -1,6 +1,6 @@
-# Setline 6.6.1
+# Setline 6.6.2
 
-Setline 6.6.1 is a GitHub Pages-ready PWA patch for the React + Material UI rebuild.
+Setline 6.6.2 is a GitHub Pages-ready PWA patch focused on professional onboarding, training-split support, streak presentation, and motion.
 
 ## Publish the update
 
@@ -16,18 +16,21 @@ Do not upload the ZIP itself or place these files inside another folder.
 ## Data safety
 
 - The permanent storage key remains `setline-data-v1`.
-- Updating GitHub files does not delete browser storage.
+- Run Setup changes the profile and weekly plan only; it does not delete workout or nutrition history.
+- Training days are stored independently from the seven-day plan.
 - Normal saves keep a last-good backup.
 - Exported JSON backups can be merged into the app.
 
-## 6.6.1 highlights
+## 6.6.2 highlights
 
-- Fixed Profile, Progress, Nutrition, and bottom-navigation clipping
-- Tappable Home metrics with quick actions and detail sheets
-- Seven-day mini trends and customizable Home card order
-- Push, Pull, Legs, Upper, Lower, and Full Body starter workouts
-- Random built-in streak Easter-egg messages
-- Light, dark, and system themes retained
+- Fixed training-days selection so 1–7 remains exactly as selected
+- Professional eight-step Run Setup wizard
+- Selectable equipment and movement-to-avoid options
+- Full Body, Upper/Lower, PPL, PPL + Upper/Lower, Bro Split, and Custom options
+- Exact weekly schedule preview and split mismatch warnings
+- Training Guide explanations for every split
+- Attributed public-domain streak Easter eggs and a continuously animated flame
+- Unified fluid transitions with reduced-motion support
 
 ## First load and offline use
 

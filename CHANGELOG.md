@@ -1,5 +1,29 @@
 # Changelog
 
+## 6.6.2 — August 5, 2026
+
+### Fixed
+- Training days in Run Setup now save as an independent 1–7 value instead of being inferred from the seven-day calendar
+- Generated weekly plans contain exactly the selected number of training days
+
+### New
+- Professional eight-step Run Setup with progress, previews and safer controls
+- Equipment selection cards and movement-to-avoid chips with an optional note
+- PPL + Upper/Lower and Bro Split options
+- Chest, Back, Shoulders and Arms session types with starter exercises
+- Full split explanations in the Training Guide, including recommended days, advantages, drawbacks and examples
+- Streak Easter eggs now show named attribution using public-domain quotations
+
+### Improved
+- Continuously animated streak flame with stronger milestone effects
+- Unified page, card, drawer, button, list and theme motion
+- Reduced Motion continues to suppress nonessential animation
+
+### Reliability
+- Permanent `setline-data-v1` storage key retained
+- Run Setup never removes workout, nutrition or progress history
+- New service-worker cache name forces installed PWAs to receive the patch
+
 ## 6.6.1 — August 5, 2026
 
 ### Fixed

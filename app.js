@@ -19,7 +19,7 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '6.6.1';
+  const APP_VERSION = '6.6.2';
   const RELEASE_DATE = 'August 5, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
@@ -117,10 +117,17 @@
     {term:'Superset',title:'Superset',summary:'Two exercises performed back-to-back before resting.',example:'Lateral raises marked Group A followed by triceps pushdowns marked Group A.',tags:['group']},
     {term:'Deload',title:'Deload',summary:'A planned reduction in training stress to manage accumulated fatigue.',example:'Keep the movements but reduce load, sets, or effort for several sessions.',tags:['recovery']},
     {term:'Active recovery',title:'Active Recovery',summary:'Low-intensity movement used instead of a normal hard workout.',example:'Easy walking, light cycling, or mobility work.',tags:['recovery']},
-    {term:'Progressive overload',title:'Progressive Overload',summary:'Gradually increase training demand while technique and recovery remain acceptable.',example:'Add one rep, a small amount of load, or an additional set—not everything at once.',tags:['progression']}
+    {term:'Progressive overload',title:'Progressive Overload',summary:'Gradually increase training demand while technique and recovery remain acceptable.',example:'Add one rep, a small amount of load, or an additional set—not everything at once.',tags:['progression']},
+    {term:'Full Body',title:'Full-Body Split',summary:'Each session trains most major muscle groups. It is efficient when you have fewer training days.',example:'Mon: Full Body · Wed: Full Body · Fri: Full Body',recommended:'2–4 days per week',advantages:'High training frequency, flexible scheduling, and fewer missed muscle groups.',drawbacks:'Sessions can become long if too many exercises are added.',bestFor:'Beginners, busy schedules, or anyone training two to four days.',tags:['split','program','beginner']},
+    {term:'Upper / Lower',title:'Upper–Lower Split',summary:'Upper-body sessions alternate with lower-body sessions so each area can be trained more than once weekly.',example:'Mon: Upper · Tue: Lower · Thu: Upper · Fri: Lower',recommended:'3–4 days per week',advantages:'Simple recovery pattern and balanced frequency.',drawbacks:'Upper sessions can become crowded if every arm and shoulder isolation is included.',bestFor:'Beginners through advanced lifters who want a balanced schedule.',tags:['split','program','upper lower']},
+    {term:'Push / Pull / Legs',title:'PPL Split',summary:'Push trains chest, shoulders and triceps; Pull trains back and biceps; Legs trains the lower body.',example:'Mon: Push · Wed: Pull · Fri: Legs, or repeat the cycle across six days.',recommended:'3 or 6 days per week',advantages:'Clear movement grouping and focused sessions.',drawbacks:'Missing one day can delay an entire muscle group unless the cycle is moved forward.',bestFor:'Intermediate lifters who enjoy focused sessions and consistent scheduling.',tags:['split','program','ppl','push pull legs']},
+    {term:'PPL + Upper / Lower',title:'PPLUL Hybrid Split',summary:'A five-session hybrid: three focused Push/Pull/Legs days followed by broader Upper and Lower sessions.',example:'Mon: Push · Tue: Pull · Wed: Legs · Fri: Upper · Sat: Lower',recommended:'5 days per week',advantages:'Combines focused sessions with a second weekly exposure for most muscle groups.',drawbacks:'Requires five reliable training days and fatigue must be managed carefully.',bestFor:'Intermediate or advanced lifters who recover well from five sessions.',tags:['split','program','pplul','hybrid']},
+    {term:'Bro Split',title:'Body-Part Split',summary:'Each session focuses mainly on one body area, commonly chest, back, shoulders, arms and legs.',example:'Mon: Chest · Tue: Back · Wed: Shoulders · Fri: Arms · Sat: Legs',recommended:'5 days per week',advantages:'Focused sessions, plenty of exercise variety, and easy local fatigue management.',drawbacks:'Most regions may be trained only once weekly; missing a day can mean missing that body part for the week.',bestFor:'Experienced lifters who prefer high-focus sessions and can train five days consistently.',tags:['split','program','bro split','body part']},
+    {term:'Custom Split',title:'Custom Weekly Split',summary:'Build your own weekly sequence using any combination of workout and recovery day types.',example:'Upper · Lower · Rest · Push · Pull · Rest · Active recovery',recommended:'1–7 planned days',advantages:'Maximum flexibility for work schedules, sport practice, and personal preferences.',drawbacks:'Balance and recovery depend on the quality of your plan.',bestFor:'Users who already understand their training needs.',tags:['split','program','custom']}
   ];
 
   const CHANGELOG = [
+    {version:'6.6.2',date:RELEASE_DATE,items:['Fixed the Run Setup training-days selector so 1–7 saves independently','Professional eight-step setup wizard with equipment and movement selections','Added PPL + Upper/Lower and Bro Split with exact weekly schedule previews','Added complete split explanations to the Training Guide','Streak flame now flickers continuously and Easter eggs show quote attribution','Added a unified fluid motion system with reduced-motion support']},
     {version:'6.6.1',date:RELEASE_DATE,items:['Fixed profile, progress and nutrition clipping and spacing','Tappable Home metrics with compact bottom-sheet details and shortcuts','Seven-day mini trends and customizable Home metric order','Upper and Lower starter workout templates alongside Push, Pull and Legs','Random streak-tap Easter-egg motivation lines','Improved bottom-navigation clearance and small-screen layout']},
     {version:'6.6.0',date:RELEASE_DATE,items:['Complete React and Material UI interface rebuild','Light, dark and system themes','Faster workout logging with previous-set prefilling','Searchable Training Guide with contextual explanations','Explainable weekly muscle-region coaching','Redesigned nutrition day view and food editor','Unified Progress hub, onboarding, changelog and data tools','Automatic pre-migration backup and non-destructive storage migration']},
     {version:'6.5.3',date:'August 2026',items:['Readiness guidance','Completion and streak animations','Deep navy visual refresh','Update and data-integrity tools']},
@@ -133,7 +140,7 @@
       days:{}, calorieGoal:3200, proteinGoal:160, carbsGoal:420, fatGoal:95,
       routines:{}, preferredUnit:'kg', bodyWeightKg:72, bodyWeights:{}, autoRest:true,
       restSeconds:90, machineProfiles:{}, liveSession:null, workoutDrafts:{},
-      profile:{name:'',goal:'build_muscle',experience:'intermediate',split:'push_pull_legs',trainingDays:4,equipment:['commercial_gym'],avoid:'',notes:''},
+      profile:{name:'',goal:'build_muscle',experience:'intermediate',split:'push_pull_legs',trainingDays:4,equipment:['commercial_gym'],avoid:'',avoidMovements:[],avoidNote:'',notes:''},
       regionTargets:{...DEFAULT_TARGETS}, foodLibrary:[], favoriteFoods:[], recentFoods:[], savedMeals:[],
       privateHabit:{enabled:false,label:'Private habit',startDate:'',personalBest:0,hideCount:true},
       schedule:{}, weeklyPlan:['push','pull','legs','rest','push','pull','rest'], autoShiftMissed:true,
@@ -153,7 +160,7 @@
       bodyWeights:parsed.bodyWeights&&typeof parsed.bodyWeights==='object'?parsed.bodyWeights:{},
       machineProfiles:parsed.machineProfiles&&typeof parsed.machineProfiles==='object'?parsed.machineProfiles:{},
       workoutDrafts:parsed.workoutDrafts&&typeof parsed.workoutDrafts==='object'?parsed.workoutDrafts:{},
-      profile:{...fallback.profile,...(parsed.profile||{})},
+      profile:{...fallback.profile,...(parsed.profile||{}),trainingDays:clamp(parsed.profile?.trainingDays??fallback.profile.trainingDays,1,7),equipment:Array.isArray(parsed.profile?.equipment)?parsed.profile.equipment:fallback.profile.equipment,avoidMovements:Array.isArray(parsed.profile?.avoidMovements)?parsed.profile.avoidMovements:(parsed.profile?.avoid?String(parsed.profile.avoid).split(',').map(v=>v.trim()).filter(Boolean):[])},
       regionTargets:{...fallback.regionTargets,...(parsed.regionTargets||{})},
       foodLibrary:Array.isArray(parsed.foodLibrary)?parsed.foodLibrary:[],
       favoriteFoods:Array.isArray(parsed.favoriteFoods)?parsed.favoriteFoods:[],
@@ -374,31 +381,106 @@
     const color=mode==='dark'?'#07111f':'#f5f7fb'; const tag=document.querySelector('meta[name="theme-color"]'); if(tag)tag.setAttribute('content',color);
   }
 
+  const EQUIPMENT_OPTIONS = [
+    {value:'commercial_gym',label:'Full gym',detail:'Machines, cables and free weights',emoji:'🏢'},
+    {value:'barbell',label:'Barbell',detail:'Rack and plates',emoji:'🏋️'},
+    {value:'dumbbells',label:'Dumbbells',detail:'Fixed or adjustable',emoji:'💪'},
+    {value:'cables',label:'Cable machine',detail:'Adjustable pulley station',emoji:'↔️'},
+    {value:'smith_machine',label:'Smith machine',detail:'Guided barbell',emoji:'▥'},
+    {value:'plate_loaded',label:'Plate-loaded machines',detail:'Leverage machines',emoji:'⚙️'},
+    {value:'selectorized',label:'Selectorized machines',detail:'Pin-loaded machines',emoji:'🎛️'},
+    {value:'bench',label:'Bench',detail:'Flat or adjustable',emoji:'▬'},
+    {value:'pullup_bar',label:'Pull-up bar',detail:'Pull-ups and hangs',emoji:'⌒'},
+    {value:'resistance_bands',label:'Resistance bands',detail:'Portable resistance',emoji:'〰️'},
+    {value:'kettlebells',label:'Kettlebells',detail:'Ballistic and strength work',emoji:'🔔'},
+    {value:'bodyweight',label:'Bodyweight only',detail:'No equipment required',emoji:'🧍'}
+  ];
+  const AVOID_OPTIONS = [
+    {value:'overhead_press',label:'Overhead pressing'},
+    {value:'bench_press',label:'Bench pressing'},
+    {value:'dips',label:'Dips'},
+    {value:'pullups',label:'Pull-ups / chin-ups'},
+    {value:'squats',label:'Squats'},
+    {value:'lunges',label:'Lunges / split squats'},
+    {value:'hip_hinge',label:'Deadlifts / hip hinges'},
+    {value:'running',label:'Running'},
+    {value:'jumping',label:'Jumping / impact'},
+    {value:'spinal_loading',label:'Heavy spinal loading'}
+  ];
+  const SPLIT_OPTIONS = [
+    {value:'full_body',label:'Full Body',days:'2–4 days',detail:'Train most major regions each session.'},
+    {value:'upper_lower',label:'Upper / Lower',days:'3–4 days',detail:'Alternate upper- and lower-body sessions.'},
+    {value:'push_pull_legs',label:'Push / Pull / Legs',days:'3 or 6 days',detail:'Group sessions by movement and muscle role.'},
+    {value:'ppl_upper_lower',label:'PPL + Upper / Lower',days:'5 days',detail:'Focused PPL days plus broader Upper and Lower days.'},
+    {value:'bro_split',label:'Bro Split',days:'5 days',detail:'Chest, Back, Shoulders, Arms and Legs days.'},
+    {value:'custom',label:'Custom',days:'1–7 days',detail:'Start with generic workout days and edit the calendar.'}
+  ];
+  const PLAN_POSITIONS={1:[0],2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,4,5],6:[0,1,2,3,4,5],7:[0,1,2,3,4,5,6]};
+
+  function splitInfo(value){return SPLIT_OPTIONS.find(option=>option.value===value)||SPLIT_OPTIONS[2];}
+  function splitWarning(split,days){
+    days=clamp(days,1,7);
+    if(split==='ppl_upper_lower'&&days!==5)return 'PPL + Upper / Lower is designed for five training days. Setline will still create exactly the number you selected.';
+    if(split==='bro_split'&&days!==5)return 'The Bro Split is most balanced with five days so every body-part day appears once.';
+    if(split==='push_pull_legs'&&![3,6].includes(days))return 'PPL is most balanced at three or six days. With this selection, continue the sequence rather than forcing every region into one week.';
+    if(split==='upper_lower'&&(days<3||days>4))return 'Upper / Lower usually works best across three or four days.';
+    if(split==='full_body'&&(days<2||days>4))return 'Full Body usually works best across two to four days.';
+    return '';
+  }
+  function generatePlan(split,days){
+    const safeDays=clamp(Math.round(Number(days)||4),1,7);
+    const cycles={
+      push_pull_legs:['push','pull','legs'],
+      upper_lower:['upper','lower'],
+      full_body:['full_body'],
+      ppl_upper_lower:['push','pull','legs','upper','lower'],
+      bro_split:['chest','back','shoulders','arms','legs'],
+      custom:['workout']
+    };
+    const cycle=cycles[split]||cycles.push_pull_legs;
+    const plan=Array(7).fill('rest');
+    (PLAN_POSITIONS[safeDays]||PLAN_POSITIONS[4]).forEach((position,index)=>{plan[position]=cycle[index%cycle.length];});
+    return plan;
+  }
+
+  function SelectableCard({selected,onClick,title,detail,badge,emoji}){
+    return html`<${Paper} component="button" type="button" onClick=${onClick} variant="outlined" className=${`setup-choice${selected?' selected':''}`} aria-pressed=${selected} sx=${{textAlign:'left',color:'text.primary',bgcolor:selected?'action.selected':'background.paper',borderColor:selected?'primary.main':'divider'}}><${Stack} direction="row" spacing=${1.2} alignItems="flex-start"><${Avatar} sx=${{width:38,height:38,bgcolor:selected?'primary.main':'action.hover',color:selected?'primary.contrastText':'text.primary',fontSize:18}}>${emoji||'✓'}</${Avatar}><${Box} sx=${{minWidth:0,flex:1}}><${Stack} direction="row" justifyContent="space-between" spacing=${1}><${Typography} fontWeight=${850}>${title}</${Typography}>${badge?html`<${Chip} label=${badge} size="small" variant=${selected?'filled':'outlined'} color=${selected?'primary':'default'}/>`:null}</${Stack}>${detail?html`<${Typography} variant="caption" color="text.secondary" sx=${{display:'block',mt:.35,lineHeight:1.45}}>${detail}</${Typography}>`:null}</${Box}></${Stack}></${Paper}>`;
+  }
+
   function OnboardingDialog({open,data,update,onClose}){
     const fullScreen=useMediaQuery(theme=>theme.breakpoints.down('sm'));
     const [step,setStep]=useState(0);
     const [draft,setDraft]=useState(()=>deepClone(data.profile));
     const [themeMode,setThemeMode]=useState(data.settings.theme||'system');
-    useEffect(()=>{if(open){setDraft(deepClone(data.profile));setThemeMode(data.settings.theme||'system');setStep(0);}},[open]);
-    const finish=()=>{update(next=>{next.profile={...next.profile,...draft,trainingDays:Number(draft.trainingDays)||4};next.settings.theme=themeMode;next.weeklyPlan=generatePlan(draft.split,Number(draft.trainingDays)||4);next.scheduleMeta.configured=true;next.onboardingComplete=true;});onClose();};
-    const steps=['Goal','Training','Preferences'];
-    return html`<${Dialog} open=${open} fullScreen=${fullScreen} maxWidth="sm" fullWidth onClose=${onClose}>
-      <${DialogTitle}>Set up Setline 6.6.1</${DialogTitle}>
-      <${DialogContent}>
-        <${Stepper} activeStep=${step} alternativeLabel sx=${{mb:3}}>${steps.map(label=>html`<${Step} key=${label}><${StepLabel}>${label}</${StepLabel}></${Step}>`)}</${Stepper}>
-        ${step===0?html`<${Stack} spacing=${2}><${TextField} label="Your name" value=${draft.name||''} onChange=${e=>setDraft({...draft,name:e.target.value})}/><${TextField} select label="Primary goal" value=${draft.goal||'build_muscle'} onChange=${e=>setDraft({...draft,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}></${Stack}>`:null}
-        ${step===1?html`<${Stack} spacing=${2}><${TextField} select label="Experience" value=${draft.experience||'intermediate'} onChange=${e=>setDraft({...draft,experience:e.target.value})}><${MenuItem} value="beginner">Beginner</${MenuItem}><${MenuItem} value="intermediate">Intermediate</${MenuItem}><${MenuItem} value="advanced">Advanced</${MenuItem}></${TextField}><${TextField} select label="Preferred split" value=${draft.split||'push_pull_legs'} onChange=${e=>setDraft({...draft,split:e.target.value})}><${MenuItem} value="push_pull_legs">Push / Pull / Legs</${MenuItem}><${MenuItem} value="upper_lower">Upper / Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="custom">Custom</${MenuItem}></${TextField}><${TextField} label="Training days each week" type="number" inputProps=${{min:1,max:7}} value=${draft.trainingDays||4} onChange=${e=>setDraft({...draft,trainingDays:clamp(e.target.value,1,7)})}/></${Stack}>`:null}
-        ${step===2?html`<${Stack} spacing=${2}><${TextField} label="Equipment" value=${(draft.equipment||[]).join(', ')} onChange=${e=>setDraft({...draft,equipment:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)})} helperText="Example: commercial gym, dumbbells, cables"/><${TextField} label="Movements to avoid" value=${draft.avoid||''} onChange=${e=>setDraft({...draft,avoid:e.target.value})} multiline minRows=${2}/><${ToggleButtonGroup} exclusive fullWidth value=${themeMode} onChange=${(_,v)=>v&&setThemeMode(v)}><${ToggleButton} value="light">Light</${ToggleButton}><${ToggleButton} value="dark">Dark</${ToggleButton}><${ToggleButton} value="system">System</${ToggleButton}></${ToggleButtonGroup}></${Stack}>`:null}
+    useEffect(()=>{if(open){const next=deepClone(data.profile);next.trainingDays=clamp(next.trainingDays??4,1,7);next.equipment=Array.isArray(next.equipment)?next.equipment:[];next.avoidMovements=Array.isArray(next.avoidMovements)?next.avoidMovements:[];setDraft(next);setThemeMode(data.settings.theme||'system');setStep(0);}},[open]);
+    const steps=['Goal','Experience','Training days','Split','Equipment','Avoid','Preview','Appearance'];
+    const trainingDays=clamp(draft.trainingDays??4,1,7);
+    const previewPlan=generatePlan(draft.split||'push_pull_legs',trainingDays);
+    const warning=splitWarning(draft.split||'push_pull_legs',trainingDays);
+    const toggleEquipment=value=>setDraft(current=>{const items=new Set(current.equipment||[]);items.has(value)?items.delete(value):items.add(value);return{...current,equipment:[...items]};});
+    const toggleAvoid=value=>setDraft(current=>{const items=new Set(current.avoidMovements||[]);items.has(value)?items.delete(value):items.add(value);return{...current,avoidMovements:[...items]};});
+    const finish=()=>{const safeDays=clamp(draft.trainingDays??4,1,7);update(next=>{const equipment=Array.isArray(draft.equipment)?draft.equipment:[];const avoidMovements=Array.isArray(draft.avoidMovements)?draft.avoidMovements:[];next.profile={...next.profile,...draft,trainingDays:safeDays,equipment,avoidMovements,avoid:avoidMovements.join(', '),avoidNote:draft.avoidNote||''};next.settings.theme=themeMode;next.weeklyPlan=generatePlan(draft.split,safeDays);next.scheduleMeta.configured=true;next.onboardingComplete=true;});onClose();};
+    return html`<${Dialog} open=${open} fullScreen=${fullScreen} maxWidth="md" fullWidth onClose=${onClose} PaperProps=${{className:'setup-dialog'}}>
+      <${DialogTitle} sx=${{pb:1}}><${Stack} direction="row" alignItems="center" justifyContent="space-between" spacing=${2}><${Box}><${Typography} variant="overline" color="primary.main" fontWeight=${900}>SETLINE 6.6.2</${Typography}><${Typography} variant="h5">Run Setup</${Typography}></${Box}><${IconButton} onClick=${onClose} aria-label="Close setup"><${Icon} name="close"/></${IconButton}></${Stack}></${DialogTitle}>
+      <${DialogContent} dividers>
+        <${Box} sx=${{mb:2.5}}><${Stack} direction="row" justifyContent="space-between" alignItems="center" sx=${{mb:.7}}><${Typography} variant="body2" fontWeight=${850}>${steps[step]}</${Typography}><${Typography} variant="caption" color="text.secondary">Step ${step+1} of ${steps.length}</${Typography}></${Stack}><${LinearProgress} variant="determinate" value=${((step+1)/steps.length)*100} sx=${{height:7,borderRadius:99}}/></${Box}>
+        <div className="setup-step" key=${step}>
+          ${step===0?html`<${Stack} spacing=${2}><${TextField} label="Your name" value=${draft.name||''} onChange=${e=>setDraft({...draft,name:e.target.value})}/><${Typography} fontWeight=${800}>Primary goal</${Typography}><div className="setup-choice-grid">${[
+            ['build_muscle','Build muscle','Prioritize hypertrophy and weekly region coverage','💪'],['strength','Build strength','Track progressive loading and personal records','🏋️'],['fat_loss','Fat loss','Combine resistance training with nutrition targets','⚡'],['general','General fitness','Build consistency, strength and health','🌱']
+          ].map(([value,title,detail,emoji])=>html`<${SelectableCard} key=${value} selected=${draft.goal===value} onClick=${()=>setDraft({...draft,goal:value})} title=${title} detail=${detail} emoji=${emoji}/>` )}</div></${Stack}>`:null}
+          ${step===1?html`<${Stack} spacing=${2}><${Typography} fontWeight=${800}>Training experience</${Typography}><div className="setup-choice-grid">${[
+            ['beginner','Beginner','Still building technique and consistency','1'],['intermediate','Intermediate','Comfortable with major exercises and progression','2'],['advanced','Advanced','Experienced with programming and fatigue management','3']
+          ].map(([value,title,detail,emoji])=>html`<${SelectableCard} key=${value} selected=${draft.experience===value} onClick=${()=>setDraft({...draft,experience:value})} title=${title} detail=${detail} emoji=${emoji}/>` )}</div></${Stack}>`:null}
+          ${step===2?html`<${Stack} spacing=${2}><${Box}><${Typography} variant="h6">How many days can you train?</${Typography}><${Typography} variant="body2" color="text.secondary">This value is saved separately from the seven-day calendar and will not reset itself.</${Typography}></${Box}><div className="training-days-grid">${[1,2,3,4,5,6,7].map(day=>html`<${Button} key=${day} className=${trainingDays===day?'selected':''} variant=${trainingDays===day?'contained':'outlined'} onClick=${()=>setDraft({...draft,trainingDays:day})}><span>${day}</span><small>${day===1?'day':'days'}</small></${Button}>`)}</div><${Alert} severity="info">Selected: <b>${trainingDays} training day${trainingDays===1?'':'s'} per week</b>.</${Alert}></${Stack}>`:null}
+          ${step===3?html`<${Stack} spacing=${1.2}><${Box}><${Typography} variant="h6">Preferred training split</${Typography}><${Typography} variant="body2" color="text.secondary">You can edit any individual day later without changing workout history.</${Typography}></${Box}><div className="setup-choice-grid">${SPLIT_OPTIONS.map(option=>html`<${SelectableCard} key=${option.value} selected=${draft.split===option.value} onClick=${()=>setDraft({...draft,split:option.value})} title=${option.label} detail=${option.detail} badge=${option.days}/>` )}</div>${warning?html`<${Alert} severity="warning">${warning}</${Alert}>`:null}</${Stack}>`:null}
+          ${step===4?html`<${Stack} spacing=${1.5}><${Box}><${Typography} variant="h6">Available equipment</${Typography}><${Typography} variant="body2" color="text.secondary">Select everything you can reliably use. Setline will use this for substitutions and starter plans.</${Typography}></${Box}><div className="setup-choice-grid equipment-grid">${EQUIPMENT_OPTIONS.map(option=>html`<${SelectableCard} key=${option.value} selected=${(draft.equipment||[]).includes(option.value)} onClick=${()=>toggleEquipment(option.value)} title=${option.label} detail=${option.detail} emoji=${option.emoji}/>` )}</div>${!(draft.equipment||[]).length?html`<${Alert} severity="info">No equipment selected. Bodyweight suggestions will remain available.</${Alert}>`:null}</${Stack}>`:null}
+          ${step===5?html`<${Stack} spacing=${1.5}><${Box}><${Typography} variant="h6">Movements to avoid</${Typography}><${Typography} variant="body2" color="text.secondary">Optional. Select movements you do not want Setline to suggest. This is not medical screening.</${Typography}></${Box}><${Box} sx=${{display:'flex',gap:.8,flexWrap:'wrap'}}>${AVOID_OPTIONS.map(option=>html`<${Chip} key=${option.value} clickable label=${option.label} color=${(draft.avoidMovements||[]).includes(option.value)?'error':'default'} variant=${(draft.avoidMovements||[]).includes(option.value)?'filled':'outlined'} onClick=${()=>toggleAvoid(option.value)} />`)}</${Box}><${TextField} label="Optional note" placeholder="Example: left shoulder discomfort during overhead pressing" value=${draft.avoidNote||''} onChange=${e=>setDraft({...draft,avoidNote:e.target.value})} multiline minRows=${2}/>${!(draft.avoidMovements||[]).length?html`<${Alert} severity="success">No movements selected to avoid.</${Alert}>`:null}</${Stack}>`:null}
+          ${step===6?html`<${Stack} spacing=${1.5}><${Box}><${Typography} variant="h6">Your weekly preview</${Typography}><${Typography} variant="body2" color="text.secondary">${splitInfo(draft.split).label} · ${trainingDays} training day${trainingDays===1?'':'s'}</${Typography}></${Box}>${warning?html`<${Alert} severity="warning">${warning}</${Alert}>`:null}<${Paper} variant="outlined" className="schedule-preview"><${Stack} spacing=${.6}>${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((day,index)=>html`<${Stack} key=${day} direction="row" alignItems="center" justifyContent="space-between" sx=${{p:1,borderRadius:2,bgcolor:isRestType(previewPlan[index])?'transparent':'action.selected'}}><${Typography} variant="body2" fontWeight=${750}>${day}</${Typography}><${Chip} label=${planLabel(previewPlan[index])} size="small" color=${isRestType(previewPlan[index])?'default':'primary'} variant=${isRestType(previewPlan[index])?'outlined':'filled'}/></${Stack}>`)}</${Stack}></${Paper}><${Alert} severity="info">Finishing setup updates the plan only. Existing workouts, meals, bodyweight and history remain untouched.</${Alert}></${Stack}>`:null}
+          ${step===7?html`<${Stack} spacing=${2}><${Box}><${Typography} variant="h6">Appearance</${Typography}><${Typography} variant="body2" color="text.secondary">Choose a theme now; it can be changed later in Profile.</${Typography}></${Box}><${ToggleButtonGroup} exclusive fullWidth value=${themeMode} onChange=${(_,value)=>value&&setThemeMode(value)}><${ToggleButton} value="light">Light</${ToggleButton}><${ToggleButton} value="dark">Dark</${ToggleButton}><${ToggleButton} value="system">System</${ToggleButton}></${ToggleButtonGroup}><${Paper} variant="outlined" sx=${{p:2,borderRadius:3}}><${Typography} fontWeight=${850}>Ready to build your plan</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:.5}}>${splitInfo(draft.split).label}, ${trainingDays} day${trainingDays===1?'':'s'}, ${(draft.equipment||[]).length} equipment option${(draft.equipment||[]).length===1?'':'s'}.</${Typography}></${Paper}></${Stack}>`:null}
+        </div>
       </${DialogContent}>
-      <${DialogActions}><${Button} onClick=${onClose}>Skip</${Button}>${step>0?html`<${Button} onClick=${()=>setStep(step-1)}>Back</${Button}>`:null}<${Button} variant="contained" onClick=${()=>step<steps.length-1?setStep(step+1):finish()}>${step<steps.length-1?'Next':'Finish setup'}</${Button}></${DialogActions}>
+      <${DialogActions} sx=${{px:2.5,py:1.5}}><${Button} onClick=${onClose}>Skip</${Button}><${Box} sx=${{flex:1}}/>${step>0?html`<${Button} onClick=${()=>setStep(value=>value-1)}>Back</${Button}>`:null}<${Button} variant="contained" onClick=${()=>step<steps.length-1?setStep(value=>value+1):finish()}>${step<steps.length-1?'Continue':'Finish setup'}</${Button}></${DialogActions}>
     </${Dialog}>`;
-  }
-  function generatePlan(split,days){
-    const templates={push_pull_legs:['push','pull','legs','rest','push','pull','rest'],upper_lower:['upper','lower','rest','upper','lower','rest','rest'],full_body:['full_body','rest','full_body','rest','full_body','rest','rest'],custom:['workout','rest','workout','rest','workout','rest','rest']};
-    const base=[...(templates[split]||templates.push_pull_legs)]; let active=base.filter(x=>!isRestType(x)).length;
-    for(let i=6;i>=0&&active>days;i--)if(!isRestType(base[i])){base[i]='rest';active--;}
-    for(let i=0;i<7&&active<days;i++)if(isRestType(base[i])){base[i]=split==='full_body'?'full_body':'workout';active++;}
-    return base;
   }
 
   function ensureDayMutable(data,key){
@@ -410,24 +492,18 @@
     return data.days[key];
   }
   function goalLabel(goal){return({build_muscle:'Build muscle',strength:'Build strength',fat_loss:'Fat loss',general:'General fitness'})[goal]||'Build muscle';}
-  function planLabel(type){return({push:'Push',pull:'Pull',legs:'Legs',upper:'Upper',lower:'Lower',full_body:'Full body',workout:'Workout',rest:'Rest day',active_recovery:'Active recovery',deload:'Deload'})[type]||String(type||'Rest').replaceAll('_',' ');}
+  function planLabel(type){return({push:'Push',pull:'Pull',legs:'Legs',upper:'Upper',lower:'Lower',full_body:'Full body',chest:'Chest',back:'Back',shoulders:'Shoulders',arms:'Arms',workout:'Workout',rest:'Rest day',active_recovery:'Active recovery',deload:'Deload'})[type]||String(type||'Rest').replaceAll('_',' ');}
   function statusColor(status){return status==='good'?'success.main':status==='high'?'warning.main':status==='low'?'secondary.main':'error.main';}
   function regionHex(status){return status==='good'?'#43D69E':status==='high'?'#FFB547':status==='low'?'#FFB547':'#FF7082';}
   function weightDisplay(data,kg){if(!Number.isFinite(Number(kg))||Number(kg)<=0)return '—';return data.preferredUnit==='lb'?round1(Number(kg)*2.20462)+' lb':round1(kg)+' kg';}
 
   const STREAK_QUOTES = [
-    'Keep moving, especially when progress feels invisible.',
-    'A difficult day still counts when you refuse to quit.',
-    'Discipline is built on the days motivation stays silent.',
-    'The next rep is small. The person it builds is not.',
-    'Strength grows quietly before anyone else can see it.',
-    'Rest when it is planned. Return when it is time.',
-    'You do not need a perfect week. You need an honest one.',
-    'The path gets lighter only after you become stronger.',
-    'Today’s effort is a message to the person you are becoming.',
-    'Even a scar can become proof that you kept moving.',
-    'Do not chase the feeling of progress. Build the evidence.',
-    'One more disciplined choice can change the direction of a day.'
+    {text:'No longer talk at all about the kind of man that a good man ought to be, but be such.',author:'Marcus Aurelius'},
+    {text:'No man is free who is not master of himself.',author:'Epictetus'},
+    {text:'Difficulties strengthen the mind, as well as labor does the body.',author:'Seneca'},
+    {text:'A ship should not ride on a single anchor, nor life on a single hope.',author:'Epictetus'},
+    {text:'Choose the life that is noblest, for custom can make it sweet to thee.',author:'Epictetus'},
+    {text:'All things are change, yet we need not fear anything new.',author:'Marcus Aurelius'}
   ];
   const HOME_CARD_LABELS={calories:'Calories',protein:'Protein',readiness:'Readiness',bodyweight:'Bodyweight'};
 
@@ -461,7 +537,8 @@
   }
 
   function StreakEasterEgg({quote,open,onClose,streak}){
-    return html`<${Drawer} anchor="bottom" open=${open} onClose=${onClose} PaperProps=${{sx:{borderTopLeftRadius:28,borderTopRightRadius:28,pb:'calc(16px + env(safe-area-inset-bottom))'}}}><${Box} sx=${{width:'min(100%,620px)',mx:'auto',p:2.5,textAlign:'center'}}><div className="easter-flame">🔥</div><${Typography} variant="overline" color="secondary.main" fontWeight=${900}>${streak} DAY STREAK</${Typography}><${Typography} variant="h6" sx=${{mt:1,lineHeight:1.45}}>“${quote}”</${Typography}><${Typography} variant="caption" color="text.secondary" sx=${{display:'block',mt:1.2}}>A hidden Setline message</${Typography}><${Button} sx=${{mt:2}} onClick=${onClose}>Keep going</${Button}></${Box}></${Drawer}>`;
+    const item=quote||STREAK_QUOTES[0];
+    return html`<${Drawer} anchor="bottom" open=${open} onClose=${onClose} PaperProps=${{sx:{borderTopLeftRadius:28,borderTopRightRadius:28,pb:'calc(16px + env(safe-area-inset-bottom))'}}}><${Box} sx=${{width:'min(100%,620px)',mx:'auto',p:2.5,textAlign:'center'}}><div className="easter-flame flame-stage" aria-hidden="true"><span className="flame-glow"></span><span className="flame-main">🔥</span><span className="flame-spark one">✦</span><span className="flame-spark two">•</span></div><${Typography} variant="overline" color="secondary.main" fontWeight=${900}>${streak} DAY STREAK</${Typography}><${Typography} variant="h6" sx=${{mt:1,lineHeight:1.45}}>“${item.text}”</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{display:'block',mt:1.2,fontWeight:750}}>— ${item.author}</${Typography}><${Button} sx=${{mt:2}} onClick=${onClose}>Keep going</${Button}></${Box}></${Drawer}>`;
   }
 
   function HomePage({data,update,navigate,openGuide,showFeedback}){
@@ -489,7 +566,7 @@
     return html`<div className="page-wrap home-page">
       <${Box} sx=${{display:'flex',alignItems:'center',justifyContent:'space-between',gap:2,mb:2}}>
         <${Stack} direction="row" spacing=${1.4} alignItems="center" sx=${{minWidth:0}}><${Avatar} src="./setline-s.svg" variant="rounded" sx=${{width:48,height:48,bgcolor:'primary.main'}}/><${Box} sx=${{minWidth:0}}><${Typography} variant="caption" color="text.secondary" fontWeight=${700}>${greeting}${firstName?`, ${firstName}`:''}</${Typography}><${Typography} variant="h4">Setline</${Typography}></${Box}></${Stack}>
-        <${Chip} clickable onClick=${openQuote} aria-label="Open streak Easter egg" icon=${html`<span className="streak-flame">🔥</span>`} label=${`${streak} day${streak===1?'':'s'}`} color="warning" variant="outlined"/>
+        <${Chip} clickable onClick=${openQuote} aria-label="Open streak Easter egg" icon=${html`<span className=${`streak-flame streak-level-${streak>=100?4:streak>=30?3:streak>=7?2:streak>0?1:0}`} aria-hidden="true"><span>🔥</span></span>`} label=${`${streak} day${streak===1?'':'s'}`} color="warning" variant="outlined"/>
       </${Box}>
 
       <${CardShell} sx=${{mb:2,background:theme=>theme.palette.mode==='dark'?'linear-gradient(135deg,#162a4a,#101c2d)':'linear-gradient(135deg,#e7efff,#ffffff)'}}>
@@ -546,7 +623,11 @@
     legs:['Hack Squat','Romanian Deadlift','Leg Curl','Calf Raise'],
     upper:['Incline Dumbbell Press','Lat Pulldown','Shoulder Press','Seated Cable Row','Cable Lateral Raise','Rope Triceps Pushdown','Preacher Curl'],
     lower:['Hack Squat','Romanian Deadlift','Leg Curl','Hip Thrust','Calf Raise','Cable Crunch'],
-    full_body:['Chest Press','Lat Pulldown','Hack Squat','Romanian Deadlift','Cable Lateral Raise','Cable Crunch']
+    full_body:['Chest Press','Lat Pulldown','Hack Squat','Romanian Deadlift','Cable Lateral Raise','Cable Crunch'],
+    chest:['Incline Dumbbell Press','Chest Press','Cable Fly','Push-Up'],
+    back:['Lat Pulldown','Chest-Supported Row','Seated Cable Row','Face Pull'],
+    shoulders:['Shoulder Press','Cable Lateral Raise','Rear Delt Fly','Face Pull'],
+    arms:['Preacher Curl','Hammer Curl','Rope Triceps Pushdown','Overhead Triceps Extension']
   };
 
   function AddExerciseDialog({open,onClose,data,dateKey,onAdd,initial=null,plan='workout'}){
@@ -599,7 +680,7 @@
       <${PageHeader} eyebrow="TRAIN" title="Workout" action=${html`<${Button} variant="contained" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>setAddOpen(true)}>Exercise</${Button}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Workout date"/>
 
-      <${CardShell} sx=${{mb:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.4} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="overline" color=${isRestType(plan)?'secondary.main':'primary.main'} fontWeight=${800}>PLANNED SESSION</${Typography}><${Typography} variant="h6">${planLabel(plan)}</${Typography}><${Typography} variant="body2" color="text.secondary">${isRestType(plan)?'No missed-workout warning will be created for this planned recovery day.':'Log working sets; warm-ups are excluded from region coverage.'}</${Typography}></${Box}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1} sx=${{width:{xs:'100%',sm:'auto'}}}>${WORKOUT_TEMPLATES[plan]?html`<${Button} variant="outlined" onClick=${addStarterTemplate}>Add ${planLabel(plan)} starter</${Button}>`:null}<${TextField} select size="small" label="Change" value=${plan} onChange=${e=>changePlan(e.target.value)} sx=${{minWidth:{xs:'100%',sm:155}}}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}></${Stack}></${CardShell}>
+      <${CardShell} sx=${{mb:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.4} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="overline" color=${isRestType(plan)?'secondary.main':'primary.main'} fontWeight=${800}>PLANNED SESSION</${Typography}><${Typography} variant="h6">${planLabel(plan)}</${Typography}><${Typography} variant="body2" color="text.secondary">${isRestType(plan)?'No missed-workout warning will be created for this planned recovery day.':'Log working sets; warm-ups are excluded from region coverage.'}</${Typography}></${Box}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1} sx=${{width:{xs:'100%',sm:'auto'}}}>${WORKOUT_TEMPLATES[plan]?html`<${Button} variant="outlined" onClick=${addStarterTemplate}>Add ${planLabel(plan)} starter</${Button}>`:null}<${TextField} select size="small" label="Change" value=${plan} onChange=${e=>changePlan(e.target.value)} sx=${{minWidth:{xs:'100%',sm:155}}}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="chest">Chest</${MenuItem}><${MenuItem} value="back">Back</${MenuItem}><${MenuItem} value="shoulders">Shoulders</${MenuItem}><${MenuItem} value="arms">Arms</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}></${Stack}></${CardShell}>
 
       ${isRestType(plan)&&!currentWorkouts.length?html`<${Alert} severity="info" icon=${html`<${Icon} name="rest"/>`} sx=${{mb:2}}>${plan==='rest'?'Rest completely or take an easy walk.':plan==='active_recovery'?'Keep movement light enough that it supports recovery.':'Reduce training stress by lowering sets, load, or effort.'}</${Alert}>`:null}
 
@@ -767,8 +848,8 @@
     const filtered=GUIDE_ITEMS.filter(item=>`${item.term} ${item.title} ${item.summary} ${item.tags.join(' ')}`.toLowerCase().includes(query.toLowerCase()));
     return html`<${Dialog} open=${open} onClose=${onClose} maxWidth="md" fullWidth scroll="paper">
       <${DialogTitle} sx=${{display:'flex',alignItems:'center',justifyContent:'space-between'}}><span>Training Guide</span><${IconButton} onClick=${onClose}><${Icon} name="close"/></${IconButton}></${DialogTitle}>
-      <${DialogContent} dividers><${TextField} fullWidth placeholder="Search RIR, RPE, AMRAP, drop set…" value=${query} onChange=${e=>setQuery(e.target.value)} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}} sx=${{mb:2}}/>
-        ${filtered.length?filtered.map(item=>html`<${Accordion} key=${item.term} defaultExpanded=${query&&(`${item.term} ${item.title}`.toLowerCase().includes(query.toLowerCase()))} disableGutters><${AccordionSummary} expandIcon=${html`<${Icon} name="chevron"/>`}><${Box}><${Typography} fontWeight=${800}>${item.term}</${Typography}><${Typography} variant="caption" color="text.secondary">${item.title}</${Typography}></${Box}></${AccordionSummary}><${AccordionDetails}><${Typography} className="guide-copy" variant="body2">${item.summary}</${Typography}><${Typography} className="guide-example" variant="body2" color="primary.main"><b>Example:</b> ${item.example}</${Typography}></${AccordionDetails}></${Accordion}>`):html`<${Alert} severity="info">No guide entry matches that search.</${Alert}>`}
+      <${DialogContent} dividers><${TextField} fullWidth placeholder="Search RIR, RPE, AMRAP, PPL, Bro Split…" value=${query} onChange=${e=>setQuery(e.target.value)} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}} sx=${{mb:2}}/>
+        ${filtered.length?filtered.map(item=>html`<${Accordion} key=${item.term} defaultExpanded=${query&&(`${item.term} ${item.title}`.toLowerCase().includes(query.toLowerCase()))} disableGutters><${AccordionSummary} expandIcon=${html`<${Icon} name="chevron"/>`}><${Box}><${Typography} fontWeight=${800}>${item.term}</${Typography}><${Typography} variant="caption" color="text.secondary">${item.title}</${Typography}></${Box}></${AccordionSummary}><${AccordionDetails}><${Typography} className="guide-copy" variant="body2">${item.summary}</${Typography}>${item.recommended?html`<${Box} className="guide-facts" sx=${{mt:1.4}}><${Typography} variant="body2"><b>Recommended:</b> ${item.recommended}</${Typography}><${Typography} variant="body2" sx=${{mt:.7}}><b>Advantages:</b> ${item.advantages}</${Typography}><${Typography} variant="body2" sx=${{mt:.7}}><b>Watch for:</b> ${item.drawbacks}</${Typography}><${Typography} variant="body2" sx=${{mt:.7}}><b>Best for:</b> ${item.bestFor}</${Typography}></${Box}>`:null}<${Typography} className="guide-example" variant="body2" color="primary.main"><b>Example:</b> ${item.example}</${Typography}></${AccordionDetails}></${Accordion}>`):html`<${Alert} severity="info">No guide entry matches that search.</${Alert}>`}
       </${DialogContent}>
       <${DialogActions}><${Button} onClick=${onClose}>Close</${Button}></${DialogActions}>
     </${Dialog}>`;
@@ -798,7 +879,7 @@
         <${Stack} spacing=${2.5}>
           <${CardShell}>
             <${SectionHeading} title="Your profile" subtitle=${goalLabel(data.profile.goal)+' · '+data.profile.experience} action=${html`<${Button} size="small" onClick=${openOnboarding}>Run setup</${Button}>`}/>
-            <${Stack} spacing=${1.5}><${TextField} label="Name" value=${profile.name||''} onChange=${e=>setProfile({...profile,name:e.target.value})}/><${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr',sm:'1fr 1fr'},gap:1}}><${TextField} select label="Goal" value=${profile.goal||'build_muscle'} onChange=${e=>setProfile({...profile,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}><${TextField} select label="Experience" value=${profile.experience||'intermediate'} onChange=${e=>setProfile({...profile,experience:e.target.value})}><${MenuItem} value="beginner">Beginner</${MenuItem}><${MenuItem} value="intermediate">Intermediate</${MenuItem}><${MenuItem} value="advanced">Advanced</${MenuItem}></${TextField}></${Box}><${TextField} label="Equipment" value=${(profile.equipment||[]).join(', ')} onChange=${e=>setProfile({...profile,equipment:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)})}/><${TextField} label="Movements to avoid" value=${profile.avoid||''} onChange=${e=>setProfile({...profile,avoid:e.target.value})}/><${Button} variant="contained" onClick=${saveProfile}>Save profile</${Button}></${Stack}>
+            <${Stack} spacing=${1.5}><${TextField} label="Name" value=${profile.name||''} onChange=${e=>setProfile({...profile,name:e.target.value})}/><${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr',sm:'1fr 1fr'},gap:1}}><${TextField} select label="Goal" value=${profile.goal||'build_muscle'} onChange=${e=>setProfile({...profile,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}><${TextField} select label="Experience" value=${profile.experience||'intermediate'} onChange=${e=>setProfile({...profile,experience:e.target.value})}><${MenuItem} value="beginner">Beginner</${MenuItem}><${MenuItem} value="intermediate">Intermediate</${MenuItem}><${MenuItem} value="advanced">Advanced</${MenuItem}></${TextField}></${Box}><${Alert} severity="info"><b>${splitInfo(profile.split).label}</b> · ${clamp(profile.trainingDays,1,7)} training day${clamp(profile.trainingDays,1,7)===1?'':'s'}. Use <b>Run setup</b> to change split, equipment or movement restrictions safely.</${Alert}><${TextField} label="Equipment" value=${(profile.equipment||[]).join(', ')} onChange=${e=>setProfile({...profile,equipment:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)})}/><${TextField} label="Movements to avoid" value=${profile.avoid||''} onChange=${e=>setProfile({...profile,avoid:e.target.value})}/><${Button} variant="contained" onClick=${saveProfile}>Save profile</${Button}></${Stack}>
           </${CardShell}>
 
           <${CardShell}>
@@ -810,7 +891,7 @@
 
           <${CardShell}>
             <${SectionHeading} title="Weekly schedule" subtitle="Rest, active recovery and deload are real plan types"/>
-            <${Stack} spacing=${1}>${weekdays.map((day,index)=>html`<${Stack} key=${day} direction="row" spacing=${1} alignItems="center"><${Typography} variant="body2" fontWeight=${700} sx=${{width:86,flexShrink:0}}>${day}</${Typography}><${TextField} select fullWidth value=${data.weeklyPlan[index]} onChange=${e=>savePlan(index,e.target.value)}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="workout">Workout</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}>`)}</${Stack}><${FormControlLabel} sx=${{mt:1}} control=${html`<${Switch} checked=${data.autoShiftMissed!==false} onChange=${e=>update(next=>next.autoShiftMissed=e.target.checked)}/>`} label="Move a missed workout forward"/>
+            <${Stack} spacing=${1}>${weekdays.map((day,index)=>html`<${Stack} key=${day} direction="row" spacing=${1} alignItems="center"><${Typography} variant="body2" fontWeight=${700} sx=${{width:86,flexShrink:0}}>${day}</${Typography}><${TextField} select fullWidth value=${data.weeklyPlan[index]} onChange=${e=>savePlan(index,e.target.value)}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="chest">Chest</${MenuItem}><${MenuItem} value="back">Back</${MenuItem}><${MenuItem} value="shoulders">Shoulders</${MenuItem}><${MenuItem} value="arms">Arms</${MenuItem}><${MenuItem} value="workout">Workout</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}>`)}</${Stack}><${FormControlLabel} sx=${{mt:1}} control=${html`<${Switch} checked=${data.autoShiftMissed!==false} onChange=${e=>update(next=>next.autoShiftMissed=e.target.checked)}/>`} label="Move a missed workout forward"/>
           </${CardShell}>
 
           <${CardShell}>
@@ -888,7 +969,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Layout fixes, tappable metrics and new workout starters.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Setup fix, new splits, attributed streak Easter eggs and fluid motion.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

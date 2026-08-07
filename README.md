@@ -1,52 +1,45 @@
-# Setline 6.6.4
+# Setline 7.0.0
 
-Setline 6.6.4 is a compact reliability patch focused on fast workout logging, correct exercise metadata, and a keyboard-safe nutrition flow.
+Setline 7 is the largest interface and progression update so far. It keeps the permanent `setline-data-v1` storage key and migrates existing records without rewriting completed load values or units.
 
 ## Publish the update
 
-1. Open Setline and export a backup from **Profile → Data and reliability**.
+1. Export a backup from **Profile → Data and reliability**.
 2. Unzip this package.
-3. Upload **all files inside this folder** to the root of the GitHub `Setline` repository.
+3. Upload every file inside the folder to the root of the GitHub `Setline` repository.
 4. Replace matching files and commit to `main`.
-5. Wait for GitHub Pages to deploy, open the website in the browser, and refresh once.
-6. Reopen the installed app and use the **Update** banner when it appears.
+5. Wait for GitHub Pages to deploy, refresh the website once, and reopen the installed app.
 
-Do not upload the ZIP itself or place these files inside another folder.
+Do not upload the ZIP itself or place the files inside an extra folder.
+
+## Setline 7 highlights
+
+- Custom minimal interface with compact type, thin separators, smaller controls and restrained color
+- Workout Focus Mode with previous performance, load, reps, RIR, completion and set removal
+- Setline XP, levels and ranks based on consistency and completed work—not raw strength
+- Weekly missions for sessions, working sets, protein consistency and muscle-region coverage
+- Exercise mastery tiers: Beginner, Consistent, Skilled and Mastered
+- Personal milestone map and guilt-free Comeback Mode
+- Existing workouts, nutrition, mixed kg/lb history, profile, recovery and schedule remain intact
+
+## Point-system rules
+
+XP rewards completed sessions, quality working sets, personal records, planned recovery and consistency milestones. It does not reward training to failure, extreme volume, or lifting more than other users. Useful tracking features are never locked behind XP.
 
 ## Data safety
 
-- The permanent storage key remains `setline-data-v1`.
-- Run Setup changes the profile and weekly plan only; it does not delete workout or nutrition history.
-- Training days are stored independently from the seven-day plan.
-- Normal saves keep a last-good backup.
-- Exported JSON backups can be merged into the app.
-
-## 6.6.4 highlights
-
-- Compact minimal interface with reduced card padding, headings, radius, and visual weight
-- Clear kg/lb segmented toggle on every exercise; no automatic unit locking
-- Completed sets retain their original unit while incomplete sets can follow a new unit
-- Per-set remove button beside the completion button
-- Exact exercise definitions fix Leg Curl muscle and equipment metadata
-- Common-food presets, including boiled eggs, work without packaged-food search
-- Mobile food entry expands to a keyboard-safe full-screen form
-- Floating input labels receive corrected spacing and notch sizing
+- Permanent storage key: `setline-data-v1`
+- Automatic pre-migration and last-good backups
+- Empty-state overwrite guard
+- Backup imports merge records instead of replacing them
+- Completed mixed-unit history remains unchanged
 
 ## First load and offline use
 
-The app uses pinned React, Material UI, and HTM browser builds. Internet is required on the first load; the service worker then caches them for offline use.
+The app uses pinned React, Material UI and HTM browser builds internally. The visible interface is a custom Setline design rather than the default Material look. Internet is required once to cache dependencies; normal tracking then works offline.
 
 ## Limitations
 
-- Data stays local to each browser/device; cloud sync is not included.
-- Packaged-food and barcode searches require internet access. Built-in common-food presets are editable estimates and should be checked against the product label when precision matters.
-- Camera barcode detection depends on browser support.
-- Training suggestions are general guidance, not medical advice.
-
-
-## Mixed-unit training in 6.6.4
-- Every set stores its original load and unit (`kg` or `lb`).
-- The global unit is only the default for new exercises and normalized charts.
-- Exercise-specific unit, machine profile, and increment settings are remembered.
-- Completed history is never numerically rewritten during a unit change.
-- Workout CSV exports include both the original unit and a normalized kilogram value.
+- Data remains local to each browser/device; cloud sync is not included.
+- Packaged-food and barcode searches need internet access.
+- Coaching and recovery suggestions are general guidance, not medical advice.

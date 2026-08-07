@@ -19,11 +19,11 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '6.6.4';
+  const APP_VERSION = '7.0.0';
   const RELEASE_DATE = 'August 7, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
-  const PRE_MIGRATION_KEY = 'setline-pre-v6.6.4-backup';
+  const PRE_MIGRATION_KEY = 'setline-pre-v7-backup';
   const LEGACY_KEYS = ['setline-fitness-v6-2','setline-fitness-v6-1','setline-fitness-v6','pulse-fitness-v6','pulse-fitness-v5','pulse-fitness-v2'];
 
   const ICONS = {
@@ -47,7 +47,11 @@
     search:'M9.5 3a6.5 6.5 0 104.09 11.55L19.04 20 20.5 18.54l-5.45-5.45A6.5 6.5 0 009.5 3zm0 2a4.5 4.5 0 110 9 4.5 4.5 0 010-9z',
     close:'M18.3 5.71 16.89 4.29 12 9.17 7.11 4.29 5.7 5.71 10.59 10.59 5.7 15.48 7.11 16.89 12 12 16.89 16.89 18.3 15.48 13.41 10.59z',
     chevron:'M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z',
-    spark:'M12 2l1.55 5.45L19 9l-5.45 1.55L12 16l-1.55-5.45L5 9l5.45-1.55L12 2zm7 12l.9 3.1L23 18l-3.1.9L19 22l-.9-3.1L15 18l3.1-.9L19 14z'
+    spark:'M12 2l1.55 5.45L19 9l-5.45 1.55L12 16l-1.55-5.45L5 9l5.45-1.55L12 2zm7 12l.9 3.1L23 18l-3.1.9L19 22l-.9-3.1L15 18l3.1-.9L19 14z',
+    trophy:'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.21 1.79 4 4 4h.18A5.01 5.01 0 0011 15.9V19H7v2h10v-2h-4v-3.1A5.01 5.01 0 0016.82 12H17c2.21 0 4-1.79 4-4V7c0-1.1-.9-2-2-2zM7 10c-1.1 0-2-.9-2-2V7h2v3zm8 1a3 3 0 01-6 0V5h6v6zm4-3c0 1.1-.9 2-2 2V7h2v1z',
+    target:'M12 2a10 10 0 1010 10A10 10 0 0012 2zm0 18a8 8 0 118-8 8 8 0 01-8 8zm0-14a6 6 0 106 6 6 6 0 00-6-6zm0 10a4 4 0 114-4 4 4 0 01-4 4zm0-6a2 2 0 102 2 2 2 0 00-2-2z',
+    bolt:'M11 21h-1l1-7H7.5c-.88 0-.33-.75-.31-.78C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.4 0 .62.19.4.66C12.97 17.53 11 21 11 21z',
+    lock:'M18 8h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-9-2a3 3 0 016 0v2H9V6zm9 14H6V10h12v10z'
   };
 
   function Icon({name, ...props}) {
@@ -206,6 +210,7 @@
   ];
 
   const CHANGELOG = [
+    {version:'7.0.0',date:RELEASE_DATE,items:['New custom minimal Setline interface with compact typography, thin dividers and restrained color','Workout Focus Mode shows one exercise at a time with previous performance, load, reps and RIR','Setline XP and levels reward completed sessions, working sets, consistency, recovery days and personal records','Weekly missions focus on workouts, quality sets, protein consistency and muscle-region coverage','Exercise mastery, personal milestones and a guilt-free Comeback Mode','Existing mixed-unit workouts, nutrition, profile and history remain under the permanent data key']},
     {version:'6.6.4',date:RELEASE_DATE,items:['Compact minimal interface with smaller cards, typography and spacing','Visible kg/lb toggle on every exercise without automatic locking','Per-set remove control with confirmation for completed sets','Exact exercise definitions prevent Leg Curl from inheriting arm tags','Known machine exercises receive sensible equipment defaults','Generic food presets including boiled eggs plus packaged-food search','Keyboard-safe mobile food logger and corrected floating-label spacing']},
     {version:'6.6.3',date:'August 6, 2026',items:['Added per-exercise kg/lb units while preserving every original load value','Exercise unit memory and optional unit locking for mixed commercial gyms','Machine profiles with remembered weight increments','Original and converted load display without rewriting history','Normalized volume charts and personal records across kg and lb','Workout CSV export now includes each set’s stored unit']},
     {version:'6.6.2',date:'August 5, 2026',items:['Fixed the Run Setup training-days selector so 1–7 saves independently','Professional eight-step setup wizard with equipment and movement selections','Added PPL + Upper/Lower and Bro Split with exact weekly schedule previews','Added complete split explanations to the Training Guide','Streak flame now flickers continuously and Easter eggs show quote attribution','Added a unified fluid motion system with reduced-motion support']},
@@ -227,7 +232,8 @@
       schedule:{}, weeklyPlan:['push','pull','legs','rest','push','pull','rest'], autoShiftMissed:true,
       recovery:{}, scheduleMeta:{configured:false,lastProcessed:''},
       settings:{theme:'system',reducedMotion:false,haptics:true,advancedDefault:false,highContrast:false,showUnitConversions:true,homeCardOrder:['calories','protein','readiness','bodyweight'],hiddenHomeCards:[]},
-      onboardingComplete:false, changelogSeen:'', schemaVersion:8, updatedAt:null
+      gamification:{enabled:true,showXP:true,claimedMilestones:[],lastCelebration:''},
+      onboardingComplete:false, changelogSeen:'', schemaVersion:9, updatedAt:null
     };
   }
 
@@ -275,6 +281,7 @@
       recovery:parsed.recovery&&typeof parsed.recovery==='object'?parsed.recovery:{},
       scheduleMeta:{...fallback.scheduleMeta,...(parsed.scheduleMeta||{})},
       settings:{...fallback.settings,...(parsed.settings||{})},
+      gamification:{...fallback.gamification,...(parsed.gamification||{})},
       preferredUnit,
       calorieGoal:Number(parsed.calorieGoal)||fallback.calorieGoal,
       proteinGoal:Number(parsed.proteinGoal)||fallback.proteinGoal,
@@ -282,7 +289,7 @@
       fatGoal:Number(parsed.fatGoal)||fallback.fatGoal,
       bodyWeightKg:Number(parsed.bodyWeightKg)||fallback.bodyWeightKg,
       restSeconds:clamp(parsed.restSeconds||fallback.restSeconds,15,600),
-      schemaVersion:8
+      schemaVersion:9
     };
   }
 
@@ -325,10 +332,10 @@
       }
     }
     loaded=loaded||defaultState();
-    if(Number(loaded.schemaVersion||1)<8 || !loaded.settings){
+    if(Number(loaded.schemaVersion||1)<9 || !loaded.settings){
       try{localStorage.setItem(PRE_MIGRATION_KEY,JSON.stringify({app:'Setline',version:APP_VERSION,backedUpAt:new Date().toISOString(),data:loaded}));}catch(err){}
     }
-    loaded=normaliseState(loaded); loaded.schemaVersion=8;
+    loaded=normaliseState(loaded); loaded.schemaVersion=9;
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(loaded));}catch(err){}
     return loaded;
   }
@@ -340,7 +347,7 @@
       if(old && recordCount(old)>0 && recordCount(data)===0){
         console.warn('Setline blocked an unexpected empty-state overwrite.'); return false;
       }
-      localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,schemaVersion:8,updatedAt:new Date().toISOString()}));
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,schemaVersion:9,updatedAt:new Date().toISOString()}));
       return true;
     }catch(err){console.error(err);return false;}
   }
@@ -404,34 +411,128 @@
     return Object.values(best).sort((a,b)=>b.estimateKg-a.estimateKg).slice(0,8).map(item=>({...item,estimate:convertWeight(item.estimateKg,'kg',data.preferredUnit)}));
   }
 
+
+  function weekDateKeys(endKey=localDateKey()){
+    const start=mondayOf(endKey); return Array.from({length:7},(_,i)=>shiftDateKey(start,i));
+  }
+  function completedWorkingSetsForDay(data,key){
+    return getDay(data,key).workouts.reduce((sum,workout)=>sum+getSets(workout,data.preferredUnit).filter(set=>set.done!==false&&set.type!=='warmup').length,0);
+  }
+  function exerciseMastery(data){
+    const map=new Map();
+    for(const [date,day] of Object.entries(data.days||{})){
+      for(const workout of day.workouts||[]){
+        const key=exerciseKey(workout.name),record=map.get(key)||{name:workout.name,sessions:new Set(),sets:0,lastDate:date};
+        record.sessions.add(date); record.sets+=getSets(workout,data.preferredUnit).filter(set=>set.done!==false&&set.type!=='warmup').length;
+        if(date>record.lastDate)record.lastDate=date; map.set(key,record);
+      }
+    }
+    return [...map.values()].map(record=>{
+      const sessions=record.sessions.size;
+      const tier=sessions>=20?'Mastered':sessions>=8?'Skilled':sessions>=3?'Consistent':'Beginner';
+      const next=sessions>=20?20:sessions>=8?20:sessions>=3?8:3;
+      return {...record,sessions,tier,next,progress:sessions>=20?100:clamp(sessions/next*100,0,100)};
+    }).sort((a,b)=>b.sessions-a.sessions||b.sets-a.sets);
+  }
+  function progressionSummary(data,endKey=localDateKey()){
+    let completedSets=0,workoutDays=0,sessions=0,plannedRestDays=0;
+    for(const [date,day] of Object.entries(data.days||{})){
+      if(date>endKey)continue;
+      const sets=completedWorkingSetsForDay(data,date); completedSets+=sets;
+      if((day.workouts||[]).length){workoutDays++;sessions+=Math.max(1,(day.sessions||[]).length);}
+      else if(isRestType(planForDate(data,date)))plannedRestDays++;
+    }
+    const prCount=computePRs(data).length,streak=calculateStreak(data);
+    let xp=sessions*50+completedSets*2+prCount*15+Math.min(plannedRestDays,60)*5;
+    if(streak>=7)xp+=50;if(streak>=30)xp+=150;if(streak>=100)xp+=400;
+    xp=Math.round(xp);
+    const level=Math.max(1,Math.floor(Math.sqrt(xp/175))+1);
+    const floor=Math.pow(level-1,2)*175,next=Math.pow(level,2)*175;
+    const ranks=['Starter','Builder','Consistent','Driven','Advanced','Relentless','Elite'];
+    const rank=ranks[Math.min(ranks.length-1,Math.floor((level-1)/3))];
+    return{xp,level,rank,floor,next,levelProgress:next===floor?100:clamp((xp-floor)/(next-floor)*100,0,100),completedSets,workoutDays,sessions,prCount,streak};
+  }
+  function weeklyMissions(data,endKey=localDateKey()){
+    const keys=weekDateKeys(endKey).filter(key=>key<=endKey),targetDays=Math.min(3,clamp(data.profile?.trainingDays||3,1,7));
+    const workoutDays=keys.filter(key=>getDay(data,key).workouts.length||getDay(data,key).sessions.length).length;
+    const sets=keys.reduce((sum,key)=>sum+completedWorkingSetsForDay(data,key),0);
+    const proteinDays=keys.filter(key=>nutritionTotals(getDay(data,key)).protein>=Number(data.proteinGoal||0)).length;
+    const regions=new Set();keys.forEach(key=>getDay(data,key).workouts.forEach(w=>classifyExercise(w.name).primary.forEach(r=>regions.add(r))));
+    return[
+      {id:'workouts',title:'Complete planned sessions',progress:workoutDays,target:targetDays,reward:30,unit:'workouts'},
+      {id:'sets',title:'Finish quality working sets',progress:sets,target:12,reward:25,unit:'sets'},
+      {id:'protein',title:'Hit the protein target',progress:proteinDays,target:4,reward:25,unit:'days'},
+      {id:'coverage',title:'Train different muscle regions',progress:regions.size,target:6,reward:20,unit:'regions'}
+    ].map(item=>({...item,done:item.progress>=item.target,percent:clamp(item.progress/item.target*100,0,100)}));
+  }
+  function milestoneItems(data,progression){
+    const values={first:progression.workoutDays,ten:progression.workoutDays,fifty:progression.workoutDays,sets:progression.completedSets,streak7:progression.streak,streak30:progression.streak};
+    return[
+      {id:'first',title:'First session',target:1,value:values.first},
+      {id:'ten',title:'10 workout days',target:10,value:values.ten},
+      {id:'fifty',title:'50 workout days',target:50,value:values.fifty},
+      {id:'sets',title:'1,000 working sets',target:1000,value:values.sets},
+      {id:'streak7',title:'7-day consistency',target:7,value:values.streak7},
+      {id:'streak30',title:'30-day consistency',target:30,value:values.streak30}
+    ].map(item=>({...item,done:item.value>=item.target,percent:clamp(item.value/item.target*100,0,100)}));
+  }
+  function comebackStatus(data){
+    const dates=Object.keys(data.days||{}).filter(key=>key<=localDateKey()&&getDay(data,key).workouts.length).sort().reverse();
+    if(!dates.length)return{active:true,days:null,message:'Your first session is enough. Start small and save one completed set.'};
+    const days=Math.floor((dateFromKey(localDateKey())-dateFromKey(dates[0]))/86400000);
+    return{active:days>=5,days,message:days>=5?`${days} days since your last workout. Resume with one normal session—no punishment and no catch-up volume.`:''};
+  }
+
+  function ProgressionStrip({data,onOpen}){
+    if(data.gamification?.enabled===false)return null;
+    const progress=progressionSummary(data);
+    return html`<${Paper} className="xp-strip" variant="outlined" role=${onOpen?'button':undefined} tabIndex=${onOpen?0:undefined} onClick=${onOpen} onKeyDown=${onOpen?(e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onOpen();}}):undefined}>
+      <div className="xp-mark"><${Icon} name="bolt" fontSize="small"/></div>
+      <div className="xp-copy"><${Typography} variant="caption" color="text.secondary">LEVEL ${progress.level} · ${progress.rank.toUpperCase()}</${Typography}><div className="xp-line"><span style=${{width:`${progress.levelProgress}%`}}></span></div></div>
+      <${Typography} className="metric-number" variant="caption" fontWeight=${800}>${progress.xp} XP</${Typography}>
+    </${Paper}>`;
+  }
+
   function makeTheme(mode, highContrast=false){
     const dark=mode==='dark';
+    const divider=dark?(highContrast?'rgba(255,255,255,.28)':'rgba(255,255,255,.10)'):(highContrast?'rgba(0,0,0,.24)':'rgba(0,0,0,.09)');
     return createTheme({
       palette:{
         mode,
-        primary:{main:dark?'#6F8DFF':'#315CD9'},
-        secondary:{main:'#FFB547'},
-        success:{main:dark?'#43D69E':'#138A61'},
-        warning:{main:'#FFB547'},
-        error:{main:dark?'#FF7082':'#C9384A'},
-        background:{default:dark?'#07111F':'#F5F7FB',paper:dark?'#101C2D':'#FFFFFF'},
-        text:{primary:dark?'#F7F9FC':'#142033',secondary:dark?'#9AABC0':'#607087'},
-        divider:dark?(highContrast?'rgba(255,255,255,.25)':'rgba(154,171,192,.16)'):(highContrast?'rgba(20,32,51,.25)':'rgba(20,32,51,.10)')
+        primary:{main:dark?'#4D7CFF':'#2457E6'},
+        secondary:{main:dark?'#F2A93B':'#B96E00'},
+        success:{main:dark?'#35C58A':'#087A52'},
+        warning:{main:'#F2A93B'},
+        error:{main:dark?'#FF667D':'#C52E45'},
+        background:{default:dark?'#080808':'#F7F7F5',paper:dark?'#111111':'#FFFFFF'},
+        text:{primary:dark?'#F6F6F6':'#111111',secondary:dark?'#9A9A9A':'#666666'},
+        divider
       },
-      shape:{borderRadius:12},
-      typography:{fontFamily:'Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',fontSize:13.5,h4:{fontWeight:800,fontSize:'1.72rem',lineHeight:1.14,letterSpacing:'-.03em'},h5:{fontWeight:800,fontSize:'1.34rem',lineHeight:1.2,letterSpacing:'-.02em'},h6:{fontWeight:750,fontSize:'1.05rem',lineHeight:1.25,letterSpacing:'-.015em'},body1:{fontSize:'.94rem'},body2:{fontSize:'.84rem'},caption:{fontSize:'.72rem'},button:{fontWeight:750,fontSize:'.83rem',textTransform:'none'}},
+      shape:{borderRadius:8},
+      typography:{
+        fontFamily:'Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        fontSize:13,
+        h4:{fontWeight:850,fontSize:'1.55rem',lineHeight:1.08,letterSpacing:'-.035em'},
+        h5:{fontWeight:820,fontSize:'1.22rem',lineHeight:1.15,letterSpacing:'-.025em'},
+        h6:{fontWeight:780,fontSize:'1rem',lineHeight:1.2,letterSpacing:'-.015em'},
+        body1:{fontSize:'.9rem'},body2:{fontSize:'.8rem'},caption:{fontSize:'.69rem'},
+        button:{fontWeight:750,fontSize:'.79rem',textTransform:'none',letterSpacing:'-.01em'}
+      },
       components:{
         MuiCssBaseline:{styleOverrides:{body:{backgroundImage:'none'}}},
-        MuiCard:{styleOverrides:{root:{border:`1px solid ${dark?'rgba(154,171,192,.14)':'rgba(20,32,51,.09)'}`,boxShadow:'none',backgroundImage:'none'}}},
-        MuiButton:{defaultProps:{disableElevation:true},styleOverrides:{root:{minHeight:38,borderRadius:10,paddingLeft:12,paddingRight:12}}},
-        MuiIconButton:{styleOverrides:{root:{minWidth:38,minHeight:38}}},
+        MuiCard:{styleOverrides:{root:{border:`1px solid ${divider}`,boxShadow:'none',backgroundImage:'none'}}},
+        MuiPaper:{styleOverrides:{root:{backgroundImage:'none'}}},
+        MuiButton:{defaultProps:{disableElevation:true},styleOverrides:{root:{minHeight:36,borderRadius:7,paddingLeft:11,paddingRight:11},contained:{boxShadow:'none'}}},
+        MuiIconButton:{styleOverrides:{root:{minWidth:36,minHeight:36,borderRadius:7}}},
         MuiTextField:{defaultProps:{variant:'outlined',size:'small'}},
-        MuiOutlinedInput:{styleOverrides:{root:{borderRadius:10,minHeight:42},input:{paddingTop:10,paddingBottom:10}}},
+        MuiOutlinedInput:{styleOverrides:{root:{borderRadius:7,minHeight:40},input:{paddingTop:9,paddingBottom:9}}},
         MuiInputLabel:{styleOverrides:{root:{lineHeight:1.2,maxWidth:'calc(100% - 24px)'},shrink:{paddingLeft:3,paddingRight:3}}},
-        MuiChip:{styleOverrides:{root:{fontWeight:700,height:28,borderRadius:9},label:{paddingLeft:9,paddingRight:9}}},
-        MuiBottomNavigation:{styleOverrides:{root:{height:'calc(68px + env(safe-area-inset-bottom))',paddingBottom:'env(safe-area-inset-bottom)',backgroundColor:dark?'rgba(7,17,31,.94)':'rgba(255,255,255,.95)',backdropFilter:'blur(18px)',borderTop:`1px solid ${dark?'rgba(154,171,192,.18)':'rgba(20,32,51,.10)'}`}}},
-        MuiBottomNavigationAction:{styleOverrides:{root:{minWidth:0,padding:'8px 2px',fontSize:10},label:{fontSize:10,'&.Mui-selected':{fontSize:10}}}},
-        MuiDialog:{styleOverrides:{paper:{borderRadius:16}}}
+        MuiChip:{styleOverrides:{root:{fontWeight:700,height:25,borderRadius:6},label:{paddingLeft:8,paddingRight:8}}},
+        MuiToggleButton:{styleOverrides:{root:{borderRadius:6,padding:'6px 10px',fontSize:12,fontWeight:800}}},
+        MuiBottomNavigation:{styleOverrides:{root:{height:'calc(62px + env(safe-area-inset-bottom))',paddingBottom:'env(safe-area-inset-bottom)',backgroundColor:dark?'rgba(8,8,8,.96)':'rgba(255,255,255,.96)',backdropFilter:'blur(16px)',borderTop:`1px solid ${divider}`}}},
+        MuiBottomNavigationAction:{styleOverrides:{root:{minWidth:0,padding:'7px 2px',fontSize:9.5},label:{fontSize:9.5,'&.Mui-selected':{fontSize:9.5}}}},
+        MuiDialog:{styleOverrides:{paper:{borderRadius:10}}},
+        MuiAlert:{styleOverrides:{root:{borderRadius:7}}}
       }
     });
   }
@@ -471,7 +572,7 @@
     const [data,setData]=useState(()=>loadState());
     const saveTimer=useRef(null);
     useEffect(()=>{clearTimeout(saveTimer.current);saveTimer.current=setTimeout(()=>persistState(data),120);return()=>clearTimeout(saveTimer.current);},[data]);
-    const update=useCallback(mutator=>setData(prev=>{const next=deepClone(prev);mutator(next);next.schemaVersion=8;next.updatedAt=new Date().toISOString();return next;}),[]);
+    const update=useCallback(mutator=>setData(prev=>{const next=deepClone(prev);mutator(next);next.schemaVersion=9;next.updatedAt=new Date().toISOString();return next;}),[]);
     return [data,update,setData];
   }
 
@@ -490,7 +591,7 @@
   }
 
   function setThemeMeta(mode){
-    const color=mode==='dark'?'#07111f':'#f5f7fb'; const tag=document.querySelector('meta[name="theme-color"]'); if(tag)tag.setAttribute('content',color);
+    const color=mode==='dark'?'#080808':'#f7f7f5'; const tag=document.querySelector('meta[name="theme-color"]'); if(tag)tag.setAttribute('content',color);
   }
 
   const EQUIPMENT_OPTIONS = [
@@ -574,7 +675,7 @@
     const toggleAvoid=value=>setDraft(current=>{const items=new Set(current.avoidMovements||[]);items.has(value)?items.delete(value):items.add(value);return{...current,avoidMovements:[...items]};});
     const finish=()=>{const safeDays=clamp(draft.trainingDays??4,1,7);update(next=>{const equipment=Array.isArray(draft.equipment)?draft.equipment:[];const avoidMovements=Array.isArray(draft.avoidMovements)?draft.avoidMovements:[];next.profile={...next.profile,...draft,trainingDays:safeDays,equipment,avoidMovements,avoid:avoidMovements.join(', '),avoidNote:draft.avoidNote||''};next.settings.theme=themeMode;next.preferredUnit=normalizeUnit(unitMode);next.weeklyPlan=generatePlan(draft.split,safeDays);next.scheduleMeta.configured=true;next.onboardingComplete=true;});onClose();};
     return html`<${Dialog} open=${open} fullScreen=${fullScreen} maxWidth="md" fullWidth onClose=${onClose} PaperProps=${{className:'setup-dialog'}}>
-      <${DialogTitle} sx=${{pb:1}}><${Stack} direction="row" alignItems="center" justifyContent="space-between" spacing=${2}><${Box}><${Typography} variant="overline" color="primary.main" fontWeight=${900}>SETLINE 6.6.4</${Typography}><${Typography} variant="h5">Run Setup</${Typography}></${Box}><${IconButton} onClick=${onClose} aria-label="Close setup"><${Icon} name="close"/></${IconButton}></${Stack}></${DialogTitle}>
+      <${DialogTitle} sx=${{pb:1}}><${Stack} direction="row" alignItems="center" justifyContent="space-between" spacing=${2}><${Box}><${Typography} variant="overline" color="primary.main" fontWeight=${900}>SETLINE 7</${Typography}><${Typography} variant="h5">Run Setup</${Typography}></${Box}><${IconButton} onClick=${onClose} aria-label="Close setup"><${Icon} name="close"/></${IconButton}></${Stack}></${DialogTitle}>
       <${DialogContent} dividers>
         <${Box} sx=${{mb:2.5}}><${Stack} direction="row" justifyContent="space-between" alignItems="center" sx=${{mb:.7}}><${Typography} variant="body2" fontWeight=${850}>${steps[step]}</${Typography}><${Typography} variant="caption" color="text.secondary">Step ${step+1} of ${steps.length}</${Typography}></${Stack}><${LinearProgress} variant="determinate" value=${((step+1)/steps.length)*100} sx=${{height:7,borderRadius:99}}/></${Box}>
         <div className="setup-step" key=${step}>
@@ -656,6 +757,7 @@
 
   function HomePage({data,update,navigate,openGuide,showFeedback}){
     const today=localDateKey(),day=getDay(data,today),totals=nutritionTotals(day),streak=calculateStreak(data),plan=planForDate(data,today),ready=readiness(data.recovery?.[today]),report=regionReport(data,today),priority=report.priorities[0];
+    const comeback=comebackStatus(data);
     const [metricSheet,setMetricSheet]=useState(''); const [customizeOpen,setCustomizeOpen]=useState(false); const [quote,setQuote]=useState(STREAK_QUOTES[0]); const [quoteOpen,setQuoteOpen]=useState(false); const lastQuote=useRef(-1);
     const firstName=(data.profile?.name||'').trim().split(/\s+/)[0];
     const greeting=new Date().getHours()<12?'Good morning':new Date().getHours()<18?'Good afternoon':'Good evening';
@@ -681,8 +783,10 @@
         <${Stack} direction="row" spacing=${1.4} alignItems="center" sx=${{minWidth:0}}><${Avatar} src="./setline-s.svg" variant="rounded" sx=${{width:48,height:48,bgcolor:'primary.main'}}/><${Box} sx=${{minWidth:0}}><${Typography} variant="caption" color="text.secondary" fontWeight=${700}>${greeting}${firstName?`, ${firstName}`:''}</${Typography}><${Typography} variant="h4">Setline</${Typography}></${Box}></${Stack}>
         <${Chip} clickable onClick=${openQuote} aria-label="Open streak Easter egg" icon=${html`<span className=${`streak-flame streak-level-${streak>=100?4:streak>=30?3:streak>=7?2:streak>0?1:0}`} aria-hidden="true"><span>🔥</span></span>`} label=${`${streak} day${streak===1?'':'s'}`} color="warning" variant="outlined"/>
       </${Box}>
+      <${ProgressionStrip} data=${data} onOpen=${()=>navigate('progress')}/>
+      ${comeback.active?html`<${Paper} className="comeback-strip" variant="outlined"><${Icon} name="spark" color="primary"/><div><${Typography} fontWeight=${800}>${comeback.days===null?'Start your Setline':'Comeback mode'}</${Typography}><${Typography} variant="caption" color="text.secondary">${comeback.message}</${Typography}></div><${Button} size="small" onClick=${()=>navigate('workout')}>Train</${Button}></${Paper}>`:null}
 
-      <${CardShell} sx=${{mb:2,background:theme=>theme.palette.mode==='dark'?'linear-gradient(135deg,#162a4a,#101c2d)':'linear-gradient(135deg,#e7efff,#ffffff)'}}>
+      <${CardShell} className="today-plan" sx=${{mb:1.5}}>
         <${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${2}>
           <${Box}><${Typography} variant="overline" color="primary.main" fontWeight=${800}>TODAY'S PLAN</${Typography}><${Typography} variant="h5">${planLabel(plan)}</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:.5}}>${isRestType(plan)?'Recovery is part of the program. Planned rest keeps your schedule streak intact.':day.workouts.length?`${day.workouts.length} exercise${day.workouts.length===1?'':'s'} logged so far.`:'Previous performance will be prefilled when you add exercises.'}</${Typography}></${Box}>
           <${Avatar} sx=${{bgcolor:isRestType(plan)?'secondary.main':'primary.main',color:'#fff'}}><${Icon} name=${isRestType(plan)?'rest':'workout'}/></${Avatar}>
@@ -790,8 +894,27 @@
     return html`<${Paper} elevation=${8} sx=${{position:'fixed',right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1200,p:1.2,pl:1.8,borderRadius:3,display:'flex',alignItems:'center',gap:1.2}}><${Box}><${Typography} variant="caption" color="text.secondary">REST TIMER</${Typography}><${Typography} className="metric-number" variant="h6">${min}:${sec}</${Typography}></${Box}><${IconButton} size="small" onClick=${onStop}><${Icon} name="close"/></${IconButton}></${Paper}>`;
   }
 
+
+  function FocusModeDialog({open,onClose,workouts,data,dateKey,updateSet,completeSet,removeSet,openGuide}){
+    const [index,setIndex]=useState(0);
+    useEffect(()=>{if(open)setIndex(0);},[open]);
+    if(!workouts.length)return null;
+    const safeIndex=Math.min(index,workouts.length-1),workout=workouts[safeIndex],sets=getSets(workout,data.preferredUnit),previous=previousWorkout(data,workout.name,dateKey);
+    const previousSets=previous?getSets(previous,data.preferredUnit):[];
+    return html`<${Dialog} open=${open} onClose=${onClose} fullScreen scroll="paper" className="focus-dialog">
+      <${AppBar} position="sticky" elevation=${0} color="transparent" sx=${{borderBottom:'1px solid',borderColor:'divider'}}><${Toolbar} variant="dense"><${IconButton} edge="start" onClick=${onClose}><${Icon} name="close"/></${IconButton}><${Box} sx=${{flex:1,minWidth:0,ml:1}}><${Typography} variant="caption" color="text.secondary">FOCUS MODE · ${safeIndex+1}/${workouts.length}</${Typography}><${Typography} fontWeight=${850} noWrap>${workout.name}</${Typography}></${Box}><${ToggleButtonGroup} size="small" exclusive value=${normalizeUnit(workout.unit||sets[0]?.unit||data.preferredUnit)} disabled><${ToggleButton} value="kg">kg</${ToggleButton}><${ToggleButton} value="lb">lb</${ToggleButton}></${ToggleButtonGroup}></${Toolbar}></${AppBar}>
+      <${DialogContent} sx=${{width:'min(100%,760px)',mx:'auto',pt:2}}>
+        ${previous?html`<${Paper} variant="outlined" sx=${{p:1.2,mb:1.4}}><${Typography} variant="caption" color="text.secondary">PREVIOUS · ${formatDate(previous.date)}</${Typography}><${Typography} variant="body2" fontWeight=${750}>${previousSets.map(s=>`${formatLoad(s.load,s.unit)} × ${s.reps}`).join(' · ')}</${Typography}></${Paper}>`:null}
+        <div className="focus-head"><span>SET</span><span>PREVIOUS</span><span>LOAD</span><span>REPS</span><span>RIR</span><span></span><span></span></div>
+        <${Stack} spacing=${.65}>${sets.map((set,si)=>{const old=previousSets[si];return html`<div className="focus-row" key=${set.id||si}><span className="focus-index">${si+1}</span><span className="focus-prev">${old?`${formatLoad(old.load,old.unit)} × ${old.reps}`:'—'}</span><${TextField} className="set-input" type="number" value=${set.load??''} onChange=${e=>updateSet(safeIndex,si,{load:e.target.value})} InputProps=${{endAdornment:html`<${InputAdornment} position="end">${normalizeUnit(set.unit||workout.unit)}</${InputAdornment}>`}}/><${TextField} className="set-input" type="number" value=${set.reps??''} onChange=${e=>updateSet(safeIndex,si,{reps:e.target.value})}/><${TextField} className="set-input" type="number" value=${set.rir??''} placeholder="—" onChange=${e=>updateSet(safeIndex,si,{rir:e.target.value,rpe:e.target.value===''?'':10-Number(e.target.value)})}/><${IconButton} color=${set.done===false?'default':'success'} onClick=${()=>completeSet(safeIndex,si,set)}><${Icon} name="check"/></${IconButton}><${IconButton} color="error" onClick=${()=>removeSet(safeIndex,si,set)}><${Icon} name="close"/></${IconButton}></div>`;})}</${Stack}>
+        <${Button} size="small" startIcon=${html`<${Icon} name="info"/>`} onClick=${()=>openGuide('RIR')} sx=${{mt:1}}>RIR guide</${Button}>
+      </${DialogContent}>
+      <${DialogActions} sx=${{borderTop:'1px solid',borderColor:'divider',justifyContent:'space-between',px:2,pb:'calc(10px + env(safe-area-inset-bottom))'}}><${Button} disabled=${safeIndex===0} onClick=${()=>setIndex(Math.max(0,safeIndex-1))}>Previous</${Button}><${Button} variant="contained" onClick=${safeIndex===workouts.length-1?onClose:()=>setIndex(safeIndex+1)}>${safeIndex===workouts.length-1?'Exit focus':'Next exercise'}</${Button}></${DialogActions}>
+    </${Dialog}>`;
+  }
+
   function WorkoutPage({data,update,selectedDate,setSelectedDate,openGuide,showFeedback,showCompletion}){
-    const day=getDay(data,selectedDate); const plan=planForDate(data,selectedDate); const [addOpen,setAddOpen]=useState(false); const [editIndex,setEditIndex]=useState(null); const [advanced,setAdvanced]=useState({}); const [restUntil,setRestUntil]=useState(0);
+    const day=getDay(data,selectedDate); const plan=planForDate(data,selectedDate); const [addOpen,setAddOpen]=useState(false); const [editIndex,setEditIndex]=useState(null); const [advanced,setAdvanced]=useState({}); const [restUntil,setRestUntil]=useState(0); const [focusOpen,setFocusOpen]=useState(false);
     const currentWorkouts=day.workouts;
     const mutateWorkout=(index,fn)=>update(next=>{const target=ensureDayMutable(next,selectedDate).workouts[index];if(target)fn(target);});
     const addExercise=(workout,initial)=>update(next=>{
@@ -827,11 +950,11 @@
       if(!currentWorkouts.length)return;
       const sets=currentWorkouts.flatMap(workout=>getSets(workout,data.preferredUnit)).filter(s=>s.done!==false&&s.type!=='warmup'); const volume=sets.reduce((sum,s)=>sum+setVolume(s,data.preferredUnit),0); const regions=new Set(currentWorkouts.flatMap(w=>classifyExercise(w.name).primary));
       update(next=>{const target=ensureDayMutable(next,selectedDate);target.sessions.push({id:id('session'),name:`${planLabel(plan)} session`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],completedAt:new Date().toISOString()});});
-      showCompletion({name:`${planLabel(plan)} complete`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],streak:calculateStreak(data)});
+      showCompletion({name:`${planLabel(plan)} complete`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],streak:calculateStreak(data),xpAward:50+Math.min(30,sets.length*2)});
     };
     const changePlan=type=>update(next=>{next.schedule[selectedDate]=type;next.scheduleMeta.configured=true;});
     return html`<div className="page-wrap">
-      <${PageHeader} eyebrow="TRAIN" title="Workout" action=${html`<${Stack} direction="row" spacing=${.8} alignItems="center"><${ToggleButtonGroup} size="small" exclusive value=${data.preferredUnit} onChange=${(_,value)=>value&&update(next=>next.preferredUnit=value)} aria-label="Default weight unit"><${ToggleButton} value="kg">kg</${ToggleButton}><${ToggleButton} value="lb">lb</${ToggleButton}></${ToggleButtonGroup}><${Button} variant="contained" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>setAddOpen(true)}>Add</${Button}></${Stack}>`}/>
+      <${PageHeader} eyebrow="TRAIN" title="Workout" action=${html`<${Stack} direction="row" spacing=${.8} alignItems="center"><${ToggleButtonGroup} size="small" exclusive value=${data.preferredUnit} onChange=${(_,value)=>value&&update(next=>next.preferredUnit=value)} aria-label="Default weight unit"><${ToggleButton} value="kg">kg</${ToggleButton}><${ToggleButton} value="lb">lb</${ToggleButton}></${ToggleButtonGroup}>${currentWorkouts.length?html`<${Button} variant="outlined" startIcon=${html`<${Icon} name="target"/>`} onClick=${()=>setFocusOpen(true)}>Focus</${Button}>`:null}<${Button} variant="contained" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>setAddOpen(true)}>Add</${Button}></${Stack}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Workout date"/>
 
       <${CardShell} sx=${{mb:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.4} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="overline" color=${isRestType(plan)?'secondary.main':'primary.main'} fontWeight=${800}>PLANNED SESSION</${Typography}><${Typography} variant="h6">${planLabel(plan)}</${Typography}><${Typography} variant="body2" color="text.secondary">${isRestType(plan)?'No missed-workout warning will be created for this planned recovery day.':'Log working sets; warm-ups are excluded from region coverage.'}</${Typography}></${Box}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1} sx=${{width:{xs:'100%',sm:'auto'}}}>${WORKOUT_TEMPLATES[plan]?html`<${Button} variant="outlined" onClick=${addStarterTemplate}>Add ${planLabel(plan)} starter</${Button}>`:null}<${TextField} select size="small" label="Change" value=${plan} onChange=${e=>changePlan(e.target.value)} sx=${{minWidth:{xs:'100%',sm:155}}}><${MenuItem} value="push">Push</${MenuItem}><${MenuItem} value="pull">Pull</${MenuItem}><${MenuItem} value="legs">Legs</${MenuItem}><${MenuItem} value="upper">Upper</${MenuItem}><${MenuItem} value="lower">Lower</${MenuItem}><${MenuItem} value="full_body">Full body</${MenuItem}><${MenuItem} value="chest">Chest</${MenuItem}><${MenuItem} value="back">Back</${MenuItem}><${MenuItem} value="shoulders">Shoulders</${MenuItem}><${MenuItem} value="arms">Arms</${MenuItem}><${MenuItem} value="rest">Rest day</${MenuItem}><${MenuItem} value="active_recovery">Active recovery</${MenuItem}><${MenuItem} value="deload">Deload</${MenuItem}></${TextField}></${Stack}></${Stack}></${CardShell}>
@@ -865,6 +988,7 @@
       </${Stack}>
       ${currentWorkouts.length?html`<${CardShell} sx=${{mt:2}}><${Stack} direction=${{xs:'column',sm:'row'}} spacing=${1.2} alignItems=${{sm:'center'}} justifyContent="space-between"><${Box}><${Typography} variant="h6">Finish the session</${Typography}><${Typography} variant="body2" color="text.secondary">Completed sets are saved continuously. This creates the final summary and streak moment.</${Typography}></${Box}><${Button} variant="contained" color="success" startIcon=${html`<${Icon} name="check"/>`} onClick=${completeWorkout}>Complete workout</${Button}></${Stack}></${CardShell}>`:null}
       <${AddExerciseDialog} open=${addOpen} onClose=${()=>{setAddOpen(false);setEditIndex(null);}} data=${data} dateKey=${selectedDate} initial=${editIndex===null?null:currentWorkouts[editIndex]} onAdd=${addExercise} plan=${plan}/>
+      <${FocusModeDialog} open=${focusOpen} onClose=${()=>setFocusOpen(false)} workouts=${currentWorkouts} data=${data} dateKey=${selectedDate} updateSet=${updateSet} completeSet=${completeSet} removeSet=${removeSet} openGuide=${openGuide}/>
       ${restUntil?html`<${RestTimer} until=${restUntil} onStop=${()=>setRestUntil(0)}/>`:null}
     </div>`;
   }
@@ -949,7 +1073,7 @@
   }
 
   function ProgressPage({data,update,selectedDate,setSelectedDate,showFeedback}){
-    const [period,setPeriod]=useState(7); const report=regionReport(data,selectedDate); const prs=computePRs(data);
+    const [period,setPeriod]=useState(7); const report=regionReport(data,selectedDate); const prs=computePRs(data); const progression=progressionSummary(data,selectedDate); const missions=weeklyMissions(data,selectedDate); const mastery=exerciseMastery(data).slice(0,8); const milestones=milestoneItems(data,progression);
     const dates=Array.from({length:period},(_,i)=>shiftDateKey(selectedDate,-(period-1-i)));
     const volumeValues=dates.map(key=>getDay(data,key).workouts.reduce((sum,w)=>sum+getSets(w,data.preferredUnit).reduce((a,s)=>a+setVolume(s,data.preferredUnit),0),0));
     const weightEntries=Object.entries(data.bodyWeights||{}).filter(([key])=>key<=selectedDate).sort(([a],[b])=>a.localeCompare(b)).slice(-Math.max(7,period));
@@ -959,6 +1083,7 @@
     return html`<div className="page-wrap">
       <${PageHeader} eyebrow="REVIEW" title="Progress" action=${html`<${ToggleButtonGroup} size="small" exclusive value=${period} onChange=${(_,v)=>v&&setPeriod(v)}><${ToggleButton} value=${7}>7D</${ToggleButton}><${ToggleButton} value=${30}>30D</${ToggleButton}></${ToggleButtonGroup}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Report ending" sticky=${false}/>
+      ${data.gamification?.enabled!==false?html`<div className="progression-grid"><${CardShell} className="level-card"><${Stack} direction="row" justifyContent="space-between" alignItems="flex-start"><div><${Typography} variant="caption" color="text.secondary">SETLINE LEVEL</${Typography}><${Typography} variant="h4">${progression.level}</${Typography}><${Typography} variant="body2" fontWeight=${800}>${progression.rank}</${Typography}></div><div className="level-badge"><${Icon} name="trophy"/></div></${Stack}><div className="xp-line large"><span style=${{width:`${progression.levelProgress}%`}}></span></div><${Typography} variant="caption" color="text.secondary">${progression.xp} XP · ${Math.max(0,Math.ceil(progression.next-progression.xp))} to next level</${Typography}></${CardShell}><${CardShell}><${SectionHeading} title="Weekly missions" subtitle="Consistency rewards, not maximum weight"/><${Stack} spacing=${1}>${missions.map(mission=>html`<div className="mission-row" key=${mission.id}><div className=${`mission-check ${mission.done?'done':''}`}>${mission.done?'✓':''}</div><div className="mission-copy"><${Typography} variant="body2" fontWeight=${760}>${mission.title}</${Typography}><${Typography} variant="caption" color="text.secondary">${Math.min(mission.progress,mission.target)} / ${mission.target} ${mission.unit} · +${mission.reward} XP</${Typography}><div className="mission-line"><span style=${{width:`${mission.percent}%`}}></span></div></div></div>`)}</${Stack}></${CardShell}></div><div className="progression-grid compact"><${CardShell}><${SectionHeading} title="Exercise mastery" subtitle="Based on repeated practice, not strength ranking"/>${mastery.length?html`<${Stack} spacing=${1}>${mastery.map(item=>html`<div className="mastery-row" key=${item.name}><div><${Typography} variant="body2" fontWeight=${760}>${item.name}</${Typography}><${Typography} variant="caption" color="text.secondary">${item.sessions} sessions · ${item.sets} sets</${Typography}></div><${Chip} label=${item.tier} color=${item.tier==='Mastered'?'secondary':'primary'} variant="outlined"/></div>`)}</${Stack}>`:html`<${Typography} variant="body2" color="text.secondary">Log repeated sessions to build exercise mastery.</${Typography}>`}</${CardShell}><${CardShell}><${SectionHeading} title="Milestones" subtitle="Personal progress only"/><div className="milestone-grid">${milestones.map(item=>html`<div className=${`milestone ${item.done?'done':''}`} key=${item.id}><${Icon} name=${item.done?'trophy':'lock'} fontSize="small"/><span>${item.title}</span></div>`)}</div></${CardShell}></div>`:null}
       <div className="desktop-grid">
         <${Stack} spacing=${2}>
           <${CardShell}>
@@ -1047,7 +1172,7 @@
             <${SectionHeading} title="Appearance" subtitle="Light, dark or phone setting"/>
             <${ToggleButtonGroup} exclusive fullWidth value=${data.settings.theme||'system'} onChange=${(_,value)=>value&&update(next=>next.settings.theme=value)}><${ToggleButton} value="light">Light</${ToggleButton}><${ToggleButton} value="dark">Dark</${ToggleButton}><${ToggleButton} value="system">System</${ToggleButton}></${ToggleButtonGroup}>
             <${Divider} sx=${{my:1.5}}/>
-            <${Stack} spacing=${.3}><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.reducedMotion} onChange=${e=>update(next=>next.settings.reducedMotion=e.target.checked)}/>`} label="Reduce animations"/><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.haptics} onChange=${e=>update(next=>next.settings.haptics=e.target.checked)}/>`} label="Vibration feedback"/><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.advancedDefault} onChange=${e=>update(next=>next.settings.advancedDefault=e.target.checked)}/>`} label="Show advanced workout fields by default"/><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.highContrast} onChange=${e=>update(next=>next.settings.highContrast=e.target.checked)}/>`} label="Higher interface contrast"/></${Stack}>
+            <${Stack} spacing=${.3}><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.reducedMotion} onChange=${e=>update(next=>next.settings.reducedMotion=e.target.checked)}/>`} label="Reduce animations"/><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.haptics} onChange=${e=>update(next=>next.settings.haptics=e.target.checked)}/>`} label="Vibration feedback"/><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.advancedDefault} onChange=${e=>update(next=>next.settings.advancedDefault=e.target.checked)}/>`} label="Show advanced workout fields by default"/><${FormControlLabel} control=${html`<${Switch} checked=${!!data.settings.highContrast} onChange=${e=>update(next=>next.settings.highContrast=e.target.checked)}/>`} label="Higher interface contrast"/><${FormControlLabel} control=${html`<${Switch} checked=${data.gamification?.enabled!==false} onChange=${e=>update(next=>next.gamification.enabled=e.target.checked)}/>`} label="Setline XP, missions and mastery"/></${Stack}>
           </${CardShell}>
 
           <${CardShell}>
@@ -1099,7 +1224,7 @@
   function CompletionOverlay({summary,onClose,reducedMotion=false}){
     const [count,setCount]=useState(reducedMotion?summary.streak:0);
     useEffect(()=>{if(reducedMotion){setCount(summary.streak);return;}const start=performance.now(),duration=800;let frame;const tick=now=>{const p=Math.min(1,(now-start)/duration);setCount(Math.round(summary.streak*(1-Math.pow(1-p,3))));if(p<1)frame=requestAnimationFrame(tick);};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);},[summary.streak,reducedMotion]);
-    return html`<div className="completion-overlay" role="dialog" aria-modal="true" aria-label="Workout complete"><${Card} className="completion-card"><div className="completion-flame">🔥</div><${Typography} variant="overline" color="secondary.main" fontWeight=${900}>STREAK EXTENDED</${Typography}><${Typography} variant="h3" sx=${{fontWeight:900,my:.5}}>${count}</${Typography}><${Typography} variant="h5">${summary.name}</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:1,mb:2}}>Your session, weekly muscle-region report and progress totals are saved.</${Typography}><${Box} sx=${{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:1,mb:2}}><${Paper} variant="outlined" sx=${{p:1,borderRadius:3}}><${Typography} variant="h6">${summary.exerciseCount}</${Typography}><${Typography} variant="caption" color="text.secondary">Exercises</${Typography}></${Paper}><${Paper} variant="outlined" sx=${{p:1,borderRadius:3}}><${Typography} variant="h6">${summary.setCount}</${Typography}><${Typography} variant="caption" color="text.secondary">Sets</${Typography}></${Paper}><${Paper} variant="outlined" sx=${{p:1,borderRadius:3}}><${Typography} variant="h6">${Math.round(summary.volume)}</${Typography}><${Typography} variant="caption" color="text.secondary">Volume (${summary.volumeUnit||'kg'})</${Typography}></${Paper}></${Box}>${summary.regions?.length?html`<${Box} sx=${{display:'flex',justifyContent:'center',gap:.6,flexWrap:'wrap',mb:2}}>${summary.regions.slice(0,5).map(r=>html`<${Chip} key=${r} label=${REGION_META[r]?.[0]||r} size="small"/>`)}</${Box}>`:null}<${Button} fullWidth variant="contained" size="large" onClick=${onClose}>Done</${Button}></${Card}></div>`;
+    return html`<div className="completion-overlay" role="dialog" aria-modal="true" aria-label="Workout complete"><${Card} className="completion-card"><div className="completion-flame">🔥</div><${Typography} variant="overline" color="secondary.main" fontWeight=${900}>STREAK EXTENDED</${Typography}><${Typography} variant="h3" sx=${{fontWeight:900,my:.5}}>${count}</${Typography}><${Typography} variant="h5">${summary.name}</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:1,mb:1}}>Your session, weekly muscle-region report and progress totals are saved.</${Typography}>${summary.xpAward?html`<${Chip} icon=${html`<${Icon} name="bolt"/>`} label=${`+${summary.xpAward} XP`} color="secondary" sx=${{mb:1.5}}/>`:null}<${Box} sx=${{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:1,mb:2}}><${Paper} variant="outlined" sx=${{p:1,borderRadius:3}}><${Typography} variant="h6">${summary.exerciseCount}</${Typography}><${Typography} variant="caption" color="text.secondary">Exercises</${Typography}></${Paper}><${Paper} variant="outlined" sx=${{p:1,borderRadius:3}}><${Typography} variant="h6">${summary.setCount}</${Typography}><${Typography} variant="caption" color="text.secondary">Sets</${Typography}></${Paper}><${Paper} variant="outlined" sx=${{p:1,borderRadius:3}}><${Typography} variant="h6">${Math.round(summary.volume)}</${Typography}><${Typography} variant="caption" color="text.secondary">Volume (${summary.volumeUnit||'kg'})</${Typography}></${Paper}></${Box}>${summary.regions?.length?html`<${Box} sx=${{display:'flex',justifyContent:'center',gap:.6,flexWrap:'wrap',mb:2}}>${summary.regions.slice(0,5).map(r=>html`<${Chip} key=${r} label=${REGION_META[r]?.[0]||r} size="small"/>`)}</${Box}>`:null}<${Button} fullWidth variant="contained" size="large" onClick=${onClose}>Done</${Button}></${Card}></div>`;
   }
 
   function DesktopNav({tab,onChange}){
@@ -1130,7 +1255,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Compact logging, correct exercise tags, per-set removal and keyboard-safe nutrition.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Minimal interface, Focus Mode, XP levels, weekly missions and exercise mastery.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

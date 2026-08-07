@@ -1,5 +1,22 @@
 # Setline changelog
 
+## 7.0.0 — August 7, 2026
+
+### New
+- Custom compact Setline interface inspired by serious training tools rather than oversized dashboard cards.
+- Workout Focus Mode with previous performance, load, reps, RIR, Done and Remove controls.
+- Setline XP, levels and ranks based on completed training, consistency, recovery and personal records.
+- Weekly missions, exercise mastery tiers, milestone map and Comeback Mode.
+
+### Improved
+- Dark theme uses near-black surfaces, white text, one blue action accent and restrained amber/green states.
+- Progress page combines serious analytics with optional progression rewards.
+- Workout completion now shows the XP earned for the session.
+
+### Data safety
+- Permanent `setline-data-v1` storage key retained.
+- Schema 9 migration adds progression settings only; workout, nutrition and mixed-unit history are not rewritten.
+
 ## 6.6.4 — August 7, 2026
 
 ### Fixed

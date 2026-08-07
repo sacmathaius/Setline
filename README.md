@@ -1,6 +1,6 @@
-# Setline 6.6.3
+# Setline 6.6.4
 
-Setline 6.6.3 is a GitHub Pages-ready PWA patch for mixed-unit commercial gyms, preserving the original kg or lb value on every logged set.
+Setline 6.6.4 is a compact reliability patch focused on fast workout logging, correct exercise metadata, and a keyboard-safe nutrition flow.
 
 ## Publish the update
 
@@ -21,17 +21,16 @@ Do not upload the ZIP itself or place these files inside another folder.
 - Normal saves keep a last-good backup.
 - Exported JSON backups can be merged into the app.
 
-## 6.6.3 highlights
+## 6.6.4 highlights
 
-- Global kg/lb default in Run Setup, Workout, and Profile
-- Per-exercise unit memory for mixed commercial-gym machines
-- Original unit stored on every set without recalculating completed history
-- Machine profiles: free weight, cable, selectorized, Smith, plate-loaded, bodyweight, and custom
-- Remembered increments and optional exercise unit locking
-- Optional original-plus-converted display
-- Normalized mixed-unit volume charts and personal-record comparisons
-- Workout CSV export with original unit and normalized kilogram values
-- Training Guide explanation for mixed kg/lb logging
+- Compact minimal interface with reduced card padding, headings, radius, and visual weight
+- Clear kg/lb segmented toggle on every exercise; no automatic unit locking
+- Completed sets retain their original unit while incomplete sets can follow a new unit
+- Per-set remove button beside the completion button
+- Exact exercise definitions fix Leg Curl muscle and equipment metadata
+- Common-food presets, including boiled eggs, work without packaged-food search
+- Mobile food entry expands to a keyboard-safe full-screen form
+- Floating input labels receive corrected spacing and notch sizing
 
 ## First load and offline use
 
@@ -40,14 +39,14 @@ The app uses pinned React, Material UI, and HTM browser builds. Internet is requ
 ## Limitations
 
 - Data stays local to each browser/device; cloud sync is not included.
-- Food and barcode searches require internet access.
+- Packaged-food and barcode searches require internet access. Built-in common-food presets are editable estimates and should be checked against the product label when precision matters.
 - Camera barcode detection depends on browser support.
 - Training suggestions are general guidance, not medical advice.
 
 
-## Mixed-unit training in 6.6.3
+## Mixed-unit training in 6.6.4
 - Every set stores its original load and unit (`kg` or `lb`).
 - The global unit is only the default for new exercises and normalized charts.
-- Exercise-specific unit, machine profile, increment, and lock settings are remembered.
+- Exercise-specific unit, machine profile, and increment settings are remembered.
 - Completed history is never numerically rewritten during a unit change.
 - Workout CSV exports include both the original unit and a normalized kilogram value.

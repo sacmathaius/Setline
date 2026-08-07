@@ -19,11 +19,11 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '6.6.3';
-  const RELEASE_DATE = 'August 6, 2026';
+  const APP_VERSION = '6.6.4';
+  const RELEASE_DATE = 'August 7, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
-  const PRE_MIGRATION_KEY = 'setline-pre-v6.6.3-backup';
+  const PRE_MIGRATION_KEY = 'setline-pre-v6.6.4-backup';
   const LEGACY_KEYS = ['setline-fitness-v6-2','setline-fitness-v6-1','setline-fitness-v6','pulse-fitness-v6','pulse-fitness-v5','pulse-fitness-v2'];
 
   const ICONS = {
@@ -97,6 +97,20 @@
   const REGION_META = {
     upper_chest:['Upper chest','Push'],chest:['Chest','Push'],lats:['Lats','Pull'],upper_back:['Upper back','Pull'],lower_back:['Lower back','Pull'],front_delts:['Front delts','Push'],side_delts:['Side delts','Push'],rear_delts:['Rear delts','Pull'],biceps:['Biceps','Pull'],triceps:['Triceps','Push'],forearms:['Forearms','Pull'],quads:['Quads','Legs'],hamstrings:['Hamstrings','Legs'],glutes:['Glutes','Legs'],calves:['Calves','Legs'],core:['Core','Core']
   };
+  const EXERCISE_DEFINITIONS = [
+    {pattern:/^(seated |lying |prone |standing |single[- ]leg )?(machine )?(leg|hamstring) curls?$/i,primary:['hamstrings'],secondary:['calves'],machineProfile:'selectorized'},
+    {pattern:/^leg extensions?$/i,primary:['quads'],secondary:[],machineProfile:'selectorized'},
+    {pattern:/^hack squats?$/i,primary:['quads'],secondary:['glutes'],machineProfile:'plate_loaded'},
+    {pattern:/^leg press(es)?$/i,primary:['quads'],secondary:['glutes'],machineProfile:'plate_loaded'},
+    {pattern:/^lat pulldowns?$/i,primary:['lats'],secondary:['biceps','upper_back'],machineProfile:'cable_stack'},
+    {pattern:/^seated cable rows?$/i,primary:['upper_back','lats'],secondary:['biceps','rear_delts'],machineProfile:'cable_stack'},
+    {pattern:/^face pulls?$/i,primary:['rear_delts'],secondary:['upper_back'],machineProfile:'cable_stack'},
+    {pattern:/^(cable )?lateral raises?$/i,primary:['side_delts'],secondary:['front_delts'],machineProfile:'cable_stack'},
+    {pattern:/^rope triceps pushdowns?$/i,primary:['triceps'],secondary:[],machineProfile:'cable_stack'},
+    {pattern:/^cable crunch(es)?$/i,primary:['core'],secondary:[],machineProfile:'cable_stack'},
+    {pattern:/^chest press(es)?$/i,primary:['chest'],secondary:['front_delts','triceps'],machineProfile:'selectorized'},
+    {pattern:/^pec deck$/i,primary:['chest'],secondary:['front_delts'],machineProfile:'selectorized'}
+  ];
   const EXERCISE_MAP = [
     [/incline.*press|incline.*fly|low.to.high/i,['upper_chest'],['front_delts','triceps']],
     [/bench press|chest press|push.?up|pec deck|chest fly|cable fly|dumbbell press/i,['chest'],['front_delts','triceps']],
@@ -105,17 +119,32 @@
     [/rear delt|reverse fly|face pull/i,['rear_delts'],['upper_back']],
     [/lat pulldown|pull.?up|chin.?up|straight.arm pulldown/i,['lats'],['biceps','upper_back']],
     [/row|t.bar|seal row/i,['upper_back','lats'],['biceps','rear_delts']],
+    [/romanian|rdl|leg curl|hamstring/i,['hamstrings'],['glutes','lower_back']],
     [/deadlift|back extension|good morning/i,['lower_back','glutes','hamstrings'],['upper_back']],
-    [/biceps|curl|preacher|hammer/i,['biceps'],['forearms']],
     [/triceps|pushdown|skull crusher|dip|overhead extension/i,['triceps'],['chest','front_delts']],
+    [/biceps|curl|preacher|hammer/i,['biceps'],['forearms']],
     [/wrist|farmer|grip/i,['forearms'],[]],
     [/squat|leg press|hack squat|leg extension|split squat|lunge/i,['quads'],['glutes']],
-    [/romanian|rdl|leg curl|hamstring/i,['hamstrings'],['glutes','lower_back']],
     [/hip thrust|glute bridge|kickback/i,['glutes'],['hamstrings']],
     [/calf/i,['calves'],[]],
     [/crunch|plank|sit.?up|ab wheel|leg raise|pallof/i,['core'],[]]
   ];
   const REGION_SUGGESTIONS={upper_chest:['incline dumbbell press','low-to-high cable fly'],chest:['chest press','cable fly'],lats:['lat pulldown','single-arm pulldown'],upper_back:['chest-supported row','seated cable row'],lower_back:['back extension','Romanian deadlift'],front_delts:['overhead press','Arnold press'],side_delts:['cable lateral raise','dumbbell lateral raise'],rear_delts:['reverse fly','face pull'],biceps:['preacher curl','incline curl'],triceps:['overhead extension','rope pushdown'],forearms:['hammer curl','farmer carry'],quads:['hack squat','leg extension'],hamstrings:['Romanian deadlift','leg curl'],glutes:['hip thrust','Bulgarian split squat'],calves:['standing calf raise','seated calf raise'],core:['cable crunch','ab wheel']};
+
+  function exerciseDefinition(name=''){
+    const clean=String(name).trim();
+    return EXERCISE_DEFINITIONS.find(item=>item.pattern.test(clean))||null;
+  }
+  function inferredMachineProfile(name=''){
+    const defined=exerciseDefinition(name); if(defined?.machineProfile)return defined.machineProfile;
+    const clean=String(name).toLowerCase();
+    if(/cable|pulldown|pushdown|face pull/.test(clean))return 'cable_stack';
+    if(/machine|extension|leg curl/.test(clean))return 'selectorized';
+    if(/hack squat|leg press|plate.loaded/.test(clean))return 'plate_loaded';
+    if(/smith/.test(clean))return 'smith_machine';
+    if(/bodyweight|push.?up|pull.?up|plank/.test(clean))return 'bodyweight';
+    return 'free_weight';
+  }
 
   const MACHINE_TYPES=[
     {value:'free_weight',label:'Free weights',kg:2.5,lb:5},
@@ -132,14 +161,28 @@
     const remembered=data.exerciseSettings?.[exerciseKey(name)]||{};
     const previousUnit=previous?(previous.unit||getSets(previous,data.preferredUnit)[0]?.unit):'';
     const unit=normalizeUnit(previousUnit||remembered.unit||data.preferredUnit);
-    const machineProfile=previous?.machineProfile||remembered.machineProfile||'free_weight';
-    return {unit,machineProfile,increment:Number(previous?.increment||remembered.increment||machineIncrement(machineProfile,unit)),unitLocked:previous?.unitLocked??remembered.unitLocked??true};
+    let machineProfile=previous?.machineProfile||remembered.machineProfile||inferredMachineProfile(name);
+    const defined=exerciseDefinition(name);
+    if(defined?.machineProfile && (!machineProfile||machineProfile==='free_weight'))machineProfile=defined.machineProfile;
+    return {unit,machineProfile,increment:Number(previous?.increment||remembered.increment||machineIncrement(machineProfile,unit)),unitLocked:false};
   }
 
   function classifyExercise(name=''){
+    const defined=exerciseDefinition(name);
+    if(defined)return {primary:defined.primary,secondary:defined.secondary};
     const found=EXERCISE_MAP.find(([pattern])=>pattern.test(name));
     return found ? {primary:found[1],secondary:found[2]} : {primary:[],secondary:[]};
   }
+
+  const COMMON_FOODS = [
+    {name:'Boiled egg',aliases:['boiled eggs','hard boiled egg','egg'],amount:1,unit:'piece',kcal:78,protein:6.3,carbs:.6,fat:5.3,note:'1 large egg'},
+    {name:'Chicken breast, cooked',aliases:['chicken breast','cooked chicken'],amount:100,unit:'g',kcal:165,protein:31,carbs:0,fat:3.6,note:'per 100 g'},
+    {name:'White rice, cooked',aliases:['cooked rice','rice'],amount:100,unit:'g',kcal:130,protein:2.4,carbs:28.2,fat:.3,note:'per 100 g'},
+    {name:'Rolled oats, dry',aliases:['oats','oatmeal'],amount:100,unit:'g',kcal:379,protein:13.2,carbs:67.7,fat:6.5,note:'per 100 g'},
+    {name:'Banana',aliases:['banana medium'],amount:1,unit:'piece',kcal:105,protein:1.3,carbs:27,fat:.4,note:'1 medium'},
+    {name:'Milk, 2%',aliases:['2 percent milk','milk'],amount:250,unit:'ml',kcal:122,protein:8.1,carbs:12,fat:4.8,note:'per 250 ml'},
+    {name:'Plain yogurt',aliases:['yogurt','curd'],amount:100,unit:'g',kcal:61,protein:3.5,carbs:4.7,fat:3.3,note:'per 100 g'}
+  ];
 
   const GUIDE_ITEMS = [
     {term:'RIR',title:'Reps in Reserve',summary:'How many clean reps you could still perform when the set ends.',example:'60 kg × 8 with two good reps left = RIR 2.',tags:['effort','working set']},
@@ -163,7 +206,8 @@
   ];
 
   const CHANGELOG = [
-    {version:'6.6.3',date:RELEASE_DATE,items:['Added per-exercise kg/lb units while preserving every original load value','Exercise unit memory and optional unit locking for mixed commercial gyms','Machine profiles with remembered weight increments','Original and converted load display without rewriting history','Normalized volume charts and personal records across kg and lb','Workout CSV export now includes each set’s stored unit']},
+    {version:'6.6.4',date:RELEASE_DATE,items:['Compact minimal interface with smaller cards, typography and spacing','Visible kg/lb toggle on every exercise without automatic locking','Per-set remove control with confirmation for completed sets','Exact exercise definitions prevent Leg Curl from inheriting arm tags','Known machine exercises receive sensible equipment defaults','Generic food presets including boiled eggs plus packaged-food search','Keyboard-safe mobile food logger and corrected floating-label spacing']},
+    {version:'6.6.3',date:'August 6, 2026',items:['Added per-exercise kg/lb units while preserving every original load value','Exercise unit memory and optional unit locking for mixed commercial gyms','Machine profiles with remembered weight increments','Original and converted load display without rewriting history','Normalized volume charts and personal records across kg and lb','Workout CSV export now includes each set’s stored unit']},
     {version:'6.6.2',date:'August 5, 2026',items:['Fixed the Run Setup training-days selector so 1–7 saves independently','Professional eight-step setup wizard with equipment and movement selections','Added PPL + Upper/Lower and Bro Split with exact weekly schedule previews','Added complete split explanations to the Training Guide','Streak flame now flickers continuously and Easter eggs show quote attribution','Added a unified fluid motion system with reduced-motion support']},
     {version:'6.6.1',date:RELEASE_DATE,items:['Fixed profile, progress and nutrition clipping and spacing','Tappable Home metrics with compact bottom-sheet details and shortcuts','Seven-day mini trends and customizable Home metric order','Upper and Lower starter workout templates alongside Push, Pull and Legs','Random streak-tap Easter-egg motivation lines','Improved bottom-navigation clearance and small-screen layout']},
     {version:'6.6.0',date:RELEASE_DATE,items:['Complete React and Material UI interface rebuild','Light, dark and system themes','Faster workout logging with previous-set prefilling','Searchable Training Guide with contextual explanations','Explainable weekly muscle-region coaching','Redesigned nutrition day view and food editor','Unified Progress hub, onboarding, changelog and data tools','Automatic pre-migration backup and non-destructive storage migration']},
@@ -183,7 +227,7 @@
       schedule:{}, weeklyPlan:['push','pull','legs','rest','push','pull','rest'], autoShiftMissed:true,
       recovery:{}, scheduleMeta:{configured:false,lastProcessed:''},
       settings:{theme:'system',reducedMotion:false,haptics:true,advancedDefault:false,highContrast:false,showUnitConversions:true,homeCardOrder:['calories','protein','readiness','bodyweight'],hiddenHomeCards:[]},
-      onboardingComplete:false, changelogSeen:'', schemaVersion:7, updatedAt:null
+      onboardingComplete:false, changelogSeen:'', schemaVersion:8, updatedAt:null
     };
   }
 
@@ -196,7 +240,11 @@
         const workout=raw&&typeof raw==='object'?raw:{};
         const unit=normalizeUnit(workout.unit||workout.weightUnit||legacyUnit);
         const setEntries=Array.isArray(workout.setEntries)?workout.setEntries.map(set=>({...set,unit:normalizeUnit(set?.unit||set?.weightUnit||unit)})):workout.setEntries;
-        return {...workout,unit,setEntries};
+        const defined=exerciseDefinition(workout.name||'');
+        let machineProfile=workout.machineProfile||inferredMachineProfile(workout.name||'');
+        if(defined?.machineProfile && (!machineProfile||machineProfile==='free_weight'))machineProfile=defined.machineProfile;
+        const increment=Number(workout.increment)||machineIncrement(machineProfile,unit);
+        return {...workout,unit,machineProfile,increment,unitLocked:false,setEntries};
       }):[];
       output[date]={...day,workouts,calories:Array.isArray(day.calories)?day.calories:[],sessions:Array.isArray(day.sessions)?day.sessions:[]};
     }
@@ -213,7 +261,7 @@
       routines:parsed.routines&&typeof parsed.routines==='object'?parsed.routines:{},
       bodyWeights:parsed.bodyWeights&&typeof parsed.bodyWeights==='object'?parsed.bodyWeights:{},
       machineProfiles:parsed.machineProfiles&&typeof parsed.machineProfiles==='object'?parsed.machineProfiles:{},
-      exerciseSettings:parsed.exerciseSettings&&typeof parsed.exerciseSettings==='object'?parsed.exerciseSettings:{},
+      exerciseSettings:Object.fromEntries(Object.entries(parsed.exerciseSettings&&typeof parsed.exerciseSettings==='object'?parsed.exerciseSettings:{}).map(([name,setting])=>{const safe=setting&&typeof setting==='object'?setting:{};const unit=normalizeUnit(safe.unit||preferredUnit);const defined=exerciseDefinition(name);let machineProfile=safe.machineProfile||inferredMachineProfile(name);if(defined?.machineProfile&&(!machineProfile||machineProfile==='free_weight'))machineProfile=defined.machineProfile;return [name,{...safe,unit,machineProfile,increment:Number(safe.increment)||machineIncrement(machineProfile,unit),unitLocked:false}];})),
       workoutDrafts:parsed.workoutDrafts&&typeof parsed.workoutDrafts==='object'?parsed.workoutDrafts:{},
       profile:{...fallback.profile,...(parsed.profile||{}),trainingDays:clamp(parsed.profile?.trainingDays??fallback.profile.trainingDays,1,7),equipment:Array.isArray(parsed.profile?.equipment)?parsed.profile.equipment:fallback.profile.equipment,avoidMovements:Array.isArray(parsed.profile?.avoidMovements)?parsed.profile.avoidMovements:(parsed.profile?.avoid?String(parsed.profile.avoid).split(',').map(v=>v.trim()).filter(Boolean):[])},
       regionTargets:{...fallback.regionTargets,...(parsed.regionTargets||{})},
@@ -234,7 +282,7 @@
       fatGoal:Number(parsed.fatGoal)||fallback.fatGoal,
       bodyWeightKg:Number(parsed.bodyWeightKg)||fallback.bodyWeightKg,
       restSeconds:clamp(parsed.restSeconds||fallback.restSeconds,15,600),
-      schemaVersion:7
+      schemaVersion:8
     };
   }
 
@@ -277,10 +325,10 @@
       }
     }
     loaded=loaded||defaultState();
-    if(Number(loaded.schemaVersion||1)<7 || !loaded.settings){
+    if(Number(loaded.schemaVersion||1)<8 || !loaded.settings){
       try{localStorage.setItem(PRE_MIGRATION_KEY,JSON.stringify({app:'Setline',version:APP_VERSION,backedUpAt:new Date().toISOString(),data:loaded}));}catch(err){}
     }
-    loaded=normaliseState(loaded); loaded.schemaVersion=7;
+    loaded=normaliseState(loaded); loaded.schemaVersion=8;
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(loaded));}catch(err){}
     return loaded;
   }
@@ -292,7 +340,7 @@
       if(old && recordCount(old)>0 && recordCount(data)===0){
         console.warn('Setline blocked an unexpected empty-state overwrite.'); return false;
       }
-      localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,schemaVersion:7,updatedAt:new Date().toISOString()}));
+      localStorage.setItem(STORAGE_KEY,JSON.stringify({...data,schemaVersion:8,updatedAt:new Date().toISOString()}));
       return true;
     }catch(err){console.error(err);return false;}
   }
@@ -370,26 +418,27 @@
         text:{primary:dark?'#F7F9FC':'#142033',secondary:dark?'#9AABC0':'#607087'},
         divider:dark?(highContrast?'rgba(255,255,255,.25)':'rgba(154,171,192,.16)'):(highContrast?'rgba(20,32,51,.25)':'rgba(20,32,51,.10)')
       },
-      shape:{borderRadius:16},
-      typography:{fontFamily:'Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',h4:{fontWeight:800,letterSpacing:'-.035em'},h5:{fontWeight:800,letterSpacing:'-.025em'},h6:{fontWeight:750,letterSpacing:'-.02em'},button:{fontWeight:750,textTransform:'none'}},
+      shape:{borderRadius:12},
+      typography:{fontFamily:'Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',fontSize:13.5,h4:{fontWeight:800,fontSize:'1.72rem',lineHeight:1.14,letterSpacing:'-.03em'},h5:{fontWeight:800,fontSize:'1.34rem',lineHeight:1.2,letterSpacing:'-.02em'},h6:{fontWeight:750,fontSize:'1.05rem',lineHeight:1.25,letterSpacing:'-.015em'},body1:{fontSize:'.94rem'},body2:{fontSize:'.84rem'},caption:{fontSize:'.72rem'},button:{fontWeight:750,fontSize:'.83rem',textTransform:'none'}},
       components:{
-        MuiCssBaseline:{styleOverrides:{body:{backgroundImage:dark?'radial-gradient(circle at 50% -10%,#19335a 0,#07111f 32%,#07111f 100%)':'linear-gradient(180deg,#EEF3FC 0,#F7F8FB 34%,#F5F7FB 100%)'}}},
-        MuiCard:{styleOverrides:{root:{border:`1px solid ${dark?'rgba(154,171,192,.14)':'rgba(20,32,51,.08)'}`,boxShadow:dark?'0 14px 36px rgba(0,0,0,.18)':'0 12px 32px rgba(36,54,79,.08)',backgroundImage:'none'}}},
-        MuiButton:{defaultProps:{disableElevation:true},styleOverrides:{root:{minHeight:44,borderRadius:13}}},
-        MuiIconButton:{styleOverrides:{root:{minWidth:44,minHeight:44}}},
+        MuiCssBaseline:{styleOverrides:{body:{backgroundImage:'none'}}},
+        MuiCard:{styleOverrides:{root:{border:`1px solid ${dark?'rgba(154,171,192,.14)':'rgba(20,32,51,.09)'}`,boxShadow:'none',backgroundImage:'none'}}},
+        MuiButton:{defaultProps:{disableElevation:true},styleOverrides:{root:{minHeight:38,borderRadius:10,paddingLeft:12,paddingRight:12}}},
+        MuiIconButton:{styleOverrides:{root:{minWidth:38,minHeight:38}}},
         MuiTextField:{defaultProps:{variant:'outlined',size:'small'}},
-        MuiOutlinedInput:{styleOverrides:{root:{borderRadius:13}}},
-        MuiChip:{styleOverrides:{root:{fontWeight:700}}},
+        MuiOutlinedInput:{styleOverrides:{root:{borderRadius:10,minHeight:42},input:{paddingTop:10,paddingBottom:10}}},
+        MuiInputLabel:{styleOverrides:{root:{lineHeight:1.2,maxWidth:'calc(100% - 24px)'},shrink:{paddingLeft:3,paddingRight:3}}},
+        MuiChip:{styleOverrides:{root:{fontWeight:700,height:28,borderRadius:9},label:{paddingLeft:9,paddingRight:9}}},
         MuiBottomNavigation:{styleOverrides:{root:{height:'calc(68px + env(safe-area-inset-bottom))',paddingBottom:'env(safe-area-inset-bottom)',backgroundColor:dark?'rgba(7,17,31,.94)':'rgba(255,255,255,.95)',backdropFilter:'blur(18px)',borderTop:`1px solid ${dark?'rgba(154,171,192,.18)':'rgba(20,32,51,.10)'}`}}},
         MuiBottomNavigationAction:{styleOverrides:{root:{minWidth:0,padding:'8px 2px',fontSize:10},label:{fontSize:10,'&.Mui-selected':{fontSize:10}}}},
-        MuiDialog:{styleOverrides:{paper:{borderRadius:22}}}
+        MuiDialog:{styleOverrides:{paper:{borderRadius:16}}}
       }
     });
   }
 
-  function CardShell({children,sx={},...props}){return html`<${Card} className="material-card" sx=${{...sx}} ...${props}><${CardContent} sx=${{p:2.1,'&:last-child':{pb:2.1}}}>${children}</${CardContent}></${Card}>`;}
-  function PageHeader({eyebrow,title,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:2,mb:2,flexWrap:'wrap'}}><${Box}><${Typography} variant="overline" color="text.secondary" sx=${{fontWeight:800,letterSpacing:1.2}}>${eyebrow}</${Typography}><${Typography} variant="h4">${title}</${Typography}></${Box}>${action||null}</${Box}>`;}
-  function SectionHeading({title,subtitle,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:1.5,mb:1.2}}><${Box} sx=${{minWidth:0}}><${Typography} variant="h6">${title}</${Typography}>${subtitle?html`<${Typography} variant="body2" color="text.secondary">${subtitle}</${Typography}>`:null}</${Box}>${action||null}</${Box}>`;}
+  function CardShell({children,sx={},...props}){return html`<${Card} className="material-card" sx=${{...sx}} ...${props}><${CardContent} sx=${{p:1.55,'&:last-child':{pb:1.55}}}>${children}</${CardContent}></${Card}>`;}
+  function PageHeader({eyebrow,title,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:1.2,mb:1.35,flexWrap:'wrap'}}><${Box}><${Typography} variant="overline" color="text.secondary" sx=${{fontWeight:800,letterSpacing:1.05,lineHeight:1.2}}>${eyebrow}</${Typography}><${Typography} variant="h4">${title}</${Typography}></${Box}>${action||null}</${Box}>`;}
+  function SectionHeading({title,subtitle,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:1,mb:.9}}><${Box} sx=${{minWidth:0}}><${Typography} variant="h6">${title}</${Typography}>${subtitle?html`<${Typography} variant="body2" color="text.secondary">${subtitle}</${Typography}>`:null}</${Box}>${action||null}</${Box}>`;}
   function InfoButton({term,onOpen}){return html`<${Tooltip} title=${`Explain ${term}`}><${IconButton} size="small" aria-label=${`Explain ${term}`} onClick=${()=>onOpen(term)}><${Icon} name="info" fontSize="small"/></${IconButton}></${Tooltip}>`;}
   function DateBar({value,onChange,label='Editing',sticky=true}){
     return html`<${Paper} className=${sticky?'date-strip date-strip-sticky':'date-strip'} elevation=${0} sx=${{display:'flex',alignItems:'center',gap:1,p:1,mb:1.8,bgcolor:'background.default',backgroundImage:'none'}}>
@@ -422,7 +471,7 @@
     const [data,setData]=useState(()=>loadState());
     const saveTimer=useRef(null);
     useEffect(()=>{clearTimeout(saveTimer.current);saveTimer.current=setTimeout(()=>persistState(data),120);return()=>clearTimeout(saveTimer.current);},[data]);
-    const update=useCallback(mutator=>setData(prev=>{const next=deepClone(prev);mutator(next);next.schemaVersion=7;next.updatedAt=new Date().toISOString();return next;}),[]);
+    const update=useCallback(mutator=>setData(prev=>{const next=deepClone(prev);mutator(next);next.schemaVersion=8;next.updatedAt=new Date().toISOString();return next;}),[]);
     return [data,update,setData];
   }
 
@@ -525,7 +574,7 @@
     const toggleAvoid=value=>setDraft(current=>{const items=new Set(current.avoidMovements||[]);items.has(value)?items.delete(value):items.add(value);return{...current,avoidMovements:[...items]};});
     const finish=()=>{const safeDays=clamp(draft.trainingDays??4,1,7);update(next=>{const equipment=Array.isArray(draft.equipment)?draft.equipment:[];const avoidMovements=Array.isArray(draft.avoidMovements)?draft.avoidMovements:[];next.profile={...next.profile,...draft,trainingDays:safeDays,equipment,avoidMovements,avoid:avoidMovements.join(', '),avoidNote:draft.avoidNote||''};next.settings.theme=themeMode;next.preferredUnit=normalizeUnit(unitMode);next.weeklyPlan=generatePlan(draft.split,safeDays);next.scheduleMeta.configured=true;next.onboardingComplete=true;});onClose();};
     return html`<${Dialog} open=${open} fullScreen=${fullScreen} maxWidth="md" fullWidth onClose=${onClose} PaperProps=${{className:'setup-dialog'}}>
-      <${DialogTitle} sx=${{pb:1}}><${Stack} direction="row" alignItems="center" justifyContent="space-between" spacing=${2}><${Box}><${Typography} variant="overline" color="primary.main" fontWeight=${900}>SETLINE 6.6.3</${Typography}><${Typography} variant="h5">Run Setup</${Typography}></${Box}><${IconButton} onClick=${onClose} aria-label="Close setup"><${Icon} name="close"/></${IconButton}></${Stack}></${DialogTitle}>
+      <${DialogTitle} sx=${{pb:1}}><${Stack} direction="row" alignItems="center" justifyContent="space-between" spacing=${2}><${Box}><${Typography} variant="overline" color="primary.main" fontWeight=${900}>SETLINE 6.6.4</${Typography}><${Typography} variant="h5">Run Setup</${Typography}></${Box}><${IconButton} onClick=${onClose} aria-label="Close setup"><${Icon} name="close"/></${IconButton}></${Stack}></${DialogTitle}>
       <${DialogContent} dividers>
         <${Box} sx=${{mb:2.5}}><${Stack} direction="row" justifyContent="space-between" alignItems="center" sx=${{mb:.7}}><${Typography} variant="body2" fontWeight=${850}>${steps[step]}</${Typography}><${Typography} variant="caption" color="text.secondary">Step ${step+1} of ${steps.length}</${Typography}></${Stack}><${LinearProgress} variant="determinate" value=${((step+1)/steps.length)*100} sx=${{height:7,borderRadius:99}}/></${Box}>
         <div className="setup-step" key=${step}>
@@ -696,13 +745,13 @@
 
   function AddExerciseDialog({open,onClose,data,dateKey,onAdd,initial=null,plan='workout'}){
     const [name,setName]=useState(''); const [count,setCount]=useState(3); const [load,setLoad]=useState(''); const [reps,setReps]=useState(10); const [group,setGroup]=useState(''); const [usePrevious,setUsePrevious]=useState(true);
-    const [unit,setUnit]=useState(data.preferredUnit); const [machineProfile,setMachineProfile]=useState('free_weight'); const [increment,setIncrement]=useState(machineIncrement('free_weight',data.preferredUnit)); const [unitLocked,setUnitLocked]=useState(true);
+    const [unit,setUnit]=useState(data.preferredUnit); const [machineProfile,setMachineProfile]=useState('free_weight'); const [increment,setIncrement]=useState(machineIncrement('free_weight',data.preferredUnit));
     const previous=name?previousWorkout(data,name,dateKey):null;
     useEffect(()=>{if(open){
       const initialName=initial?.name||''; const prior=initial||previousWorkout(data,initialName,dateKey); const setting=exerciseSetting(data,initialName,prior);
-      setName(initialName);setCount(initial?getSets(initial,data.preferredUnit).length:3);setLoad(initial?getSets(initial,data.preferredUnit)[0]?.load||'':'');setReps(initial?getSets(initial,data.preferredUnit)[0]?.reps||10:10);setGroup(initial?.group||'');setUsePrevious(!initial);setUnit(setting.unit);setMachineProfile(setting.machineProfile);setIncrement(setting.increment);setUnitLocked(setting.unitLocked);
+      setName(initialName);setCount(initial?getSets(initial,data.preferredUnit).length:3);setLoad(initial?getSets(initial,data.preferredUnit)[0]?.load||'':'');setReps(initial?getSets(initial,data.preferredUnit)[0]?.reps||10:10);setGroup(initial?.group||'');setUsePrevious(!initial);setUnit(setting.unit);setMachineProfile(setting.machineProfile);setIncrement(setting.increment);
     }},[open,initial]);
-    useEffect(()=>{if(!open||initial||!name.trim())return;const remembered=data.exerciseSettings?.[exerciseKey(name)];const prior=previousWorkout(data,name,dateKey);if(remembered||prior){const setting=exerciseSetting(data,name,prior);setUnit(setting.unit);setMachineProfile(setting.machineProfile);setIncrement(setting.increment);setUnitLocked(setting.unitLocked);}},[name,open,initial]);
+    useEffect(()=>{if(!open||initial||!name.trim())return;const prior=previousWorkout(data,name,dateKey);const setting=exerciseSetting(data,name,prior);setUnit(setting.unit);setMachineProfile(setting.machineProfile);setIncrement(setting.increment);},[name,open,initial]);
     const selectMachine=value=>{setMachineProfile(value);setIncrement(machineIncrement(value,unit));};
     const selectUnit=value=>{const next=normalizeUnit(value);setUnit(next);setIncrement(machineIncrement(machineProfile,next));};
     const submit=()=>{
@@ -710,7 +759,7 @@
       let sets;
       if(usePrevious&&previous){sets=getSets(previous,data.preferredUnit).map(set=>({...set,id:id('set'),done:false,note:''}));}
       else{sets=Array.from({length:clamp(count,1,12)},()=>({id:id('set'),load:Number(load)||0,unit,reps:Number(reps)||0,done:false,type:'working',rir:'',rpe:'',note:''}));}
-      onAdd({id:initial?.id||id('workout'),name:name.trim(),group:group.trim(),unit,machineProfile,increment:Number(increment)||machineIncrement(machineProfile,unit),unitLocked,setEntries:sets,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()},initial);onClose();
+      onAdd({id:initial?.id||id('workout'),name:name.trim(),group:group.trim(),unit,machineProfile,increment:Number(increment)||machineIncrement(machineProfile,unit),unitLocked:false,setEntries:sets,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()},initial);onClose();
     };
     const suggestions=[...(WORKOUT_TEMPLATES[plan]||[]),...COMMON_EXERCISES].filter((item,index,array)=>array.indexOf(item)===index);
     return html`<${Dialog} open=${open} onClose=${onClose} maxWidth="sm" fullWidth>
@@ -724,7 +773,6 @@
           <${Typography} fontWeight=${800}>Machine and load unit</${Typography}>
           <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr',sm:'1.35fr 1fr'},gap:1}}><${TextField} select label="Equipment profile" value=${machineProfile} onChange=${e=>selectMachine(e.target.value)}>${MACHINE_TYPES.map(item=>html`<${MenuItem} key=${item.value} value=${item.value}>${item.label}</${MenuItem}>`)}</${TextField}><${ToggleButtonGroup} exclusive fullWidth value=${unit} onChange=${(_,value)=>value&&selectUnit(value)}><${ToggleButton} value="kg">kg</${ToggleButton}><${ToggleButton} value="lb">lb</${ToggleButton}></${ToggleButtonGroup}></${Box}>
           <${TextField} label=${`Weight increment (${unit})`} type="number" value=${increment} onChange=${e=>setIncrement(e.target.value)} inputProps=${{min:.1,step:.1}} helperText="Used as the step size for new sets on this exercise."/>
-          <${FormControlLabel} control=${html`<${Switch} checked=${unitLocked} onChange=${e=>setUnitLocked(e.target.checked)}/>`} label="Lock this unit for this exercise"/>
           <${Typography} variant="caption" color="text.secondary">Setline stores the original number and unit on every set. Changing your global default never rewrites completed history.</${Typography}>
         </${Stack}></${Paper}>
         ${!usePrevious||!previous||initial?html`<${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(3,1fr)'},gap:1}}><${TextField} label="Sets" type="number" value=${count} onChange=${e=>setCount(e.target.value)} inputProps=${{min:1,max:12}}/><${TextField} label=${`Load (${unit})`} type="number" value=${load} onChange=${e=>setLoad(e.target.value)} inputProps=${{min:0,step:Number(increment)||.5}}/><${TextField} label="Reps" type="number" value=${reps} onChange=${e=>setReps(e.target.value)} inputProps=${{min:0,max:100}}/></${Box}>`:null}
@@ -752,25 +800,28 @@
         const existing=target.workouts[editIndex],existingSets=getSets(existing,next.preferredUnit).map(set=>set.done===false?{...set,unit:workout.unit}:set);
         target.workouts[editIndex]={...existing,...workout,setEntries:existingSets};
       }else target.workouts.push(workout);
-      next.exerciseSettings[key]={unit:normalizeUnit(workout.unit),machineProfile:workout.machineProfile||'free_weight',increment:Number(workout.increment)||machineIncrement(workout.machineProfile,workout.unit),unitLocked:workout.unitLocked!==false};
+      next.exerciseSettings[key]={unit:normalizeUnit(workout.unit),machineProfile:workout.machineProfile||'free_weight',increment:Number(workout.increment)||machineIncrement(workout.machineProfile,workout.unit),unitLocked:false};
       next.machineProfiles[key]={unit:normalizeUnit(workout.unit),type:workout.machineProfile||'free_weight',increment:Number(workout.increment)||machineIncrement(workout.machineProfile,workout.unit)};
     });
     const updateSet=(wi,si,patch)=>mutateWorkout(wi,workout=>{if(!Array.isArray(workout.setEntries))workout.setEntries=getSets(workout);workout.setEntries[si]={...workout.setEntries[si],unit:normalizeUnit(workout.setEntries[si].unit||workout.unit||data.preferredUnit),...patch};workout.updatedAt=new Date().toISOString();});
     const completeSet=(wi,si,set)=>{const done=set.done===false;updateSet(wi,si,{done});showFeedback(done?'Set saved':'Set reopened');if(done&&data.autoRest)setRestUntil(Date.now()+Number(data.restSeconds||90)*1000);};
     const addSet=(wi)=>mutateWorkout(wi,workout=>{if(!Array.isArray(workout.setEntries))workout.setEntries=getSets(workout);const last=workout.setEntries.at(-1)||{};workout.setEntries.push({...last,id:id('set'),unit:normalizeUnit(workout.unit||last.unit||data.preferredUnit),done:false,note:''});});
+    const removeSet=(wi,si,set)=>{if(set.done!==false&&!confirm(`Remove completed set ${si+1}?`))return;mutateWorkout(wi,workout=>{if(!Array.isArray(workout.setEntries))workout.setEntries=getSets(workout);workout.setEntries.splice(si,1);workout.updatedAt=new Date().toISOString();});showFeedback('Set removed');};
     const deleteExercise=wi=>{if(!confirm('Delete this exercise from the selected session?'))return;update(next=>ensureDayMutable(next,selectedDate).workouts.splice(wi,1));showFeedback('Exercise removed');};
     const duplicateExercise=wi=>update(next=>{const target=ensureDayMutable(next,selectedDate);const copy=deepClone(target.workouts[wi]);copy.id=id('workout');copy.name=`${copy.name}`;copy.setEntries=getSets(copy).map(s=>({...s,id:id('set'),done:false}));target.workouts.splice(wi+1,0,copy);});
-    const addStarterTemplate=()=>{const template=WORKOUT_TEMPLATES[plan];if(!template?.length)return;const existing=new Set(currentWorkouts.map(workout=>String(workout.name).toLowerCase()));update(next=>{const target=ensureDayMutable(next,selectedDate);for(const name of template){if(existing.has(name.toLowerCase()))continue;const setting=exerciseSetting(next,name);target.workouts.push({id:id('workout'),name,group:'',unit:setting.unit,machineProfile:setting.machineProfile,increment:setting.increment,unitLocked:setting.unitLocked,setEntries:Array.from({length:3},()=>({id:id('set'),load:0,unit:setting.unit,reps:10,done:false,type:'working',rir:'',rpe:'',note:''})),loggedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}});showFeedback(`${planLabel(plan)} starter added`);};
+    const addStarterTemplate=()=>{const template=WORKOUT_TEMPLATES[plan];if(!template?.length)return;const existing=new Set(currentWorkouts.map(workout=>String(workout.name).toLowerCase()));update(next=>{const target=ensureDayMutable(next,selectedDate);for(const name of template){if(existing.has(name.toLowerCase()))continue;const setting=exerciseSetting(next,name);target.workouts.push({id:id('workout'),name,group:'',unit:setting.unit,machineProfile:setting.machineProfile,increment:setting.increment,unitLocked:false,setEntries:Array.from({length:3},()=>({id:id('set'),load:0,unit:setting.unit,reps:10,done:false,type:'working',rir:'',rpe:'',note:''})),loggedAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}});showFeedback(`${planLabel(plan)} starter added`);};
     const changeExerciseUnit=(wi,nextUnit)=>{
-      const current=currentWorkouts[wi];
-      if(!current)return;
-      if(current.unitLocked!==false){showFeedback('Unit locked — edit the exercise to change it');return;}
+      const current=currentWorkouts[wi]; if(!current)return;
+      const oldUnit=normalizeUnit(current.unit||getSets(current,data.preferredUnit)[0]?.unit||data.preferredUnit),unit=normalizeUnit(nextUnit);
+      if(oldUnit===unit)return;
       update(next=>{
         const workout=ensureDayMutable(next,selectedDate).workouts[wi];if(!workout)return;
-        const unit=normalizeUnit(nextUnit);workout.unit=unit;workout.increment=machineIncrement(workout.machineProfile||'free_weight',unit);
-        workout.setEntries=getSets(workout,next.preferredUnit).map(set=>set.done===false?{...set,unit}:set);workout.updatedAt=new Date().toISOString();
-        next.exerciseSettings[exerciseKey(workout.name)]={unit,machineProfile:workout.machineProfile||'free_weight',increment:workout.increment,unitLocked:false};
+        workout.unit=unit;workout.unitLocked=false;workout.increment=machineIncrement(workout.machineProfile||inferredMachineProfile(workout.name),unit);
+        workout.setEntries=getSets(workout,next.preferredUnit).map(set=>set.done===false?{...set,load:Number(set.load)?round1(convertWeight(set.load,set.unit||oldUnit,unit)):set.load,unit}:set);
+        workout.updatedAt=new Date().toISOString();
+        next.exerciseSettings[exerciseKey(workout.name)]={unit,machineProfile:workout.machineProfile||inferredMachineProfile(workout.name),increment:workout.increment,unitLocked:false};
       });
+      showFeedback(`New and incomplete sets use ${unit}`);
     };
     const completeWorkout=()=>{
       if(!currentWorkouts.length)return;
@@ -792,11 +843,11 @@
           const sets=Array.isArray(workout.setEntries)?workout.setEntries:getSets(workout); const regions=classifyExercise(workout.name); const isAdvanced=advanced[workout.id||wi]??data.settings.advancedDefault; const previous=previousWorkout(data,workout.name,selectedDate);
           return html`<${CardShell} key=${workout.id||`${workout.name}-${wi}`}>
             <${Stack} direction="row" alignItems="flex-start" justifyContent="space-between" spacing=${1}>
-              <${Box} sx=${{minWidth:0}}><${Stack} direction="row" spacing=${.7} alignItems="center" flexWrap="wrap"><${Typography} className="exercise-title" variant="h6">${workout.name}</${Typography}>${workout.group?html`<${Chip} label=${`Group ${workout.group}`} size="small" color="secondary"/>`:null}<${Chip} size="small" color="primary" variant="filled" label=${`${normalizeUnit(workout.unit||sets[0]?.unit||data.preferredUnit).toUpperCase()}${workout.unitLocked!==false?' · LOCKED':''}`} onClick=${()=>changeExerciseUnit(wi,normalizeUnit(workout.unit||sets[0]?.unit||data.preferredUnit)==='kg'?'lb':'kg')}/><${Chip} size="small" variant="outlined" label=${`${machineTypeInfo(workout.machineProfile||'free_weight').label} · ${workout.increment||machineIncrement(workout.machineProfile,workout.unit)} ${normalizeUnit(workout.unit||data.preferredUnit)}`}/></${Stack}><${Box} sx=${{display:'flex',gap:.6,flexWrap:'wrap',mt:.7}}>${regions.primary.map(r=>html`<${Chip} key=${r} size="small" label=${REGION_META[r]?.[0]||r} color="primary" variant="outlined"/>`)}${regions.secondary.slice(0,2).map(r=>html`<${Chip} key=${r} size="small" label=${REGION_META[r]?.[0]||r} variant="outlined"/>`)}</${Box}>${previous?html`<${Typography} variant="caption" color="text.secondary" sx=${{display:'block',mt:.8}}>Previous ${formatDate(previous.date)}: ${getSets(previous,data.preferredUnit).map(s=>`${formatLoad(s.load,s.unit)}×${s.reps||0}`).join(' · ')}</${Typography}>`:null}</${Box}>
+              <${Box} sx=${{minWidth:0,flex:1}}><${Stack} direction="row" spacing=${.6} alignItems="center" sx=${{minWidth:0}}><${Typography} className="exercise-title" variant="h6">${workout.name}</${Typography}>${workout.group?html`<${Chip} label=${`Group ${workout.group}`} size="small" color="secondary"/>`:null}</${Stack}><${Stack} direction="row" spacing=${.8} alignItems="center" flexWrap="wrap" sx=${{mt:.55}}><${ToggleButtonGroup} className="exercise-unit-toggle" size="small" exclusive value=${normalizeUnit(workout.unit||sets[0]?.unit||data.preferredUnit)} onChange=${(_,value)=>value&&changeExerciseUnit(wi,value)} aria-label=${`${workout.name} weight unit`}><${ToggleButton} value="kg">kg</${ToggleButton}><${ToggleButton} value="lb">lb</${ToggleButton}></${ToggleButtonGroup}><${Typography} variant="caption" color="text.secondary">${machineTypeInfo(workout.machineProfile||inferredMachineProfile(workout.name)).label} · ${workout.increment||machineIncrement(workout.machineProfile,workout.unit)} ${normalizeUnit(workout.unit||data.preferredUnit)} increments</${Typography}></${Stack}><${Box} sx=${{display:'flex',gap:.5,flexWrap:'wrap',mt:.55}}>${regions.primary.map(r=>html`<${Chip} key=${r} size="small" label=${REGION_META[r]?.[0]||r} color="primary" variant="outlined"/>`)}${regions.secondary.slice(0,2).map(r=>html`<${Chip} key=${r} size="small" label=${REGION_META[r]?.[0]||r} variant="outlined"/>`)}</${Box}>${previous?html`<${Typography} variant="caption" color="text.secondary" sx=${{display:'block',mt:.55}}>Previous ${formatDate(previous.date)}: ${getSets(previous,data.preferredUnit).map(s=>`${formatLoad(s.load,s.unit)}×${s.reps||0}`).join(' · ')}</${Typography}>`:null}</${Box}>
               <${Box} sx=${{display:'flex'}}><${Tooltip} title="Duplicate"><${IconButton} size="small" onClick=${()=>duplicateExercise(wi)}><${Icon} name="copy" fontSize="small"/></${IconButton}></${Tooltip}><${Tooltip} title="Edit"><${IconButton} size="small" onClick=${()=>{setEditIndex(wi);setAddOpen(true);}}><${Icon} name="edit" fontSize="small"/></${IconButton}></${Tooltip}><${Tooltip} title="Delete"><${IconButton} size="small" color="error" onClick=${()=>deleteExercise(wi)}><${Icon} name="delete" fontSize="small"/></${IconButton}></${Tooltip}></${Box}>
             </${Stack}>
             <${Divider} sx=${{my:1.5}}/>
-            <div className=${`set-grid ${isAdvanced?'advanced':''} set-head`}><span>Set</span><span>Load</span><span>Reps</span>${isAdvanced?html`<span>RIR / type</span>`:null}<span>Done</span></div>
+            <div className=${`set-grid ${isAdvanced?'advanced':''} set-head`}><span>Set</span><span>Load</span><span>Reps</span>${isAdvanced?html`<span>RIR / type</span>`:null}<span>Done</span><span></span></div>
             <${Stack} spacing=${1} sx=${{mt:.7}}>${sets.map((set,si)=>html`<${Box} key=${set.id||si}>
               <div className=${`set-grid ${isAdvanced?'advanced':''}`}>
                 <${Avatar} sx=${{width:30,height:30,fontSize:12,bgcolor:set.done===false?'action.selected':'primary.main',color:set.done===false?'text.secondary':'#fff'}}>${si+1}</${Avatar}>
@@ -804,6 +855,7 @@
                 <${TextField} className="set-input" aria-label=${`Set ${si+1} reps`} type="number" value=${set.reps??''} onChange=${e=>updateSet(wi,si,{reps:e.target.value})} inputProps=${{min:0,max:200}}/>
                 ${isAdvanced?html`<${Stack} spacing=${.5}><${TextField} className="set-input" aria-label=${`Set ${si+1} RIR`} type="number" value=${set.rir??''} onChange=${e=>updateSet(wi,si,{rir:e.target.value,rpe:e.target.value===''?'':10-Number(e.target.value)})} placeholder="RIR" inputProps=${{min:0,max:10}}/><${TextField} select value=${set.type||'working'} onChange=${e=>updateSet(wi,si,{type:e.target.value})} SelectProps=${{native:true}}><option value="warmup">Warm-up</option><option value="working">Working</option><option value="amrap">AMRAP</option><option value="drop">Drop</option><option value="failure">Failure</option></${TextField}></${Stack}>`:null}
                 <${IconButton} aria-label=${set.done===false?'Complete set':'Reopen set'} color=${set.done===false?'default':'success'} onClick=${()=>completeSet(wi,si,set)} sx=${{border:'1px solid',borderColor:set.done===false?'divider':'success.main'}}><${Icon} name="check"/></${IconButton}>
+                <${IconButton} aria-label=${`Remove set ${si+1}`} color="error" onClick=${()=>removeSet(wi,si,set)} sx=${{border:'1px solid',borderColor:'divider'}}><${Icon} name="close"/></${IconButton}>
               </div>
               ${isAdvanced?html`<${TextField} fullWidth multiline maxRows=${2} value=${set.note||''} onChange=${e=>updateSet(wi,si,{note:e.target.value})} placeholder="Set note (optional)" sx=${{mt:.7}}/>`:null}
             </${Box}>`)}</${Stack}>
@@ -818,29 +870,30 @@
   }
 
   function AddFoodDialog({open,onClose,data,initial,onSave,defaultMeal='Breakfast'}){
+    const mobile=useMediaQuery('(max-width:600px)');
     const blank={name:'',meal:defaultMeal,kcal:'',protein:'',carbs:'',fat:'',amount:1,unit:'serving',favorite:false,barcode:''};
     const [form,setForm]=useState(blank); const [query,setQuery]=useState(''); const [results,setResults]=useState([]); const [loading,setLoading]=useState(false); const [error,setError]=useState('');
     useEffect(()=>{if(open){setForm(initial?{...blank,...initial,favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');}},[open,initial,defaultMeal]);
     const patch=(key,value)=>setForm({...form,[key]:value});
-    const applyProduct=product=>{const n=product.nutriments||{};setForm({...form,name:product.product_name||product.generic_name||form.name,kcal:Math.round(Number(n['energy-kcal_100g']||0)),protein:round1(n.proteins_100g||0),carbs:round1(n.carbohydrates_100g||0),fat:round1(n.fat_100g||0),amount:100,unit:'g',barcode:product.code||form.barcode});setResults([]);};
-    const search=async()=>{if(!query.trim())return;setLoading(true);setError('');try{const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8`;const res=await fetch(url);if(!res.ok)throw new Error('Search failed');const json=await res.json();setResults((json.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,8));if(!(json.products||[]).length)setError('No products found. Enter the nutrition manually.');}catch(err){setError('Food search is unavailable right now. Manual logging still works.');}finally{setLoading(false);}};
+    const applyProduct=product=>{if(product._setlinePreset){setForm({...form,name:product.name,kcal:product.kcal,protein:product.protein,carbs:product.carbs,fat:product.fat,amount:product.amount,unit:product.unit,barcode:''});setResults([]);return;}const n=product.nutriments||{};setForm({...form,name:product.product_name||product.generic_name||form.name,kcal:Math.round(Number(n['energy-kcal_100g']||0)),protein:round1(n.proteins_100g||0),carbs:round1(n.carbohydrates_100g||0),fat:round1(n.fat_100g||0),amount:100,unit:'g',barcode:product.code||form.barcode});setResults([]);};
+    const search=async()=>{const term=query.trim().toLowerCase();if(!term)return;const local=COMMON_FOODS.filter(item=>[item.name,...item.aliases].some(label=>label.toLowerCase().includes(term)||term.includes(label.toLowerCase()))).slice(0,6).map(item=>({...item,_setlinePreset:true}));setResults(local);setLoading(true);setError('');try{const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=6`;const res=await fetch(url);if(!res.ok)throw new Error('Search failed');const json=await res.json();const packaged=(json.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,6);setResults([...local,...packaged]);if(!local.length&&!packaged.length)setError('No match found. Enter the nutrition manually.');}catch(err){if(!local.length)setError('Online packaged-food search is unavailable. Manual logging still works.');}finally{setLoading(false);}};
     const lookupBarcode=async(code=form.barcode)=>{if(!code.trim())return;setLoading(true);setError('');try{const res=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json`);const json=await res.json();if(!json.product)throw new Error('Not found');applyProduct({...json.product,code});}catch(err){setError('Barcode not found. Enter the food manually.');}finally{setLoading(false);}};
     const scanImage=async file=>{if(!file)return;if(!('BarcodeDetector' in window)){setError('Camera barcode detection is not supported in this browser. Type the barcode instead.');return;}setLoading(true);try{const bitmap=await createImageBitmap(file);const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});const codes=await detector.detect(bitmap);if(!codes.length)throw new Error('No barcode');patch('barcode',codes[0].rawValue);await lookupBarcode(codes[0].rawValue);}catch(err){setError('No barcode was detected in that image.');}finally{setLoading(false);}};
     const submit=()=>{if(!form.name.trim()||!Number.isFinite(Number(form.kcal))){setError('Enter a food name and calories.');return;}onSave({...form,id:initial?.id||id('food'),name:form.name.trim(),kcal:Number(form.kcal)||0,protein:Number(form.protein)||0,carbs:Number(form.carbs)||0,fat:Number(form.fat)||0,amount:Number(form.amount)||1,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()});onClose();};
-    return html`<${Dialog} open=${open} onClose=${onClose} maxWidth="sm" fullWidth>
+    return html`<${Dialog} className="food-dialog" open=${open} onClose=${onClose} maxWidth="sm" fullWidth fullScreen=${mobile} scroll="paper">
       <${DialogTitle}>${initial?'Edit food':'Log food'}</${DialogTitle}>
-      <${DialogContent}><${Stack} spacing=${2} sx=${{pt:.5}}>
-        <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:1}}><${TextField} label="Search packaged foods" value=${query} onChange=${e=>setQuery(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&search()} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}}/><${Button} variant="outlined" onClick=${search} disabled=${loading}>Search</${Button}></${Box}>
+      <${DialogContent} dividers className="food-dialog-content"><${Stack} spacing=${1.4} sx=${{pt:.25}}>
+        <${Box}><${Typography} component="label" variant="caption" color="text.secondary" fontWeight=${800} sx=${{display:'block',mb:.55}}>SEARCH FOODS</${Typography}><${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:.8}}><${TextField} placeholder="e.g. boiled eggs" aria-label="Search foods" value=${query} onChange=${e=>setQuery(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&search()} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}}/><${Button} variant="outlined" onClick=${search} disabled=${loading}>Search</${Button}></${Box}></${Box}>
         ${loading?html`<${LinearProgress}/>`:null}${error?html`<${Alert} severity="info">${error}</${Alert}>`:null}
-        ${results.length?html`<${Paper} variant="outlined" sx=${{maxHeight:230,overflow:'auto'}}>${results.map((p,index)=>html`<${ListItemButton} key=${p.code||index} onClick=${()=>applyProduct(p)}><${ListItemText} primary=${p.product_name} secondary=${`${p.brands||'Unbranded'} · ${Math.round(Number(p.nutriments?.['energy-kcal_100g']||0))} kcal/100g`}/></${ListItemButton}>`)}</${Paper}>`:null}
+        ${results.length?html`<${Paper} variant="outlined" sx=${{maxHeight:230,overflow:'auto'}}>${results.map((p,index)=>html`<${ListItemButton} key=${p.code||p.name||index} onClick=${()=>applyProduct(p)}><${ListItemText} primary=${p._setlinePreset?p.name:p.product_name} secondary=${p._setlinePreset?`${p.note} · ${Math.round(p.kcal)} kcal`:`${p.brands||'Packaged food'} · ${Math.round(Number(p.nutriments?.['energy-kcal_100g']||0))} kcal/100g`}/></${ListItemButton}>`)}</${Paper}>`:null}
         <${Divider}>OR ENTER MANUALLY</${Divider}>
         <${TextField} label="Food or meal" value=${form.name} onChange=${e=>patch('name',e.target.value)}/>
         <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(4,1fr)'},gap:1}}><${TextField} label="Calories" type="number" value=${form.kcal} onChange=${e=>patch('kcal',e.target.value)}/><${TextField} label="Protein (g)" type="number" value=${form.protein} onChange=${e=>patch('protein',e.target.value)}/><${TextField} label="Carbs (g)" type="number" value=${form.carbs} onChange=${e=>patch('carbs',e.target.value)}/><${TextField} label="Fat (g)" type="number" value=${form.fat} onChange=${e=>patch('fat',e.target.value)}/></${Box}>
-        <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" value=${form.amount} onChange=${e=>patch('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patch('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
+        <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" value=${form.amount} onChange=${e=>patch('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patch('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="ml">Millilitres</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
         <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto auto',gap:1}}><${TextField} label="Barcode" value=${form.barcode} onChange=${e=>patch('barcode',e.target.value)}/><${Button} variant="outlined" onClick=${()=>lookupBarcode()}>Lookup</${Button}><${Button} variant="outlined" component="label">Scan<input className="sr-only" type="file" accept="image/*" capture="environment" onChange=${e=>scanImage(e.target.files?.[0])}/></${Button}></${Box}>
         <${FormControlLabel} control=${html`<${Checkbox} checked=${!!form.favorite} onChange=${e=>patch('favorite',e.target.checked)}/>`} label="Save to favourites"/>
       </${Stack}></${DialogContent}>
-      <${DialogActions}><${Button} onClick=${onClose}>Cancel</${Button}><${Button} variant="contained" color="secondary" onClick=${submit}>Save food</${Button}></${DialogActions}>
+      <${DialogActions} className="food-dialog-actions"><${Button} onClick=${onClose}>Cancel</${Button}><${Button} variant="contained" color="secondary" onClick=${submit}>Save food</${Button}></${DialogActions}>
     </${Dialog}>`;
   }
 
@@ -1077,7 +1130,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Mixed kg/lb machines, remembered increments, normalized charts and safer exports.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Compact logging, correct exercise tags, per-set removal and keyboard-safe nutrition.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

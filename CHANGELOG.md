@@ -1,5 +1,24 @@
 # Setline changelog
 
+## 6.6.4 — August 7, 2026
+
+### Fixed
+- Leg Curl now maps to hamstrings with calf assistance instead of biceps and forearms.
+- Known machine exercises receive sensible equipment defaults when an old automatic free-weight default was stored.
+- Food search labels and outlined-field notches no longer cut through text.
+- The mobile food form scrolls above the keyboard and keeps Save/Cancel reachable.
+
+### Improved
+- Compact, minimal visual density with smaller typography, card padding, radii, and controls.
+- Every exercise displays an immediate kg/lb segmented toggle; automatic unit locking was removed.
+- Completed set history remains unchanged when the exercise unit changes.
+- Every set has a visible remove control beside Done.
+- Generic foods such as boiled eggs are available through local presets; packaged foods remain available online.
+
+### Data safety
+- Permanent storage key remains `setline-data-v1`.
+- Migration changes metadata and interface defaults only; completed load values and units are not rewritten.
+
 ## 6.6.3 — August 6, 2026
 
 ### New

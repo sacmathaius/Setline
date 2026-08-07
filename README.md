@@ -1,6 +1,6 @@
-# Setline 6.6.2
+# Setline 6.6.3
 
-Setline 6.6.2 is a GitHub Pages-ready PWA patch focused on professional onboarding, training-split support, streak presentation, and motion.
+Setline 6.6.3 is a GitHub Pages-ready PWA patch for mixed-unit commercial gyms, preserving the original kg or lb value on every logged set.
 
 ## Publish the update
 
@@ -21,16 +21,17 @@ Do not upload the ZIP itself or place these files inside another folder.
 - Normal saves keep a last-good backup.
 - Exported JSON backups can be merged into the app.
 
-## 6.6.2 highlights
+## 6.6.3 highlights
 
-- Fixed training-days selection so 1–7 remains exactly as selected
-- Professional eight-step Run Setup wizard
-- Selectable equipment and movement-to-avoid options
-- Full Body, Upper/Lower, PPL, PPL + Upper/Lower, Bro Split, and Custom options
-- Exact weekly schedule preview and split mismatch warnings
-- Training Guide explanations for every split
-- Attributed public-domain streak Easter eggs and a continuously animated flame
-- Unified fluid transitions with reduced-motion support
+- Global kg/lb default in Run Setup, Workout, and Profile
+- Per-exercise unit memory for mixed commercial-gym machines
+- Original unit stored on every set without recalculating completed history
+- Machine profiles: free weight, cable, selectorized, Smith, plate-loaded, bodyweight, and custom
+- Remembered increments and optional exercise unit locking
+- Optional original-plus-converted display
+- Normalized mixed-unit volume charts and personal-record comparisons
+- Workout CSV export with original unit and normalized kilogram values
+- Training Guide explanation for mixed kg/lb logging
 
 ## First load and offline use
 
@@ -42,3 +43,11 @@ The app uses pinned React, Material UI, and HTM browser builds. Internet is requ
 - Food and barcode searches require internet access.
 - Camera barcode detection depends on browser support.
 - Training suggestions are general guidance, not medical advice.
+
+
+## Mixed-unit training in 6.6.3
+- Every set stores its original load and unit (`kg` or `lb`).
+- The global unit is only the default for new exercises and normalized charts.
+- Exercise-specific unit, machine profile, increment, and lock settings are remembered.
+- Completed history is never numerically rewritten during a unit change.
+- Workout CSV exports include both the original unit and a normalized kilogram value.

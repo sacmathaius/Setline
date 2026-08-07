@@ -1,4 +1,20 @@
-# Changelog
+# Setline changelog
+
+## 6.6.3 — August 6, 2026
+
+### New
+- Per-exercise kg/lb selection with remembered settings.
+- Machine profiles and configurable load increments.
+- Unit locking and optional converted-value display.
+- Workout CSV export with original unit and normalized kilogram values.
+
+### Improved
+- Volume charts and personal records compare mixed-unit training in a normalized display unit.
+- Previous-set summaries display the original unit used.
+
+### Data safety
+- Migration adds unit metadata only; it does not recalculate or rewrite existing load numbers.
+- The permanent `setline-data-v1` storage key remains unchanged.
 
 ## 6.6.2 — August 5, 2026
 

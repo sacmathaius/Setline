@@ -50,7 +50,7 @@ button,input,select,textarea{font:inherit}
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 
 
-/* Setline 6.6.2 — professional setup and unified motion */
+/* Setline 6.6.3 — professional setup and unified motion */
 html{scroll-behavior:smooth}
 body,#app-shell,.MuiPaper-root,.MuiCard-root,.MuiAppBar-root,.MuiBottomNavigation-root{transition:background-color .24s ease,color .2s ease,border-color .2s ease,box-shadow .2s ease}
 .page-wrap{animation:page-enter .28s cubic-bezier(.2,.8,.2,1) both}

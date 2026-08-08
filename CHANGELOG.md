@@ -1,5 +1,17 @@
 # Setline changelog
 
+## 7.0.2 — August 8, 2026
+
+### New
+- Run Setup weekly preview lets you move any day to a different slot with arrow controls before finishing setup, instead of only reassigning splits afterward in Profile → Schedule.
+- Reset order action returns the preview to the auto-generated split sequence.
+
+### Improved
+- Changing training split or training days in the wizard now resets any manual day reorder, so the preview never shows a stale arrangement.
+
+### Data safety
+- Permanent `setline-data-v1` storage key retained; this release only changes the Run Setup wizard UI.
+
 ## 7.0.1 — Editorial visual update
 
 ### New

@@ -1,4 +1,4 @@
-# Setline 7.0.1
+# Setline 7.0.2
 
 Setline 7 is the largest interface and progression update so far. It keeps the permanent `setline-data-v1` storage key and migrates existing records without rewriting completed load values or units.
 
@@ -47,3 +47,7 @@ The app uses pinned React, Material UI and HTM browser builds internally. The vi
 
 ## 7.0.1 visual system
 The interface now uses a custom editorial design: warm off-white light mode, charcoal dark mode, modular pastel tiles, Inter Tight typography and compact black-line controls. Existing local data is not rewritten.
+
+
+## 7.0.2 Run Setup improvement
+The weekly preview step in Run Setup now has arrow controls to move any day to a different slot, plus a Reset order action, so you can arrange your split across the week without leaving the wizard.

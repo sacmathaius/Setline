@@ -19,8 +19,8 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '7.0.0';
-  const RELEASE_DATE = 'August 7, 2026';
+  const APP_VERSION = '7.0.1';
+  const RELEASE_DATE = 'August 8, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
   const PRE_MIGRATION_KEY = 'setline-pre-v7-backup';
@@ -210,6 +210,7 @@
   ];
 
   const CHANGELOG = [
+    {version:'7.0.1',date:RELEASE_DATE,items:['New editorial Setline visual system inspired by clean Figma case-study layouts','Warm off-white light mode and charcoal dark mode with restrained pastel tiles','Inter Tight typography, tighter hierarchy and simpler black-and-white controls','Home metrics, today plan, XP, recovery and weekly focus now use a modular color grid','Flattened cards, compact fields and less Material-style visual chrome','All Setline 7 features and the permanent data key remain unchanged']},
     {version:'7.0.0',date:RELEASE_DATE,items:['New custom minimal Setline interface with compact typography, thin dividers and restrained color','Workout Focus Mode shows one exercise at a time with previous performance, load, reps and RIR','Setline XP and levels reward completed sessions, working sets, consistency, recovery days and personal records','Weekly missions focus on workouts, quality sets, protein consistency and muscle-region coverage','Exercise mastery, personal milestones and a guilt-free Comeback Mode','Existing mixed-unit workouts, nutrition, profile and history remain under the permanent data key']},
     {version:'6.6.4',date:RELEASE_DATE,items:['Compact minimal interface with smaller cards, typography and spacing','Visible kg/lb toggle on every exercise without automatic locking','Per-set remove control with confirmation for completed sets','Exact exercise definitions prevent Leg Curl from inheriting arm tags','Known machine exercises receive sensible equipment defaults','Generic food presets including boiled eggs plus packaged-food search','Keyboard-safe mobile food logger and corrected floating-label spacing']},
     {version:'6.6.3',date:'August 6, 2026',items:['Added per-exercise kg/lb units while preserving every original load value','Exercise unit memory and optional unit locking for mixed commercial gyms','Machine profiles with remembered weight increments','Original and converted load display without rewriting history','Normalized volume charts and personal records across kg and lb','Workout CSV export now includes each set’s stored unit']},
@@ -495,49 +496,49 @@
 
   function makeTheme(mode, highContrast=false){
     const dark=mode==='dark';
-    const divider=dark?(highContrast?'rgba(255,255,255,.28)':'rgba(255,255,255,.10)'):(highContrast?'rgba(0,0,0,.24)':'rgba(0,0,0,.09)');
+    const divider=dark?(highContrast?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'):(highContrast?'rgba(18,17,16,.34)':'rgba(18,17,16,.14)');
     return createTheme({
       palette:{
         mode,
-        primary:{main:dark?'#4D7CFF':'#2457E6'},
-        secondary:{main:dark?'#F2A93B':'#B96E00'},
-        success:{main:dark?'#35C58A':'#087A52'},
-        warning:{main:'#F2A93B'},
-        error:{main:dark?'#FF667D':'#C52E45'},
-        background:{default:dark?'#080808':'#F7F7F5',paper:dark?'#111111':'#FFFFFF'},
-        text:{primary:dark?'#F6F6F6':'#111111',secondary:dark?'#9A9A9A':'#666666'},
+        primary:{main:dark?'#FF7952':'#F0643E',contrastText:'#11100F'},
+        secondary:{main:dark?'#B2A7FF':'#9F92F7',contrastText:'#11100F'},
+        success:{main:dark?'#B8D45A':'#9FBE43',contrastText:'#11100F'},
+        warning:{main:dark?'#F1D149':'#E7C52A',contrastText:'#11100F'},
+        error:{main:dark?'#FF727A':'#F3575F'},
+        background:{default:dark?'#1C1B1A':'#F1EEE9',paper:dark?'#262422':'#FBF9F6'},
+        text:{primary:dark?'#F8F5F0':'#141311',secondary:dark?'#B6B0AA':'#69635E'},
         divider
       },
-      shape:{borderRadius:8},
+      shape:{borderRadius:12},
       typography:{
-        fontFamily:'Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        fontFamily:'"Inter Tight",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
         fontSize:13,
-        h4:{fontWeight:850,fontSize:'1.55rem',lineHeight:1.08,letterSpacing:'-.035em'},
-        h5:{fontWeight:820,fontSize:'1.22rem',lineHeight:1.15,letterSpacing:'-.025em'},
-        h6:{fontWeight:780,fontSize:'1rem',lineHeight:1.2,letterSpacing:'-.015em'},
-        body1:{fontSize:'.9rem'},body2:{fontSize:'.8rem'},caption:{fontSize:'.69rem'},
-        button:{fontWeight:750,fontSize:'.79rem',textTransform:'none',letterSpacing:'-.01em'}
+        h4:{fontWeight:850,fontSize:'1.48rem',lineHeight:1.02,letterSpacing:'-.045em'},
+        h5:{fontWeight:820,fontSize:'1.18rem',lineHeight:1.1,letterSpacing:'-.03em'},
+        h6:{fontWeight:790,fontSize:'.98rem',lineHeight:1.15,letterSpacing:'-.02em'},
+        body1:{fontSize:'.88rem',lineHeight:1.42},body2:{fontSize:'.79rem',lineHeight:1.42},caption:{fontSize:'.68rem',lineHeight:1.35},
+        button:{fontWeight:760,fontSize:'.77rem',textTransform:'none',letterSpacing:'-.012em'}
       },
       components:{
         MuiCssBaseline:{styleOverrides:{body:{backgroundImage:'none'}}},
         MuiCard:{styleOverrides:{root:{border:`1px solid ${divider}`,boxShadow:'none',backgroundImage:'none'}}},
         MuiPaper:{styleOverrides:{root:{backgroundImage:'none'}}},
-        MuiButton:{defaultProps:{disableElevation:true},styleOverrides:{root:{minHeight:36,borderRadius:7,paddingLeft:11,paddingRight:11},contained:{boxShadow:'none'}}},
-        MuiIconButton:{styleOverrides:{root:{minWidth:36,minHeight:36,borderRadius:7}}},
+        MuiButton:{defaultProps:{disableElevation:true},styleOverrides:{root:{minHeight:35,borderRadius:10,paddingLeft:12,paddingRight:12},contained:{boxShadow:'none',backgroundColor:dark?'#F8F5F0':'#141311',color:dark?'#141311':'#F8F5F0','&:hover':{backgroundColor:dark?'#E8E3DD':'#2A2825'}}}},
+        MuiIconButton:{styleOverrides:{root:{minWidth:35,minHeight:35,borderRadius:9}}},
         MuiTextField:{defaultProps:{variant:'outlined',size:'small'}},
-        MuiOutlinedInput:{styleOverrides:{root:{borderRadius:7,minHeight:40},input:{paddingTop:9,paddingBottom:9}}},
+        MuiOutlinedInput:{styleOverrides:{root:{borderRadius:10,minHeight:40,backgroundColor:dark?'rgba(255,255,255,.025)':'rgba(255,255,255,.34)'},input:{paddingTop:9,paddingBottom:9}}},
         MuiInputLabel:{styleOverrides:{root:{lineHeight:1.2,maxWidth:'calc(100% - 24px)'},shrink:{paddingLeft:3,paddingRight:3}}},
-        MuiChip:{styleOverrides:{root:{fontWeight:700,height:25,borderRadius:6},label:{paddingLeft:8,paddingRight:8}}},
-        MuiToggleButton:{styleOverrides:{root:{borderRadius:6,padding:'6px 10px',fontSize:12,fontWeight:800}}},
-        MuiBottomNavigation:{styleOverrides:{root:{height:'calc(62px + env(safe-area-inset-bottom))',paddingBottom:'env(safe-area-inset-bottom)',backgroundColor:dark?'rgba(8,8,8,.96)':'rgba(255,255,255,.96)',backdropFilter:'blur(16px)',borderTop:`1px solid ${divider}`}}},
-        MuiBottomNavigationAction:{styleOverrides:{root:{minWidth:0,padding:'7px 2px',fontSize:9.5},label:{fontSize:9.5,'&.Mui-selected':{fontSize:9.5}}}},
-        MuiDialog:{styleOverrides:{paper:{borderRadius:10}}},
-        MuiAlert:{styleOverrides:{root:{borderRadius:7}}}
+        MuiChip:{styleOverrides:{root:{fontWeight:720,height:25,borderRadius:9},label:{paddingLeft:8,paddingRight:8}}},
+        MuiToggleButton:{styleOverrides:{root:{borderRadius:9,padding:'6px 10px',fontSize:12,fontWeight:780}}},
+        MuiBottomNavigation:{styleOverrides:{root:{height:'calc(62px + env(safe-area-inset-bottom))',paddingBottom:'env(safe-area-inset-bottom)',backgroundColor:dark?'rgba(28,27,26,.97)':'rgba(251,249,246,.97)',backdropFilter:'blur(18px)',borderTop:`1px solid ${divider}`}}},
+        MuiBottomNavigationAction:{styleOverrides:{root:{minWidth:0,padding:'7px 2px',fontSize:9.5},label:{fontSize:9.5,'&.Mui-selected':{fontSize:9.5,fontWeight:750}}}},
+        MuiDialog:{styleOverrides:{paper:{borderRadius:16}}},
+        MuiAlert:{styleOverrides:{root:{borderRadius:10}}}
       }
     });
   }
 
-  function CardShell({children,sx={},...props}){return html`<${Card} className="material-card" sx=${{...sx}} ...${props}><${CardContent} sx=${{p:1.55,'&:last-child':{pb:1.55}}}>${children}</${CardContent}></${Card}>`;}
+  function CardShell({children,sx={},className='',...props}){return html`<${Card} className=${`material-card ${className}`.trim()} sx=${{...sx}} ...${props}><${CardContent} sx=${{p:1.55,'&:last-child':{pb:1.55}}}>${children}</${CardContent}></${Card}>`;}
   function PageHeader({eyebrow,title,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:1.2,mb:1.35,flexWrap:'wrap'}}><${Box}><${Typography} variant="overline" color="text.secondary" sx=${{fontWeight:800,letterSpacing:1.05,lineHeight:1.2}}>${eyebrow}</${Typography}><${Typography} variant="h4">${title}</${Typography}></${Box}>${action||null}</${Box}>`;}
   function SectionHeading({title,subtitle,action}){return html`<${Box} sx=${{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:1,mb:.9}}><${Box} sx=${{minWidth:0}}><${Typography} variant="h6">${title}</${Typography}>${subtitle?html`<${Typography} variant="body2" color="text.secondary">${subtitle}</${Typography}>`:null}</${Box}>${action||null}</${Box}>`;}
   function InfoButton({term,onOpen}){return html`<${Tooltip} title=${`Explain ${term}`}><${IconButton} size="small" aria-label=${`Explain ${term}`} onClick=${()=>onOpen(term)}><${Icon} name="info" fontSize="small"/></${IconButton}></${Tooltip}>`;}
@@ -560,7 +561,8 @@
   }
   function MetricCard({label,value,sub,progress,color='primary',trend=[],onClick}){
     const interactive=typeof onClick==='function';
-    return html`<${CardShell} role=${interactive?'button':undefined} tabIndex=${interactive?0:undefined} onClick=${onClick} onKeyDown=${interactive?(event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onClick();}}):undefined} sx=${{height:'100%',cursor:interactive?'pointer':'default',transition:'transform .16s ease, border-color .16s ease','&:hover':interactive?{transform:'translateY(-2px)',borderColor:'primary.main'}:{},'&:focus-visible':interactive?{outline:'3px solid',outlineColor:'primary.main',outlineOffset:2}:{}}}>
+    const tone=String(label||'metric').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    return html`<${CardShell} className=${`metric-card metric-${tone}`} role=${interactive?'button':undefined} tabIndex=${interactive?0:undefined} onClick=${onClick} onKeyDown=${interactive?(event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onClick();}}):undefined} sx=${{height:'100%',cursor:interactive?'pointer':'default',transition:'transform .16s ease, border-color .16s ease','&:hover':interactive?{transform:'translateY(-1px)'}:{},'&:focus-visible':interactive?{outline:'3px solid',outlineColor:'text.primary',outlineOffset:2}:{}}}>
       <${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${1}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${label}</${Typography}>${interactive?html`<${Typography} aria-hidden="true" color="text.secondary" sx=${{fontSize:18,lineHeight:1}}>›</${Typography}>`:null}</${Stack}>
       <${Typography} className="metric-number" variant="h5" sx=${{mt:.3}}>${value}</${Typography}>${sub?html`<${Typography} variant="caption" color="text.secondary" sx=${{display:'block',minHeight:'1.5em'}}>${sub}</${Typography}>`:null}
       ${trend?.length?html`<${Box} sx=${{mt:.7,color:color==='secondary'?'secondary.main':'primary.main'}}><${MiniSparkline} values=${trend}/></${Box}>`:null}
@@ -799,12 +801,12 @@
 
       <div className="desktop-grid">
         <${Stack} spacing=${2.25}>
-          <${CardShell}>
+          <${CardShell} className="home-focus-tile">
             <${SectionHeading} title="Weekly focus" subtitle="Explainable muscle-region coverage" action=${html`<${Button} size="small" onClick=${()=>navigate('progress')}>View report</${Button}>`}/>
             ${report.workingSets<4?html`<${Alert} severity="info">Log a few working sets to unlock a useful weekly focus.</${Alert}>`:priority?html`<${Box}><${Stack} direction="row" justifyContent="space-between" alignItems="center"><${Box}><${Typography} variant="h6">Prioritize ${priority.label}</${Typography}><${Typography} variant="body2" color="text.secondary">${priority.value} of ${priority.target} target effective sets in the last 7 days.</${Typography}></${Box}><${Chip} label=${priority.status.toUpperCase()} color=${priority.status==='missed'?'error':'warning'} size="small"/></${Stack}><${Typography} variant="body2" sx=${{mt:1.4}}>Consider ${REGION_SUGGESTIONS[priority.key]?.slice(0,2).join(' or ')} when this region fits your next session.</${Typography}><${Button} size="small" sx=${{mt:1}} startIcon=${html`<${Icon} name="info"/>`} onClick=${()=>openGuide('Working set')}>How coverage is counted</${Button}></${Box}>`:html`<${Alert} severity="success">Your major regions have reasonable coverage. Progress the exercises already working.</${Alert}>`}
           </${CardShell}>
 
-          <${CardShell}>
+          <${CardShell} className="home-quick-tile">
             <${SectionHeading} title="Quick actions"/>
             <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(4,1fr)'},gap:1}}>
               <${Button} variant="outlined" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>navigate('workout')}>Exercise</${Button}>
@@ -816,12 +818,12 @@
         </${Stack}>
 
         <${Stack} spacing=${2.25}>
-          <${CardShell}>
+          <${CardShell} className="home-recovery-tile">
             <${SectionHeading} title="Recovery" subtitle=${formatDate(today,{weekday:'long',month:'short',day:'numeric'})}/>
             ${ready?html`<${Box}><${Stack} direction="row" spacing=${2} alignItems="center"><${Box} sx=${{position:'relative',display:'inline-flex'}}><${CircularProgress} variant="determinate" value=${ready.score} size=${72} thickness=${5} color=${ready.tone}/><${Box} sx=${{position:'absolute',inset:0,display:'grid',placeItems:'center'}}><${Typography} fontWeight=${800}>${ready.score}</${Typography}></${Box}></${Box}><${Box}><${Typography} variant="h6">${ready.label}</${Typography}><${Typography} variant="body2" color="text.secondary">${ready.message}</${Typography}></${Box}></${Stack}></${Box}>`:html`<${Alert} severity="info" action=${html`<${Button} color="inherit" size="small" onClick=${()=>navigate('profile')}>Check in</${Button}>`}>Add sleep, soreness, energy and stress to get recovery guidance.</${Alert}>`}
           </${CardShell}>
 
-          <${CardShell}>
+          <${CardShell} className="home-week-tile">
             <${SectionHeading} title="This week" subtitle="Planned schedule"/>
             <${Stack} spacing=${.8}>${data.weeklyPlan.map((type,index)=>{const key=shiftDateKey(mondayOf(today),index),current=key===today,logged=getDay(data,key).workouts.length>0;return html`<${Stack} key=${key} direction="row" alignItems="center" justifyContent="space-between" sx=${{p:1,borderRadius:2,bgcolor:current?'action.selected':'transparent'}}><${Stack} direction="row" spacing=${1} alignItems="center"><${Avatar} sx=${{width:28,height:28,fontSize:12,bgcolor:logged?'success.main':isRestType(type)?'secondary.main':'primary.main'}}>${logged?'✓':formatDate(key,{weekday:'narrow'})}</${Avatar}><${Typography} variant="body2" fontWeight=${current?800:600}>${formatDate(key,{weekday:'short'})}</${Typography}></${Stack}><${Typography} variant="body2" color="text.secondary">${planLabel(type)}</${Typography}></${Stack}>`;})}</${Stack}>
           </${CardShell}>
@@ -953,7 +955,7 @@
       showCompletion({name:`${planLabel(plan)} complete`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],streak:calculateStreak(data),xpAward:50+Math.min(30,sets.length*2)});
     };
     const changePlan=type=>update(next=>{next.schedule[selectedDate]=type;next.scheduleMeta.configured=true;});
-    return html`<div className="page-wrap">
+    return html`<div className="page-wrap workout-page">
       <${PageHeader} eyebrow="TRAIN" title="Workout" action=${html`<${Stack} direction="row" spacing=${.8} alignItems="center"><${ToggleButtonGroup} size="small" exclusive value=${data.preferredUnit} onChange=${(_,value)=>value&&update(next=>next.preferredUnit=value)} aria-label="Default weight unit"><${ToggleButton} value="kg">kg</${ToggleButton}><${ToggleButton} value="lb">lb</${ToggleButton}></${ToggleButtonGroup}>${currentWorkouts.length?html`<${Button} variant="outlined" startIcon=${html`<${Icon} name="target"/>`} onClick=${()=>setFocusOpen(true)}>Focus</${Button}>`:null}<${Button} variant="contained" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>setAddOpen(true)}>Add</${Button}></${Stack}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Workout date"/>
 
@@ -1031,7 +1033,7 @@
     const applyTemplate=template=>{update(next=>{const target=ensureDayMutable(next,selectedDate);target.calories.push(...template.items.map(item=>({...deepClone(item),id:id('food'),loggedAt:new Date().toISOString()})));});showFeedback(`${template.name} added`);};
     const meals=['Breakfast','Lunch','Dinner','Snack'];
     const weekly=Array.from({length:7},(_,i)=>nutritionTotals(getDay(data,shiftDateKey(selectedDate,-i)))); const average=weekly.reduce((sum,x)=>({kcal:sum.kcal+x.kcal,protein:sum.protein+x.protein,carbs:sum.carbs+x.carbs,fat:sum.fat+x.fat}),{kcal:0,protein:0,carbs:0,fat:0});Object.keys(average).forEach(k=>average[k]=round1(average[k]/7));
-    return html`<div className="page-wrap">
+    return html`<div className="page-wrap nutrition-page">
       <${PageHeader} eyebrow="FUEL" title="Nutrition" action=${html`<${Button} variant="contained" color="secondary" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>{setEditItem(null);setDefaultMeal('Breakfast');setDialogOpen(true);}}>Food</${Button}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Nutrition date"/>
       <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},gap:1.2,mb:2}}><${MetricCard} label="CALORIES" value=${Math.round(totals.kcal)} sub=${`${data.calorieGoal} target`} progress=${totals.kcal/data.calorieGoal*100} color="secondary"/><${MetricCard} label="PROTEIN" value=${`${Math.round(totals.protein)} g`} sub=${`${Math.max(0,Math.round(data.proteinGoal-totals.protein))} g remaining`} progress=${totals.protein/data.proteinGoal*100}/><${MetricCard} label="CARBS" value=${`${Math.round(totals.carbs)} g`} sub=${`${data.carbsGoal} g target`} progress=${totals.carbs/data.carbsGoal*100}/><${MetricCard} label="FAT" value=${`${Math.round(totals.fat)} g`} sub=${`${data.fatGoal} g target`} progress=${totals.fat/data.fatGoal*100}/></${Box}>
@@ -1080,7 +1082,7 @@
     const addWeight=()=>{const raw=prompt(`Bodyweight in ${data.preferredUnit}:`,data.preferredUnit==='kg'?String(data.bodyWeights?.[selectedDate]||data.bodyWeightKg||''):String(round1((data.bodyWeights?.[selectedDate]||data.bodyWeightKg||0)*2.20462)));if(raw===null)return;let value=Number(raw);if(!Number.isFinite(value)||value<=0)return;if(data.preferredUnit==='lb')value=value/2.20462;update(next=>{next.bodyWeights[selectedDate]=round1(value);next.bodyWeightKg=round1(value);});showFeedback('Bodyweight saved');};
     const actionItems=report.priorities.slice(0,3);
     const calendarDates=Array.from({length:28},(_,i)=>shiftDateKey(selectedDate,-(27-i)));
-    return html`<div className="page-wrap">
+    return html`<div className="page-wrap progress-page">
       <${PageHeader} eyebrow="REVIEW" title="Progress" action=${html`<${ToggleButtonGroup} size="small" exclusive value=${period} onChange=${(_,v)=>v&&setPeriod(v)}><${ToggleButton} value=${7}>7D</${ToggleButton}><${ToggleButton} value=${30}>30D</${ToggleButton}></${ToggleButtonGroup}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Report ending" sticky=${false}/>
       ${data.gamification?.enabled!==false?html`<div className="progression-grid"><${CardShell} className="level-card"><${Stack} direction="row" justifyContent="space-between" alignItems="flex-start"><div><${Typography} variant="caption" color="text.secondary">SETLINE LEVEL</${Typography}><${Typography} variant="h4">${progression.level}</${Typography}><${Typography} variant="body2" fontWeight=${800}>${progression.rank}</${Typography}></div><div className="level-badge"><${Icon} name="trophy"/></div></${Stack}><div className="xp-line large"><span style=${{width:`${progression.levelProgress}%`}}></span></div><${Typography} variant="caption" color="text.secondary">${progression.xp} XP · ${Math.max(0,Math.ceil(progression.next-progression.xp))} to next level</${Typography}></${CardShell}><${CardShell}><${SectionHeading} title="Weekly missions" subtitle="Consistency rewards, not maximum weight"/><${Stack} spacing=${1}>${missions.map(mission=>html`<div className="mission-row" key=${mission.id}><div className=${`mission-check ${mission.done?'done':''}`}>${mission.done?'✓':''}</div><div className="mission-copy"><${Typography} variant="body2" fontWeight=${760}>${mission.title}</${Typography}><${Typography} variant="caption" color="text.secondary">${Math.min(mission.progress,mission.target)} / ${mission.target} ${mission.unit} · +${mission.reward} XP</${Typography}><div className="mission-line"><span style=${{width:`${mission.percent}%`}}></span></div></div></div>`)}</${Stack}></${CardShell}></div><div className="progression-grid compact"><${CardShell}><${SectionHeading} title="Exercise mastery" subtitle="Based on repeated practice, not strength ranking"/>${mastery.length?html`<${Stack} spacing=${1}>${mastery.map(item=>html`<div className="mastery-row" key=${item.name}><div><${Typography} variant="body2" fontWeight=${760}>${item.name}</${Typography}><${Typography} variant="caption" color="text.secondary">${item.sessions} sessions · ${item.sets} sets</${Typography}></div><${Chip} label=${item.tier} color=${item.tier==='Mastered'?'secondary':'primary'} variant="outlined"/></div>`)}</${Stack}>`:html`<${Typography} variant="body2" color="text.secondary">Log repeated sessions to build exercise mastery.</${Typography}>`}</${CardShell}><${CardShell}><${SectionHeading} title="Milestones" subtitle="Personal progress only"/><div className="milestone-grid">${milestones.map(item=>html`<div className=${`milestone ${item.done?'done':''}`} key=${item.id}><${Icon} name=${item.done?'trophy':'lock'} fontSize="small"/><span>${item.title}</span></div>`)}</div></${CardShell}></div>`:null}
@@ -1241,7 +1243,7 @@
     const [guide,setGuide]=useState({open:false,term:''}); const [changelogOpen,setChangelogOpen]=useState(false); const [onboardingOpen,setOnboardingOpen]=useState(()=>!data.onboardingComplete&&recordCount(data)===0);
     const [feedback,setFeedback]=useState(''); const feedbackTimer=useRef(null); const [completion,setCompletion]=useState(null); const [online,setOnline]=useState(navigator.onLine); const [updateReady,setUpdateReady]=useState(null);
     useServiceWorker(setUpdateReady);
-    useEffect(()=>{setThemeMeta(resolvedMode);document.documentElement.style.colorScheme=resolvedMode;document.body.classList.toggle('reduce-motion',!!data.settings.reducedMotion);},[resolvedMode,data.settings.reducedMotion]);
+    useEffect(()=>{setThemeMeta(resolvedMode);document.documentElement.style.colorScheme=resolvedMode;document.body.classList.toggle('reduce-motion',!!data.settings.reducedMotion);document.body.classList.toggle('theme-light',resolvedMode==='light');document.body.classList.toggle('theme-dark',resolvedMode==='dark');},[resolvedMode,data.settings.reducedMotion]);
     useEffect(()=>{const on=()=>setOnline(true),off=()=>setOnline(false);window.addEventListener('online',on);window.addEventListener('offline',off);return()=>{window.removeEventListener('online',on);window.removeEventListener('offline',off);};},[]);
     const navigate=value=>{setTab(value);window.scrollTo({top:0,behavior:data.settings.reducedMotion?'auto':'smooth'});};
     const showFeedback=message=>{setFeedback(message);clearTimeout(feedbackTimer.current);feedbackTimer.current=setTimeout(()=>setFeedback(''),850);if(data.settings.haptics){try{navigator.vibrate?.(35);}catch(err){}}};
@@ -1255,7 +1257,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Minimal interface, Focus Mode, XP levels, weekly missions and exercise mastery.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Editorial minimal interface, pastel modular tiles, Focus Mode, XP, missions and mastery.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

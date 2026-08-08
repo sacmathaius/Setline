@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Setline 7 Fitness Tracker",
   "short_name": "Setline",
-  "description": "Minimal workout, nutrition and progression tracking with Focus Mode, XP, missions and mixed kg/lb support.",
+  "description": "Editorial minimal workout, nutrition and progression tracking with Focus Mode, XP, missions and mixed kg/lb support.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -11,8 +11,8 @@
     "standalone"
   ],
   "orientation": "portrait-primary",
-  "background_color": "#080808",
-  "theme_color": "#080808",
+  "background_color": "#F1EEE9",
+  "theme_color": "#F1EEE9",
   "lang": "en",
   "dir": "ltr",
   "categories": [

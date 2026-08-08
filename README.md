@@ -1,4 +1,4 @@
-# Setline 7.0.0
+# Setline 7.0.1
 
 Setline 7 is the largest interface and progression update so far. It keeps the permanent `setline-data-v1` storage key and migrates existing records without rewriting completed load values or units.
 
@@ -43,3 +43,7 @@ The app uses pinned React, Material UI and HTM browser builds internally. The vi
 - Data remains local to each browser/device; cloud sync is not included.
 - Packaged-food and barcode searches need internet access.
 - Coaching and recovery suggestions are general guidance, not medical advice.
+
+
+## 7.0.1 visual system
+The interface now uses a custom editorial design: warm off-white light mode, charcoal dark mode, modular pastel tiles, Inter Tight typography and compact black-line controls. Existing local data is not rewritten.

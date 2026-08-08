@@ -173,3 +173,122 @@ body{background:#080808}
   .page-wrap{padding-left:10px;padding-right:10px}
 }
 @media(prefers-color-scheme:light){body{background:#f7f7f5}}
+
+
+/* Setline 7.0.1 — editorial Figma-style visual system */
+:root{
+  --editorial-bg:#F1EEE9;
+  --editorial-paper:#FBF9F6;
+  --editorial-ink:#141311;
+  --editorial-muted:#6D6761;
+  --editorial-line:rgba(20,19,17,.14);
+  --tile-coral:#F0643E;
+  --tile-orange:#F49A59;
+  --tile-lilac:#A99DF6;
+  --tile-blue:#78A9EB;
+  --tile-green:#A8C24B;
+  --tile-yellow:#E9C92D;
+}
+body{font-family:"Inter Tight",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--editorial-bg)}
+body.theme-light,#app-shell{background:var(--editorial-bg)}
+body.theme-dark{--editorial-bg:#1C1B1A;--editorial-paper:#262422;--editorial-ink:#F8F5F0;--editorial-muted:#B6B0AA;--editorial-line:rgba(248,245,240,.14);background:var(--editorial-bg)}
+body.theme-dark #app-shell{background:var(--editorial-bg)}
+body.theme-light .boot-shell{background:var(--editorial-bg);color:var(--editorial-ink)}
+body.theme-dark .boot-shell{background:#1C1B1A;color:#F8F5F0}
+.page-wrap{width:min(100%,940px);padding:12px clamp(11px,3.3vw,24px) calc(102px + env(safe-area-inset-bottom))}
+.page-wrap>div:first-child .MuiAvatar-root{border:1px solid var(--editorial-line);background:var(--editorial-paper)!important}
+.MuiTypography-h4,.MuiTypography-h5,.MuiTypography-h6{font-family:"Inter Tight",Inter,sans-serif}
+.MuiTypography-overline{color:var(--editorial-muted)!important;font-weight:780!important}
+.material-card{background:var(--editorial-paper)!important;border:1px solid var(--editorial-line)!important;border-radius:13px!important;color:var(--editorial-ink);overflow:hidden!important}
+.material-card .MuiCardContent-root{padding:14px!important}
+.material-card .MuiDivider-root{border-color:var(--editorial-line)}
+.MuiPaper-outlined{border-color:var(--editorial-line)!important}
+.MuiButton-contained{background:var(--editorial-ink)!important;color:var(--editorial-paper)!important}
+.MuiButton-outlined{border-color:var(--editorial-line)!important;color:inherit!important;background:transparent!important}
+.MuiButton-text{color:inherit!important}
+.MuiIconButton-root{color:inherit}
+.MuiOutlinedInput-root{background:transparent!important}
+.MuiOutlinedInput-notchedOutline{border-color:var(--editorial-line)!important}
+.MuiInputLabel-root{color:var(--editorial-muted)!important}
+.MuiChip-outlined{border-color:var(--editorial-line)!important}
+.MuiChip-root{font-weight:760!important}
+.MuiSwitch-switchBase.Mui-checked{color:var(--tile-coral)!important}
+.MuiSwitch-switchBase.Mui-checked+.MuiSwitch-track{background:var(--tile-coral)!important}
+.MuiBottomNavigation-root{background:color-mix(in srgb,var(--editorial-paper) 94%,transparent)!important;border-top-color:var(--editorial-line)!important}
+.MuiBottomNavigationAction-root.Mui-selected{color:var(--tile-coral)!important}
+.MuiDrawer-paper,.MuiDialog-paper{background:var(--editorial-paper)!important;color:var(--editorial-ink)!important}
+.side-nav-desktop .MuiDrawer-paper{border-right-color:var(--editorial-line)!important}
+.date-strip{background:color-mix(in srgb,var(--editorial-bg) 94%,transparent)!important;border-bottom:1px solid var(--editorial-line);border-radius:0!important;padding-left:0!important;padding-right:0!important}
+.date-strip .MuiButton-outlined{background:var(--editorial-paper)!important}
+
+/* Editorial home grid */
+.home-page{--home-gap:9px}
+.home-page .xp-strip{background:var(--tile-lilac)!important;color:#141311!important;border-color:#14131122!important;border-radius:13px}
+.home-page .xp-strip .MuiTypography-root{color:#141311!important}
+.home-page .xp-mark{background:#141311!important;color:#F8F5F0!important}
+.home-page .xp-line{background:rgba(20,19,17,.18)}
+.home-page .xp-line>span{background:#141311}
+.home-page .comeback-strip{background:var(--tile-yellow)!important;color:#141311!important;border-color:#14131122!important}
+.home-page .comeback-strip .MuiTypography-root{color:#141311!important}
+.home-page .today-plan{background:var(--tile-coral)!important;color:#141311!important;border-color:#14131122!important}
+.home-page .today-plan .MuiTypography-root{color:#141311!important}
+.home-page .today-plan .MuiAvatar-root{background:#141311!important;color:#F8F5F0!important;border:0}
+.home-page .today-plan .MuiButton-contained{background:#141311!important;color:#F8F5F0!important}
+.home-page .today-plan .MuiButton-outlined{border-color:rgba(20,19,17,.34)!important;color:#141311!important}
+.metric-card{min-height:112px;color:#141311!important;border-color:#14131120!important}
+.metric-card .MuiTypography-root{color:#141311!important}
+.metric-card .region-bar,.metric-card .MuiLinearProgress-root{background:rgba(20,19,17,.16)!important}
+.metric-calories{background:var(--tile-yellow)!important}
+.metric-protein{background:var(--tile-lilac)!important}
+.metric-readiness{background:var(--tile-blue)!important}
+.metric-bodyweight{background:var(--tile-green)!important}
+.metric-card .MuiLinearProgress-bar{background:#141311!important}
+.metric-card .mini-sparkline{color:#141311!important}
+.home-focus-tile{background:var(--tile-orange)!important;color:#141311!important;border-color:#14131120!important}
+.home-focus-tile .MuiTypography-root,.home-focus-tile .MuiButton-root{color:#141311!important}
+.home-focus-tile .MuiChip-root{background:#141311!important;color:#F8F5F0!important}
+.home-quick-tile{background:var(--editorial-paper)!important}
+.home-recovery-tile{background:var(--tile-blue)!important;color:#141311!important;border-color:#14131120!important}
+.home-recovery-tile .MuiTypography-root,.home-recovery-tile .MuiButton-root{color:#141311!important}
+.home-week-tile{background:var(--tile-green)!important;color:#141311!important;border-color:#14131120!important}
+.home-week-tile .MuiTypography-root{color:#141311!important}
+.home-week-tile .MuiAvatar-root{background:#141311!important;color:#F8F5F0!important}
+.home-page .desktop-grid{gap:9px}
+.home-page .desktop-grid>.MuiStack-root{gap:9px!important}
+
+/* Workout and nutrition: dense, black-line utility UI */
+.workout-page .material-card,.nutrition-page .material-card,.progress-page .material-card,.profile-page .material-card{box-shadow:none!important}
+.workout-page .material-card+.material-card,.nutrition-page .material-card+.material-card{margin-top:9px}
+.workout-page .set-grid{border-top:1px solid var(--editorial-line);padding-top:6px;margin-top:4px}
+.workout-page .set-grid+.set-grid{border-top:0}
+.workout-page .MuiToggleButtonGroup-root{background:transparent}
+.workout-page .MuiToggleButton-root.Mui-selected{background:var(--editorial-ink)!important;color:var(--editorial-paper)!important}
+.food-row{border-bottom:1px solid var(--editorial-line);padding:10px 0;min-height:0}
+.food-row:last-child{border-bottom:0}
+.food-kcal{font-weight:800}
+.region-bar{height:5px;border-radius:2px}
+.chart-svg{height:150px}
+.calendar-day{border-radius:7px;background:transparent;border:1px solid var(--editorial-line)}
+.calendar-day.active{background:var(--tile-lilac);color:#141311;border-color:transparent}
+.progress-page .level-card{background:var(--tile-yellow)!important;color:#141311!important}
+.progress-page .level-card .MuiTypography-root{color:#141311!important}
+.milestone{border-radius:10px;background:transparent}
+.milestone.done{background:var(--tile-green);color:#141311;border-color:transparent}
+.mission-check.done{background:var(--tile-green);border-color:#141311;color:#141311}
+.completion-overlay{background:rgba(20,19,17,.72);backdrop-filter:blur(8px)}
+.completion-card{background:var(--editorial-paper)!important;color:var(--editorial-ink)!important;border-radius:18px!important}
+.save-pop{border-radius:12px;background:#141311;color:#F8F5F0}
+
+/* Fewer visual containers on narrow screens */
+@media(max-width:620px){
+  .page-wrap{padding-left:9px;padding-right:9px}
+  .material-card .MuiCardContent-root{padding:12px!important}
+  .home-page .MuiTypography-h4{font-size:1.4rem}
+  .metric-card{min-height:105px}
+  .home-page .desktop-grid{display:grid;gap:9px}
+  .home-page .desktop-grid>.MuiStack-root{gap:9px!important}
+}
+@media(max-width:370px){
+  .metric-card{min-height:100px}
+  .material-card .MuiCardContent-root{padding:10px!important}
+}

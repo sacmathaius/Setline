@@ -1,5 +1,17 @@
 # Setline changelog
 
+## 7.0.1 — Editorial visual update
+
+### New
+- Warm off-white and charcoal themes based on a clean editorial/Figma-style system.
+- Modular pastel tiles for Home metrics, today plan, XP, recovery and weekly focus.
+- Inter Tight typography with simpler black-and-white controls.
+
+### Improved
+- Reduced Material-style chrome, shadows and oversized containers.
+- More compact workout, nutrition, progress and profile surfaces.
+- Same features, records and permanent `setline-data-v1` key.
+
 ## 7.0.0 — August 7, 2026
 
 ### New

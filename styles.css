@@ -235,7 +235,7 @@ body.theme-dark .boot-shell{background:#1C1B1A;color:#F8F5F0}
 .home-page .today-plan .MuiAvatar-root{background:#141311!important;color:#F8F5F0!important;border:0}
 .home-page .today-plan .MuiButton-contained{background:#141311!important;color:#F8F5F0!important}
 .home-page .today-plan .MuiButton-outlined{border-color:rgba(20,19,17,.34)!important;color:#141311!important}
-.metric-card{min-height:112px;color:#141311!important;border-color:#14131120!important}
+.metric-card{min-height:112px;height:100%;color:#141311!important;border-color:#14131120!important}
 .metric-card .MuiTypography-root{color:#141311!important}
 .metric-card .region-bar,.metric-card .MuiLinearProgress-root{background:rgba(20,19,17,.16)!important}
 .metric-calories{background:var(--tile-yellow)!important}

@@ -1,3 +1,11 @@
+# Setline 7.1.2 — Metric card alignment fix
+
+- Fixed Calories/Protein/Carbs/Fat metric cards not stretching to equal height within their grid row, which visibly shifted a card (and its progress bar) lower than its row partner.
+- Grid rows now explicitly set `alignItems: stretch` and `.metric-card` carries `height: 100%` directly in the stylesheet, instead of relying on implicit CSS Grid stretch behavior.
+- Confirmed via code inspection against a user-reported screenshot; a live-browser visual check is still recommended since this environment cannot render the actual MUI/CDN UI.
+
+---
+
 # Setline 7.1.1 — Hardening, scanner and catalogue update
 
 - Replaced full-resolution photo barcode capture with a low-memory live camera scanner using a constrained stream and cropped scan frame.

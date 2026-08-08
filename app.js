@@ -19,7 +19,7 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '7.1.1';
+  const APP_VERSION = '7.1.2';
   const RELEASE_DATE = 'August 8, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
@@ -260,6 +260,7 @@
 
   const CHANGELOG = [
     {version:'7.1.1',date:RELEASE_DATE,items:['Replaced full-resolution photo barcode scanning with a low-memory live camera scanner capped near 1280 × 720','Added Slice as a serving unit and reads explicit package labels such as 2 slices (56 g) as 28 g per slice','Rounded calorie remainders and macro displays so raw floating-point values never reach the interface','Expanded the offline exercise catalogue to over 120 canonical exercises, including Arnold Press and Dumbbell Lateral Raise','Added aliases and typo-tolerant exercise search while keeping custom exercise names available','Fixed Carbs and Fat card backgrounds, contrast, equal heights, baselines and progress-bar alignment in light and dark themes']},
+    {version:'7.1.2',date:RELEASE_DATE,items:['Fixed metric-card grid rows (Calories/Protein/Carbs/Fat) not stretching to equal height, which let a card sit visibly lower than its row and misaligned the progress bars underneath','Made the fix explicit rather than relying on implicit grid behavior: grid rows now force alignItems:stretch and .metric-card carries height:100% directly, so equal-height cards no longer depend on content length matching between cards']},
     {version:'7.1',date:RELEASE_DATE,items:['Barcode nutrition now scales to the actual portion instead of leaving per-100-g values unchanged','Scanned foods keep an immutable per-100-g nutrition basis and recalculate live when amount or unit changes','Cup, piece, scoop, can and unknown serving sizes require a gram equivalent instead of guessing','Package serving nutrition and serving weight are used automatically when Open Food Facts provides them','Manual macro edits safely disable automatic scaling so user-entered values are never overwritten','Retains all Setline 7.0.3 reliability fixes for lookup, XP, PRs, streaks and zero-set validation']},
     {version:'7.0.3',date:RELEASE_DATE,items:['Fixed nutrition lookup memory pressure by requesting only required product fields and limiting temporary results','Added request cancellation, timeout handling and exact network/no-result messages with copyable diagnostics','Weekly mission rewards now contribute to XP exactly once per completed week','PR XP now requires a genuine improvement over an earlier logged performance','Rest days may maintain a streak but can never create one without a completed workout','Explicit zero-set and zero-rep records no longer inflate XP, mastery, missions or muscle coverage','Corrected current-version ordering and smaller reliability fixes']},
     {version:'7.0.2',date:RELEASE_DATE,items:['Run Setup weekly preview lets you move any day to a different slot with arrow controls before finishing setup','Added a Reset order action to return to the auto-generated split sequence','Changing training split or training days resets any manual day order so the preview matches the latest choice']},
@@ -894,7 +895,7 @@
       </${CardShell}>
 
       <${Stack} direction="row" justifyContent="space-between" alignItems="center" sx=${{mb:1}}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>TAP A CARD FOR DETAILS</${Typography}><${Button} size="small" onClick=${()=>setCustomizeOpen(true)}>Customize</${Button}></${Stack}>
-      <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},gap:1.3,mb:2}}>${visibleOrder.map(key=>html`<${React.Fragment} key=${key}>${cardMap[key]}</${React.Fragment}>`)}</${Box}>
+      <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},alignItems:'stretch',gap:1.3,mb:2}}>${visibleOrder.map(key=>html`<${React.Fragment} key=${key}>${cardMap[key]}</${React.Fragment}>`)}</${Box}>
 
       <div className="desktop-grid">
         <${Stack} spacing=${2.25}>
@@ -1307,7 +1308,7 @@
     return html`<div className="page-wrap nutrition-page">
       <${PageHeader} eyebrow="FUEL" title="Nutrition" action=${html`<${Button} variant="contained" color="secondary" startIcon=${html`<${Icon} name="add"/>`} onClick=${()=>{setEditItem(null);setDefaultMeal('Breakfast');setDialogOpen(true);}}>Food</${Button}>`}/>
       <${DateBar} value=${selectedDate} onChange=${setSelectedDate} label="Nutrition date"/>
-      <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},gap:1.2,mb:2}}><${MetricCard} label="CALORIES" value=${Math.round(totals.kcal)} sub=${`${data.calorieGoal} target`} progress=${totals.kcal/data.calorieGoal*100} color="secondary"/><${MetricCard} label="PROTEIN" value=${`${Math.round(totals.protein)} g`} sub=${`${Math.max(0,Math.round(data.proteinGoal-totals.protein))} g remaining`} progress=${totals.protein/data.proteinGoal*100}/><${MetricCard} label="CARBS" value=${`${Math.round(totals.carbs)} g`} sub=${`${data.carbsGoal} g target`} progress=${totals.carbs/data.carbsGoal*100}/><${MetricCard} label="FAT" value=${`${Math.round(totals.fat)} g`} sub=${`${data.fatGoal} g target`} progress=${totals.fat/data.fatGoal*100}/></${Box}>
+      <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',md:'repeat(4,1fr)'},alignItems:'stretch',gap:1.2,mb:2}}><${MetricCard} label="CALORIES" value=${Math.round(totals.kcal)} sub=${`${data.calorieGoal} target`} progress=${totals.kcal/data.calorieGoal*100} color="secondary"/><${MetricCard} label="PROTEIN" value=${`${Math.round(totals.protein)} g`} sub=${`${Math.max(0,Math.round(data.proteinGoal-totals.protein))} g remaining`} progress=${totals.protein/data.proteinGoal*100}/><${MetricCard} label="CARBS" value=${`${Math.round(totals.carbs)} g`} sub=${`${data.carbsGoal} g target`} progress=${totals.carbs/data.carbsGoal*100}/><${MetricCard} label="FAT" value=${`${Math.round(totals.fat)} g`} sub=${`${data.fatGoal} g target`} progress=${totals.fat/data.fatGoal*100}/></${Box}>
 
       <div className="desktop-grid">
         <${Stack} spacing=${2}>

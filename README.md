@@ -1,4 +1,4 @@
-# Setline 7.0.2
+# Setline 7.0.3
 
 Setline 7 is the largest interface and progression update so far. It keeps the permanent `setline-data-v1` storage key and migrates existing records without rewriting completed load values or units.
 
@@ -36,7 +36,7 @@ XP rewards completed sessions, quality working sets, personal records, planned r
 
 ## First load and offline use
 
-The app uses pinned React, Material UI and HTM browser builds internally. The visible interface is a custom Setline design rather than the default Material look. Internet is required once to cache dependencies; normal tracking then works offline.
+The app loads pinned React, Material UI and HTM browser builds from its configured CDN URLs. The visible interface is a custom Setline design rather than the default Material look. Internet is required once to cache dependencies; normal tracking then works offline.
 
 ## Limitations
 
@@ -51,3 +51,7 @@ The interface now uses a custom editorial design: warm off-white light mode, cha
 
 ## 7.0.2 Run Setup improvement
 The weekly preview step in Run Setup now has arrow controls to move any day to a different slot, plus a Reset order action, so you can arrange your split across the week without leaving the wizard.
+
+## 7.0.3 reliability notes
+
+Food searches are cancellable, limited, and never written to local storage. When an online lookup fails, local common foods and manual entry remain available. Error details can be copied from the food dialog or Profile during the same app session.

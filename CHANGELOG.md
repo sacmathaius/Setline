@@ -1,3 +1,14 @@
+# Setline 7.0.3 — Reliability patch
+
+- Reduced nutrition-search memory use by requesting only required Open Food Facts fields and keeping no more than nine temporary results.
+- Added cancellation, eight-second timeouts, exact lookup errors and copyable diagnostics.
+- Weekly mission rewards now contribute to XP once per completed week.
+- PR XP now requires beating a previous logged performance; first-time exercises establish a baseline only.
+- Rest days maintain an existing streak but cannot create a streak without completed training.
+- Explicit zero-set and zero-rep records no longer affect XP, mastery, missions or muscle coverage.
+- Fixed changelog ordering, schedule arrow direction and Profile equipment/movement selectors.
+- The permanent storage key remains `setline-data-v1`; migration does not rewrite mixed kg/lb history.
+
 # Setline changelog
 
 ## 7.0.2 — August 8, 2026

@@ -19,11 +19,12 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '7.0.2';
+  const APP_VERSION = '7.0.3';
   const RELEASE_DATE = 'August 8, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
   const PRE_MIGRATION_KEY = 'setline-pre-v7-backup';
+  const LOOKUP_DIAGNOSTIC_KEY = 'setline-last-lookup-error';
   const LEGACY_KEYS = ['setline-fitness-v6-2','setline-fitness-v6-1','setline-fitness-v6','pulse-fitness-v6','pulse-fitness-v5','pulse-fitness-v2'];
 
   const ICONS = {
@@ -89,11 +90,16 @@
   function getDay(data,key){ const day=data?.days?.[key]||{}; return {workouts:Array.isArray(day.workouts)?day.workouts:[],calories:Array.isArray(day.calories)?day.calories:[],sessions:Array.isArray(day.sessions)?day.sessions:[],...day}; }
   function getSets(workout,fallbackUnit='kg'){
     const workoutUnit=normalizeUnit(workout?.unit||workout?.weightUnit||fallbackUnit);
-    if(Array.isArray(workout?.setEntries) && workout.setEntries.length) return workout.setEntries.map((set,index)=>({id:set.id||id('set'),load:Number(set.load??set.weight??0),unit:normalizeUnit(set.unit||set.weightUnit||workoutUnit),reps:Number(set.reps??0),done:set.done!==false,type:set.type||'working',rir:set.rir??'',rpe:set.rpe??'',note:set.note||'',index}));
-    const count=Math.max(1,Number(workout?.sets)||1); return Array.from({length:count},(_,index)=>({id:id('set'),load:Number(workout?.load||0),unit:workoutUnit,reps:Number(workout?.reps||0),done:true,type:'working',rir:'',rpe:'',note:'',index}));
+    if(Array.isArray(workout?.setEntries)) return workout.setEntries.map((set,index)=>({id:set.id||id('set'),load:Number(set.load??set.weight??0),unit:normalizeUnit(set.unit||set.weightUnit||workoutUnit),reps:Number(set.reps??0),done:set.done!==false,type:set.type||'working',rir:set.rir??'',rpe:set.rpe??'',note:set.note||'',index}));
+    const rawCount=workout?.sets;
+    const count=rawCount===undefined||rawCount===null||rawCount===''?1:Math.max(0,Math.floor(Number(rawCount)||0));
+    return Array.from({length:count},(_,index)=>({id:id('set'),load:Number(workout?.load||0),unit:workoutUnit,reps:Number(workout?.reps||0),done:true,type:'working',rir:'',rpe:'',note:'',index}));
+  }
+  function isCompletedWorkingSet(set){
+    return !!set&&set.done!==false&&set.type!=='warmup'&&Number(set.reps)>0;
   }
   function setVolume(set,outputUnit='kg'){
-    if(set.done===false || set.type==='warmup')return 0;
+    if(!isCompletedWorkingSet(set))return 0;
     return convertWeight(Number(set.load)||0,set.unit||'kg',outputUnit)*(Number(set.reps)||0);
   }
 
@@ -210,8 +216,9 @@
   ];
 
   const CHANGELOG = [
-    {version:'7.0.1',date:RELEASE_DATE,items:['New editorial Setline visual system inspired by clean Figma case-study layouts','Warm off-white light mode and charcoal dark mode with restrained pastel tiles','Inter Tight typography, tighter hierarchy and simpler black-and-white controls','Home metrics, today plan, XP, recovery and weekly focus now use a modular color grid','Flattened cards, compact fields and less Material-style visual chrome','All Setline 7 features and the permanent data key remain unchanged']},
-    {version:'7.0.2',date:RELEASE_DATE,items:['Run Setup weekly preview now lets you move any day to a different slot with arrow controls before finishing setup','Added a Reset order action to return to the auto-generated split sequence','Changing training split or training days resets any manual day order so the preview always matches your latest choice']},
+    {version:'7.0.3',date:RELEASE_DATE,items:['Fixed nutrition lookup memory pressure by requesting only required product fields and limiting temporary results','Added request cancellation, timeout handling and exact network/no-result messages with copyable diagnostics','Weekly mission rewards now contribute to XP exactly once per completed week','PR XP now requires a genuine improvement over an earlier logged performance','Rest days may maintain a streak but can never create one without a completed workout','Explicit zero-set and zero-rep records no longer inflate XP, mastery, missions or muscle coverage','Corrected current-version ordering and smaller reliability fixes']},
+    {version:'7.0.2',date:RELEASE_DATE,items:['Run Setup weekly preview lets you move any day to a different slot with arrow controls before finishing setup','Added a Reset order action to return to the auto-generated split sequence','Changing training split or training days resets any manual day order so the preview matches the latest choice']},
+    {version:'7.0.1',date:RELEASE_DATE,items:['New editorial Setline visual system inspired by clean Figma case-study layouts','Warm off-white light mode and charcoal dark mode with restrained pastel tiles','Inter Tight typography, tighter hierarchy and simpler black-and-white controls','Home metrics, today plan, XP, recovery and weekly focus use a modular color grid','Flattened cards, compact fields and less Material-style visual chrome','All Setline 7 features and the permanent data key remain unchanged']},
     {version:'7.0.0',date:RELEASE_DATE,items:['New custom minimal Setline interface with compact typography, thin dividers and restrained color','Workout Focus Mode shows one exercise at a time with previous performance, load, reps and RIR','Setline XP and levels reward completed sessions, working sets, consistency, recovery days and personal records','Weekly missions focus on workouts, quality sets, protein consistency and muscle-region coverage','Exercise mastery, personal milestones and a guilt-free Comeback Mode','Existing mixed-unit workouts, nutrition, profile and history remain under the permanent data key']},
     {version:'6.6.4',date:RELEASE_DATE,items:['Compact minimal interface with smaller cards, typography and spacing','Visible kg/lb toggle on every exercise without automatic locking','Per-set remove control with confirmation for completed sets','Exact exercise definitions prevent Leg Curl from inheriting arm tags','Known machine exercises receive sensible equipment defaults','Generic food presets including boiled eggs plus packaged-food search','Keyboard-safe mobile food logger and corrected floating-label spacing']},
     {version:'6.6.3',date:'August 6, 2026',items:['Added per-exercise kg/lb units while preserving every original load value','Exercise unit memory and optional unit locking for mixed commercial gyms','Machine profiles with remembered weight increments','Original and converted load display without rewriting history','Normalized volume charts and personal records across kg and lb','Workout CSV export now includes each set’s stored unit']},
@@ -360,16 +367,27 @@
     return data.weeklyPlan?.[index]||'rest';
   }
   function isRestType(type){return ['rest','active_recovery','deload'].includes(type);}
+  function hasCompletedWorkout(data,key){
+    const day=getDay(data,key);
+    if((day.sessions||[]).some(session=>!isRestType(session?.type||'')))return true;
+    return (day.workouts||[]).some(workout=>getSets(workout,data.preferredUnit).some(isCompletedWorkingSet));
+  }
+  function hasPlannedTraining(data){
+    if((data.weeklyPlan||[]).some(type=>!isRestType(type)))return true;
+    return Object.values(data.schedule||{}).some(value=>!isRestType(typeof value==='string'?value:value?.type));
+  }
   function calculateStreak(data){
-    if(recordCount(data)===0 && !data.scheduleMeta?.configured) return 0;
-    let key=localDateKey(); const todayPlan=planForDate(data,key); const today=getDay(data,key);
-    if(!today.workouts.length&&!today.sessions.length&&!isRestType(todayPlan)) key=shiftDateKey(key,-1);
-    let count=0;
+    if(!hasPlannedTraining(data))return 0;
+    let key=localDateKey();
+    if(!hasCompletedWorkout(data,key)&&!isRestType(planForDate(data,key)))key=shiftDateKey(key,-1);
+    let span=0,anchoredSpan=0;
     for(let i=0;i<365;i++){
-      const day=getDay(data,key),plan=planForDate(data,key);
-      if(day.workouts.length||day.sessions.length||isRestType(plan)){count++;key=shiftDateKey(key,-1);}else break;
+      const completed=hasCompletedWorkout(data,key),plan=planForDate(data,key);
+      if(completed){span++;anchoredSpan=span;key=shiftDateKey(key,-1);continue;}
+      if(isRestType(plan)){span++;key=shiftDateKey(key,-1);continue;}
+      break;
     }
-    return count;
+    return anchoredSpan;
   }
   function readiness(entry){
     if(!entry||!Number.isFinite(Number(entry.sleep))) return null;
@@ -385,7 +403,7 @@
     for(let offset=0;offset<7;offset++){
       const key=shiftDateKey(endKey,-offset); const day=getDay(data,key);
       for(const workout of day.workouts){
-        const regions=classifyExercise(workout.name); const sets=getSets(workout).filter(set=>set.done!==false&&set.type!=='warmup');
+        const regions=classifyExercise(workout.name); const sets=getSets(workout).filter(isCompletedWorkingSet);
         workingSets+=sets.length;
         for(const region of regions.primary) totals[region]=(totals[region]||0)+sets.length;
         for(const region of regions.secondary) totals[region]=(totals[region]||0)+sets.length*.5;
@@ -400,32 +418,48 @@
   function previousWorkout(data,name,beforeKey=localDateKey()){
     const entries=allWorkouts(data).filter(w=>String(w.name).toLowerCase()===String(name).toLowerCase()&&w.date<beforeKey).sort((a,b)=>b.date.localeCompare(a.date)); return entries[0]||null;
   }
-  function computePRs(data){
-    const best={};
-    for(const w of allWorkouts(data)){
-      for(const set of getSets(w,data.preferredUnit)){
-        if(set.done===false||set.type==='warmup')continue;
-        const load=Number(set.load)||0,reps=Number(set.reps)||0,unit=normalizeUnit(set.unit||w.unit||data.preferredUnit);
-        const estimateKg=convertWeight(load,unit,'kg')*(1+reps/30),key=w.name||'Exercise';
-        if(!best[key]||estimateKg>best[key].estimateKg)best[key]={name:key,load,unit,reps,estimateKg,date:w.date};
-      }
-    }
-    return Object.values(best).sort((a,b)=>b.estimateKg-a.estimateKg).slice(0,8).map(item=>({...item,estimate:convertWeight(item.estimateKg,'kg',data.preferredUnit)}));
+  function workoutBestEstimate(workout,data){
+    const candidates=getSets(workout,data.preferredUnit).filter(isCompletedWorkingSet).map(set=>{
+      const load=Number(set.load)||0,reps=Number(set.reps)||0,unit=normalizeUnit(set.unit||workout.unit||data.preferredUnit);
+      return{load,reps,unit,estimateKg:convertWeight(load,unit,'kg')*(1+reps/30)};
+    }).filter(item=>item.load>0&&item.reps>0);
+    return candidates.sort((a,b)=>b.estimateKg-a.estimateKg)[0]||null;
   }
+  function computePRs(data){
+    const best=new Map();
+    for(const workout of allWorkouts(data)){
+      const candidate=workoutBestEstimate(workout,data);if(!candidate)continue;
+      const key=exerciseKey(workout.name)||'exercise',existing=best.get(key);
+      if(!existing||candidate.estimateKg>existing.estimateKg)best.set(key,{name:workout.name||'Exercise',...candidate,date:workout.date});
+    }
+    return [...best.values()].sort((a,b)=>b.estimateKg-a.estimateKg).slice(0,8).map(item=>({...item,estimate:convertWeight(item.estimateKg,'kg',data.preferredUnit)}));
+  }
+  function computePREvents(data){
+    const best=new Map(),events=[];
+    const workouts=allWorkouts(data).sort((a,b)=>a.date.localeCompare(b.date)||String(a.loggedAt||a.updatedAt||'').localeCompare(String(b.loggedAt||b.updatedAt||'')));
+    for(const workout of workouts){
+      const candidate=workoutBestEstimate(workout,data);if(!candidate)continue;
+      const key=exerciseKey(workout.name)||'exercise',previous=best.get(key);
+      if(!previous){best.set(key,candidate);continue;}
+      if(candidate.estimateKg>previous.estimateKg+0.0001){events.push({exerciseKey:key,name:workout.name||'Exercise',date:workout.date,previousEstimateKg:previous.estimateKg,...candidate});best.set(key,candidate);}
+    }
+    return events;
+  }
+
 
 
   function weekDateKeys(endKey=localDateKey()){
     const start=mondayOf(endKey); return Array.from({length:7},(_,i)=>shiftDateKey(start,i));
   }
   function completedWorkingSetsForDay(data,key){
-    return getDay(data,key).workouts.reduce((sum,workout)=>sum+getSets(workout,data.preferredUnit).filter(set=>set.done!==false&&set.type!=='warmup').length,0);
+    return getDay(data,key).workouts.reduce((sum,workout)=>sum+getSets(workout,data.preferredUnit).filter(isCompletedWorkingSet).length,0);
   }
   function exerciseMastery(data){
     const map=new Map();
     for(const [date,day] of Object.entries(data.days||{})){
       for(const workout of day.workouts||[]){
         const key=exerciseKey(workout.name),record=map.get(key)||{name:workout.name,sessions:new Set(),sets:0,lastDate:date};
-        record.sessions.add(date); record.sets+=getSets(workout,data.preferredUnit).filter(set=>set.done!==false&&set.type!=='warmup').length;
+        record.sessions.add(date); record.sets+=getSets(workout,data.preferredUnit).filter(isCompletedWorkingSet).length;
         if(date>record.lastDate)record.lastDate=date; map.set(key,record);
       }
     }
@@ -440,32 +474,43 @@
     let completedSets=0,workoutDays=0,sessions=0,plannedRestDays=0;
     for(const [date,day] of Object.entries(data.days||{})){
       if(date>endKey)continue;
-      const sets=completedWorkingSetsForDay(data,date); completedSets+=sets;
-      if((day.workouts||[]).length){workoutDays++;sessions+=Math.max(1,(day.sessions||[]).length);}
-      else if(isRestType(planForDate(data,date)))plannedRestDays++;
+      const sets=completedWorkingSetsForDay(data,date);completedSets+=sets;
+      if(hasCompletedWorkout(data,date)){workoutDays++;sessions+=Math.max(1,(day.sessions||[]).length);}
+      else if((day.sessions||[]).some(session=>isRestType(session.type)))plannedRestDays++;
     }
-    const prCount=computePRs(data).length,streak=calculateStreak(data);
-    let xp=sessions*50+completedSets*2+prCount*15+Math.min(plannedRestDays,60)*5;
+    const prCount=computePREvents(data).filter(event=>event.date<=endKey).length,streak=calculateStreak(data);
+    const missionSummary=completedMissionSummary(data,endKey);
+    let xp=sessions*50+completedSets*2+prCount*15+missionSummary.xp+Math.min(plannedRestDays,60)*5;
     if(streak>=7)xp+=50;if(streak>=30)xp+=150;if(streak>=100)xp+=400;
     xp=Math.round(xp);
     const level=Math.max(1,Math.floor(Math.sqrt(xp/175))+1);
     const floor=Math.pow(level-1,2)*175,next=Math.pow(level,2)*175;
     const ranks=['Starter','Builder','Consistent','Driven','Advanced','Relentless','Elite'];
     const rank=ranks[Math.min(ranks.length-1,Math.floor((level-1)/3))];
-    return{xp,level,rank,floor,next,levelProgress:next===floor?100:clamp((xp-floor)/(next-floor)*100,0,100),completedSets,workoutDays,sessions,prCount,streak};
+    return{xp,level,rank,floor,next,levelProgress:next===floor?100:clamp((xp-floor)/(next-floor)*100,0,100),completedSets,workoutDays,sessions,prCount,streak,missionXP:missionSummary.xp,completedMissions:missionSummary.completed};
   }
   function weeklyMissions(data,endKey=localDateKey()){
     const keys=weekDateKeys(endKey).filter(key=>key<=endKey),targetDays=Math.min(3,clamp(data.profile?.trainingDays||3,1,7));
-    const workoutDays=keys.filter(key=>getDay(data,key).workouts.length||getDay(data,key).sessions.length).length;
+    const workoutDays=keys.filter(key=>hasCompletedWorkout(data,key)).length;
     const sets=keys.reduce((sum,key)=>sum+completedWorkingSetsForDay(data,key),0);
     const proteinDays=keys.filter(key=>nutritionTotals(getDay(data,key)).protein>=Number(data.proteinGoal||0)).length;
-    const regions=new Set();keys.forEach(key=>getDay(data,key).workouts.forEach(w=>classifyExercise(w.name).primary.forEach(r=>regions.add(r))));
+    const regions=new Set();keys.forEach(key=>getDay(data,key).workouts.forEach(workout=>{if(getSets(workout,data.preferredUnit).some(isCompletedWorkingSet))classifyExercise(workout.name).primary.forEach(region=>regions.add(region));}));
     return[
       {id:'workouts',title:'Complete planned sessions',progress:workoutDays,target:targetDays,reward:30,unit:'workouts'},
       {id:'sets',title:'Finish quality working sets',progress:sets,target:12,reward:25,unit:'sets'},
       {id:'protein',title:'Hit the protein target',progress:proteinDays,target:4,reward:25,unit:'days'},
       {id:'coverage',title:'Train different muscle regions',progress:regions.size,target:6,reward:20,unit:'regions'}
     ].map(item=>({...item,done:item.progress>=item.target,percent:clamp(item.progress/item.target*100,0,100)}));
+  }
+  function completedMissionSummary(data,endKey=localDateKey()){
+    const mondays=new Set([mondayOf(endKey)]);
+    Object.keys(data.days||{}).filter(key=>key<=endKey).forEach(key=>mondays.add(mondayOf(key)));
+    let xp=0,completed=0;
+    for(const monday of mondays){
+      const weekEnd=shiftDateKey(monday,6),effectiveEnd=weekEnd>endKey?endKey:weekEnd;
+      for(const mission of weeklyMissions(data,effectiveEnd)){if(mission.done){xp+=Number(mission.reward)||0;completed++;}}
+    }
+    return{xp,completed};
   }
   function milestoneItems(data,progression){
     const values={first:progression.workoutDays,ten:progression.workoutDays,fifty:progression.workoutDays,sets:progression.completedSets,streak7:progression.streak,streak30:progression.streak};
@@ -479,7 +524,7 @@
     ].map(item=>({...item,done:item.value>=item.target,percent:clamp(item.value/item.target*100,0,100)}));
   }
   function comebackStatus(data){
-    const dates=Object.keys(data.days||{}).filter(key=>key<=localDateKey()&&getDay(data,key).workouts.length).sort().reverse();
+    const dates=Object.keys(data.days||{}).filter(key=>key<=localDateKey()&&hasCompletedWorkout(data,key)).sort().reverse();
     if(!dates.length)return{active:true,days:null,message:'Your first session is enough. Start small and save one completed set.'};
     const days=Math.floor((dateFromKey(localDateKey())-dateFromKey(dates[0]))/86400000);
     return{active:days>=5,days,message:days>=5?`${days} days since your last workout. Resume with one normal session—no punishment and no catch-up volume.`:''};
@@ -698,7 +743,7 @@
           ${step===3?html`<${Stack} spacing=${1.2}><${Box}><${Typography} variant="h6">Preferred training split</${Typography}><${Typography} variant="body2" color="text.secondary">You can edit any individual day later without changing workout history.</${Typography}></${Box}><div className="setup-choice-grid">${SPLIT_OPTIONS.map(option=>html`<${SelectableCard} key=${option.value} selected=${draft.split===option.value} onClick=${()=>{setPlanTouched(false);setDraft({...draft,split:option.value});}} title=${option.label} detail=${option.detail} badge=${option.days}/>` )}</div>${warning?html`<${Alert} severity="warning">${warning}</${Alert}>`:null}</${Stack}>`:null}
           ${step===4?html`<${Stack} spacing=${1.5}><${Box}><${Typography} variant="h6">Available equipment</${Typography}><${Typography} variant="body2" color="text.secondary">Select everything you can reliably use. Setline will use this for substitutions and starter plans.</${Typography}></${Box}><div className="setup-choice-grid equipment-grid">${EQUIPMENT_OPTIONS.map(option=>html`<${SelectableCard} key=${option.value} selected=${(draft.equipment||[]).includes(option.value)} onClick=${()=>toggleEquipment(option.value)} title=${option.label} detail=${option.detail} emoji=${option.emoji}/>` )}</div>${!(draft.equipment||[]).length?html`<${Alert} severity="info">No equipment selected. Bodyweight suggestions will remain available.</${Alert}>`:null}</${Stack}>`:null}
           ${step===5?html`<${Stack} spacing=${1.5}><${Box}><${Typography} variant="h6">Movements to avoid</${Typography}><${Typography} variant="body2" color="text.secondary">Optional. Select movements you do not want Setline to suggest. This is not medical screening.</${Typography}></${Box}><${Box} sx=${{display:'flex',gap:.8,flexWrap:'wrap'}}>${AVOID_OPTIONS.map(option=>html`<${Chip} key=${option.value} clickable label=${option.label} color=${(draft.avoidMovements||[]).includes(option.value)?'error':'default'} variant=${(draft.avoidMovements||[]).includes(option.value)?'filled':'outlined'} onClick=${()=>toggleAvoid(option.value)} />`)}</${Box}><${TextField} label="Optional note" placeholder="Example: left shoulder discomfort during overhead pressing" value=${draft.avoidNote||''} onChange=${e=>setDraft({...draft,avoidNote:e.target.value})} multiline minRows=${2}/>${!(draft.avoidMovements||[]).length?html`<${Alert} severity="success">No movements selected to avoid.</${Alert}>`:null}</${Stack}>`:null}
-          ${step===6?html`<${Stack} spacing=${1.5}><${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${1}><${Box}><${Typography} variant="h6">Your weekly preview</${Typography}><${Typography} variant="body2" color="text.secondary">${splitInfo(draft.split).label} · ${trainingDays} training day${trainingDays===1?'':'s'} · use the arrows to move a day to a different slot</${Typography}></${Box}>${planTouched?html`<${Button} size="small" onClick=${resetPlanOrder}>Reset order</${Button}>`:null}</${Stack}>${warning?html`<${Alert} severity="warning">${warning}</${Alert}>`:null}<${Paper} variant="outlined" className="schedule-preview"><${Stack} spacing=${.6}>${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((day,index)=>html`<${Stack} key=${day} direction="row" alignItems="center" justifyContent="space-between" spacing=${1} sx=${{p:1,borderRadius:2,bgcolor:isRestType(previewPlan[index])?'transparent':'action.selected'}}><${Typography} variant="body2" fontWeight=${750} sx=${{width:38,flexShrink:0}}>${day.slice(0,3)}</${Typography}><${Chip} label=${planLabel(previewPlan[index])} size="small" color=${isRestType(previewPlan[index])?'default':'primary'} variant=${isRestType(previewPlan[index])?'outlined':'filled'} sx=${{flex:1}}/><${Stack} direction="row" spacing=${.3}><${IconButton} size="small" aria-label=${`Move ${day} earlier`} disabled=${index===0} onClick=${()=>movePlanDay(index,-1)}><${Icon} name="chevron" sx=${{transform:'rotate(180deg)'}} fontSize="small"/></${IconButton}><${IconButton} size="small" aria-label=${`Move ${day} later`} disabled=${index===6} onClick=${()=>movePlanDay(index,1)}><${Icon} name="chevron" sx=${{transform:'rotate(90deg)'}} fontSize="small"/></${IconButton}></${Stack}></${Stack}>`)}</${Stack}></${Paper}><${Alert} severity="info">Finishing setup updates the plan only. Existing workouts, meals, bodyweight and history remain untouched.</${Alert}></${Stack}>`:null}
+          ${step===6?html`<${Stack} spacing=${1.5}><${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${1}><${Box}><${Typography} variant="h6">Your weekly preview</${Typography}><${Typography} variant="body2" color="text.secondary">${splitInfo(draft.split).label} · ${trainingDays} training day${trainingDays===1?'':'s'} · use the arrows to move a day to a different slot</${Typography}></${Box}>${planTouched?html`<${Button} size="small" onClick=${resetPlanOrder}>Reset order</${Button}>`:null}</${Stack}>${warning?html`<${Alert} severity="warning">${warning}</${Alert}>`:null}<${Paper} variant="outlined" className="schedule-preview"><${Stack} spacing=${.6}>${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((day,index)=>html`<${Stack} key=${day} direction="row" alignItems="center" justifyContent="space-between" spacing=${1} sx=${{p:1,borderRadius:2,bgcolor:isRestType(previewPlan[index])?'transparent':'action.selected'}}><${Typography} variant="body2" fontWeight=${750} sx=${{width:38,flexShrink:0}}>${day.slice(0,3)}</${Typography}><${Chip} label=${planLabel(previewPlan[index])} size="small" color=${isRestType(previewPlan[index])?'default':'primary'} variant=${isRestType(previewPlan[index])?'outlined':'filled'} sx=${{flex:1}}/><${Stack} direction="row" spacing=${.3}><${IconButton} size="small" aria-label=${`Move ${day} earlier`} disabled=${index===0} onClick=${()=>movePlanDay(index,-1)}><${Icon} name="chevron" sx=${{transform:'rotate(180deg)'}} fontSize="small"/></${IconButton}><${IconButton} size="small" aria-label=${`Move ${day} later`} disabled=${index===6} onClick=${()=>movePlanDay(index,1)}><${Icon} name="chevron" fontSize="small"/></${IconButton}></${Stack}></${Stack}>`)}</${Stack}></${Paper}><${Alert} severity="info">Finishing setup updates the plan only. Existing workouts, meals, bodyweight and history remain untouched.</${Alert}></${Stack}>`:null}
           ${step===7?html`<${Stack} spacing=${2}><${Box}><${Typography} variant="h6">Appearance and default units</${Typography}><${Typography} variant="body2" color="text.secondary">Choose your theme and the default unit for new exercises. Individual machines can still use a different unit.</${Typography}></${Box}><${ToggleButtonGroup} exclusive fullWidth value=${themeMode} onChange=${(_,value)=>value&&setThemeMode(value)}><${ToggleButton} value="light">Light</${ToggleButton}><${ToggleButton} value="dark">Dark</${ToggleButton}><${ToggleButton} value="system">System</${ToggleButton}></${ToggleButtonGroup}><${ToggleButtonGroup} exclusive fullWidth value=${unitMode} onChange=${(_,value)=>value&&setUnitMode(value)}><${ToggleButton} value="kg">Default kg</${ToggleButton}><${ToggleButton} value="lb">Default lb</${ToggleButton}></${ToggleButtonGroup}><${Alert} severity="info">This default affects new exercises and chart display only. Each exercise remembers its own kg or lb setting.</${Alert}><${Paper} variant="outlined" sx=${{p:2,borderRadius:3}}><${Typography} fontWeight=${850}>Ready to build your plan</${Typography}><${Typography} variant="body2" color="text.secondary" sx=${{mt:.5}}>${splitInfo(draft.split).label}, ${trainingDays} day${trainingDays===1?'':'s'}, ${(draft.equipment||[]).length} equipment option${(draft.equipment||[]).length===1?'':'s'}, default ${unitMode}.</${Typography}></${Paper}></${Stack}>`:null}
         </div>
       </${DialogContent}>
@@ -957,9 +1002,12 @@
     };
     const completeWorkout=()=>{
       if(!currentWorkouts.length)return;
-      const sets=currentWorkouts.flatMap(workout=>getSets(workout,data.preferredUnit)).filter(s=>s.done!==false&&s.type!=='warmup'); const volume=sets.reduce((sum,s)=>sum+setVolume(s,data.preferredUnit),0); const regions=new Set(currentWorkouts.flatMap(w=>classifyExercise(w.name).primary));
-      update(next=>{const target=ensureDayMutable(next,selectedDate);target.sessions.push({id:id('session'),name:`${planLabel(plan)} session`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],completedAt:new Date().toISOString()});});
-      showCompletion({name:`${planLabel(plan)} complete`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],streak:calculateStreak(data),xpAward:50+Math.min(30,sets.length*2)});
+      const sets=currentWorkouts.flatMap(workout=>getSets(workout,data.preferredUnit)).filter(isCompletedWorkingSet);if(!sets.length){showFeedback('Complete at least one working set first');return;}
+      const volume=sets.reduce((sum,set)=>sum+setVolume(set,data.preferredUnit),0),regions=new Set(currentWorkouts.filter(workout=>getSets(workout,data.preferredUnit).some(isCompletedWorkingSet)).flatMap(workout=>classifyExercise(workout.name).primary));
+      const session={id:id('session'),name:`${planLabel(plan)} session`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],completedAt:new Date().toISOString()};
+      const beforeXP=progressionSummary(data,selectedDate).xp,nextSnapshot=deepClone(data);ensureDayMutable(nextSnapshot,selectedDate).sessions.push(deepClone(session));const afterXP=progressionSummary(nextSnapshot,selectedDate).xp;
+      update(next=>ensureDayMutable(next,selectedDate).sessions.push(session));
+      showCompletion({name:`${planLabel(plan)} complete`,exerciseCount:currentWorkouts.length,setCount:sets.length,volume,volumeUnit:data.preferredUnit,regions:[...regions],streak:calculateStreak(nextSnapshot),xpAward:Math.max(0,afterXP-beforeXP)});
     };
     const changePlan=type=>update(next=>{next.schedule[selectedDate]=type;next.scheduleMeta.configured=true;});
     return html`<div className="page-wrap workout-page">
@@ -1005,28 +1053,76 @@
   function AddFoodDialog({open,onClose,data,initial,onSave,defaultMeal='Breakfast'}){
     const mobile=useMediaQuery('(max-width:600px)');
     const blank={name:'',meal:defaultMeal,kcal:'',protein:'',carbs:'',fat:'',amount:1,unit:'serving',favorite:false,barcode:''};
-    const [form,setForm]=useState(blank); const [query,setQuery]=useState(''); const [results,setResults]=useState([]); const [loading,setLoading]=useState(false); const [error,setError]=useState('');
-    useEffect(()=>{if(open){setForm(initial?{...blank,...initial,favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');}},[open,initial,defaultMeal]);
-    const patch=(key,value)=>setForm({...form,[key]:value});
-    const applyProduct=product=>{if(product._setlinePreset){setForm({...form,name:product.name,kcal:product.kcal,protein:product.protein,carbs:product.carbs,fat:product.fat,amount:product.amount,unit:product.unit,barcode:''});setResults([]);return;}const n=product.nutriments||{};setForm({...form,name:product.product_name||product.generic_name||form.name,kcal:Math.round(Number(n['energy-kcal_100g']||0)),protein:round1(n.proteins_100g||0),carbs:round1(n.carbohydrates_100g||0),fat:round1(n.fat_100g||0),amount:100,unit:'g',barcode:product.code||form.barcode});setResults([]);};
-    const search=async()=>{const term=query.trim().toLowerCase();if(!term)return;const local=COMMON_FOODS.filter(item=>[item.name,...item.aliases].some(label=>label.toLowerCase().includes(term)||term.includes(label.toLowerCase()))).slice(0,6).map(item=>({...item,_setlinePreset:true}));setResults(local);setLoading(true);setError('');try{const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=6`;const res=await fetch(url);if(!res.ok)throw new Error('Search failed');const json=await res.json();const packaged=(json.products||[]).filter(p=>p.product_name&&p.nutriments).slice(0,6);setResults([...local,...packaged]);if(!local.length&&!packaged.length)setError('No match found. Enter the nutrition manually.');}catch(err){if(!local.length)setError('Online packaged-food search is unavailable. Manual logging still works.');}finally{setLoading(false);}};
-    const lookupBarcode=async(code=form.barcode)=>{if(!code.trim())return;setLoading(true);setError('');try{const res=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json`);const json=await res.json();if(!json.product)throw new Error('Not found');applyProduct({...json.product,code});}catch(err){setError('Barcode not found. Enter the food manually.');}finally{setLoading(false);}};
-    const scanImage=async file=>{if(!file)return;if(!('BarcodeDetector' in window)){setError('Camera barcode detection is not supported in this browser. Type the barcode instead.');return;}setLoading(true);try{const bitmap=await createImageBitmap(file);const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});const codes=await detector.detect(bitmap);if(!codes.length)throw new Error('No barcode');patch('barcode',codes[0].rawValue);await lookupBarcode(codes[0].rawValue);}catch(err){setError('No barcode was detected in that image.');}finally{setLoading(false);}};
-    const submit=()=>{if(!form.name.trim()||!Number.isFinite(Number(form.kcal))){setError('Enter a food name and calories.');return;}onSave({...form,id:initial?.id||id('food'),name:form.name.trim(),kcal:Number(form.kcal)||0,protein:Number(form.protein)||0,carbs:Number(form.carbs)||0,fat:Number(form.fat)||0,amount:Number(form.amount)||1,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()});onClose();};
-    return html`<${Dialog} className="food-dialog" open=${open} onClose=${onClose} maxWidth="sm" fullWidth fullScreen=${mobile} scroll="paper">
+    const [form,setForm]=useState(blank);const [query,setQuery]=useState('');const [results,setResults]=useState([]);const [loading,setLoading]=useState(false);const [error,setError]=useState('');const [debugDetails,setDebugDetails]=useState('');
+    const searchAbort=useRef(null),barcodeAbort=useRef(null),requestSequence=useRef(0);
+    const closeDialog=()=>{searchAbort.current?.abort('dialog_closed');barcodeAbort.current?.abort('dialog_closed');setLoading(false);setResults([]);onClose();};
+    useEffect(()=>{
+      if(open){setForm(initial?{...blank,...initial,favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');setDebugDetails('');}
+      return()=>{searchAbort.current?.abort('unmounted');barcodeAbort.current?.abort('unmounted');};
+    },[open,initial,defaultMeal]);
+    const patch=(key,value)=>setForm(current=>({...current,[key]:value}));
+    const slimProduct=product=>({code:product?.code||'',product_name:product?.product_name||'',generic_name:product?.generic_name||'',brands:product?.brands||'',nutriments:{'energy-kcal_100g':Number(product?.nutriments?.['energy-kcal_100g']||0),proteins_100g:Number(product?.nutriments?.proteins_100g||0),carbohydrates_100g:Number(product?.nutriments?.carbohydrates_100g||0),fat_100g:Number(product?.nutriments?.fat_100g||0)}});
+    const saveDiagnostic=(message,err,context={})=>{
+      const details=JSON.stringify({time:new Date().toISOString(),message,errorName:err?.name||'',errorMessage:err?.message||String(err||''),online:navigator.onLine,...context},null,2);
+      setError(message);setDebugDetails(details);console.error('[Setline nutrition lookup]',details,err);
+      try{sessionStorage.setItem(LOOKUP_DIAGNOSTIC_KEY,details);}catch(storageError){}
+    };
+    const copyDebug=async()=>{if(!debugDetails)return;try{await navigator.clipboard.writeText(debugDetails);setError('Error details copied. Manual logging still works.');}catch(err){prompt('Copy these error details:',debugDetails);}};
+    const applyProduct=product=>{if(product._setlinePreset){setForm(current=>({...current,name:product.name,kcal:product.kcal,protein:product.protein,carbs:product.carbs,fat:product.fat,amount:product.amount,unit:product.unit,barcode:''}));setResults([]);return;}const n=product.nutriments||{};setForm(current=>({...current,name:product.product_name||product.generic_name||current.name,kcal:Math.round(Number(n['energy-kcal_100g']||0)),protein:round1(n.proteins_100g||0),carbs:round1(n.carbohydrates_100g||0),fat:round1(n.fat_100g||0),amount:100,unit:'g',barcode:product.code||current.barcode}));setResults([]);};
+    const search=async()=>{
+      const rawTerm=query.trim(),term=rawTerm.toLowerCase();if(term.length<2){setError('Type at least two characters.');return;}
+      const local=COMMON_FOODS.filter(item=>[item.name,...item.aliases].some(label=>label.toLowerCase().includes(term)||term.includes(label.toLowerCase()))).slice(0,5).map(item=>({...item,_setlinePreset:true}));
+      setResults(local);setError('');setDebugDetails('');searchAbort.current?.abort('superseded');const controller=new AbortController();searchAbort.current=controller;const requestId=++requestSequence.current;const timeout=setTimeout(()=>controller.abort('timeout'),8000);setLoading(true);
+      try{
+        const fields='code,product_name,generic_name,brands,nutriments';
+        const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(rawTerm)}&search_simple=1&action=process&json=1&page_size=4&fields=${encodeURIComponent(fields)}`;
+        const response=await fetch(url,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/json'}});
+        if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const declaredSize=Number(response.headers.get('content-length')||0);if(declaredSize>1500000)throw new Error('Response exceeded safe size');
+        const payload=await response.json();if(requestId!==requestSequence.current)return;
+        const packaged=(Array.isArray(payload.products)?payload.products:[]).filter(product=>product?.product_name&&product?.nutriments).slice(0,4).map(slimProduct);
+        setResults([...local,...packaged].slice(0,9));
+        if(!local.length&&!packaged.length)setError('No matching food found. Use manual entry below.');
+      }catch(err){
+        if(controller.signal.reason==='superseded'||controller.signal.reason==='dialog_closed'||controller.signal.reason==='unmounted')return;
+        if(controller.signal.reason==='timeout'||err?.name==='AbortError')saveDiagnostic('Food search timed out. Try again or use manual entry.',err,{operation:'food_search',query:rawTerm});
+        else if(!navigator.onLine)saveDiagnostic('You are offline. Local foods and manual entry still work.',err,{operation:'food_search',query:rawTerm});
+        else if(String(err?.message||'').startsWith('HTTP'))saveDiagnostic(`Food service returned ${err.message}. Try again later.`,err,{operation:'food_search',query:rawTerm});
+        else saveDiagnostic('Food search could not connect. Local foods and manual entry still work.',err,{operation:'food_search',query:rawTerm});
+      }finally{clearTimeout(timeout);if(requestId===requestSequence.current)setLoading(false);}
+    };
+    const lookupBarcode=async(code=form.barcode)=>{
+      const clean=String(code||'').trim();if(!clean){setError('Enter a barcode first.');return;}
+      barcodeAbort.current?.abort('superseded');const controller=new AbortController();barcodeAbort.current=controller;const timeout=setTimeout(()=>controller.abort('timeout'),8000);setLoading(true);setError('');setDebugDetails('');
+      try{
+        const fields='code,product_name,generic_name,brands,nutriments';
+        const response=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(clean)}.json?fields=${encodeURIComponent(fields)}`,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/json'}});
+        if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const payload=await response.json();if(!payload.product)throw new Error('Product not found');applyProduct({...slimProduct(payload.product),code:clean});
+      }catch(err){
+        if(controller.signal.reason==='superseded'||controller.signal.reason==='dialog_closed'||controller.signal.reason==='unmounted')return;
+        if(controller.signal.reason==='timeout'||err?.name==='AbortError')saveDiagnostic('Barcode lookup timed out. Try again or enter the food manually.',err,{operation:'barcode_lookup',barcode:clean});
+        else if(!navigator.onLine)saveDiagnostic('You are offline. Barcode lookup needs internet.',err,{operation:'barcode_lookup',barcode:clean});
+        else if(err?.message==='Product not found')saveDiagnostic('Barcode not found. Enter the food manually.',err,{operation:'barcode_lookup',barcode:clean});
+        else saveDiagnostic('Barcode lookup failed. Enter the food manually.',err,{operation:'barcode_lookup',barcode:clean});
+      }finally{clearTimeout(timeout);setLoading(false);}
+    };
+    const scanImage=async file=>{if(!file)return;if(!('BarcodeDetector' in window)){setError('Camera barcode detection is not supported in this browser. Type the barcode instead.');return;}setLoading(true);try{const bitmap=await createImageBitmap(file);const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});const codes=await detector.detect(bitmap);bitmap.close?.();if(!codes.length)throw new Error('No barcode');patch('barcode',codes[0].rawValue);await lookupBarcode(codes[0].rawValue);}catch(err){saveDiagnostic('No barcode was detected in that image.',err,{operation:'barcode_scan'});}finally{setLoading(false);}};
+    const submit=()=>{if(!form.name.trim()||!Number.isFinite(Number(form.kcal))){setError('Enter a food name and calories.');return;}onSave({...form,id:initial?.id||id('food'),name:form.name.trim(),kcal:Number(form.kcal)||0,protein:Number(form.protein)||0,carbs:Number(form.carbs)||0,fat:Number(form.fat)||0,amount:Number(form.amount)||1,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()});closeDialog();};
+    return html`<${Dialog} className="food-dialog" open=${open} onClose=${closeDialog} maxWidth="sm" fullWidth fullScreen=${mobile} scroll="paper">
       <${DialogTitle}>${initial?'Edit food':'Log food'}</${DialogTitle}>
       <${DialogContent} dividers className="food-dialog-content"><${Stack} spacing=${1.4} sx=${{pt:.25}}>
-        <${Box}><${Typography} component="label" variant="caption" color="text.secondary" fontWeight=${800} sx=${{display:'block',mb:.55}}>SEARCH FOODS</${Typography}><${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:.8}}><${TextField} placeholder="e.g. boiled eggs" aria-label="Search foods" value=${query} onChange=${e=>setQuery(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&search()} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}}/><${Button} variant="outlined" onClick=${search} disabled=${loading}>Search</${Button}></${Box}></${Box}>
-        ${loading?html`<${LinearProgress}/>`:null}${error?html`<${Alert} severity="info">${error}</${Alert}>`:null}
-        ${results.length?html`<${Paper} variant="outlined" sx=${{maxHeight:230,overflow:'auto'}}>${results.map((p,index)=>html`<${ListItemButton} key=${p.code||p.name||index} onClick=${()=>applyProduct(p)}><${ListItemText} primary=${p._setlinePreset?p.name:p.product_name} secondary=${p._setlinePreset?`${p.note} · ${Math.round(p.kcal)} kcal`:`${p.brands||'Packaged food'} · ${Math.round(Number(p.nutriments?.['energy-kcal_100g']||0))} kcal/100g`}/></${ListItemButton}>`)}</${Paper}>`:null}
+        <${Box}><${Typography} component="label" variant="caption" color="text.secondary" fontWeight=${800} sx=${{display:'block',mb:.55}}>SEARCH FOODS</${Typography}><${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:.8}}><${TextField} placeholder="e.g. boiled eggs" aria-label="Search foods" value=${query} onChange=${e=>setQuery(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter'){e.preventDefault();search();}}} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}}/><${Button} variant="outlined" onClick=${search} disabled=${loading}>Search</${Button}></${Box}></${Box}>
+        ${loading?html`<${LinearProgress}/>`:null}${error?html`<${Alert} severity="info" action=${debugDetails?html`<${Button} color="inherit" size="small" onClick=${copyDebug}>Copy details</${Button}>`:null}>${error}</${Alert}>`:null}
+        ${results.length?html`<${Paper} variant="outlined" sx=${{maxHeight:230,overflow:'auto'}}>${results.map((product,index)=>html`<${ListItemButton} key=${product.code||product.name||index} onClick=${()=>applyProduct(product)}><${ListItemText} primary=${product._setlinePreset?product.name:product.product_name} secondary=${product._setlinePreset?`${product.note} · ${Math.round(product.kcal)} kcal`:`${product.brands||'Packaged food'} · ${Math.round(Number(product.nutriments?.['energy-kcal_100g']||0))} kcal/100g`}/></${ListItemButton}>`)}</${Paper}>`:null}
         <${Divider}>OR ENTER MANUALLY</${Divider}>
         <${TextField} label="Food or meal" value=${form.name} onChange=${e=>patch('name',e.target.value)}/>
         <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(4,1fr)'},gap:1}}><${TextField} label="Calories" type="number" value=${form.kcal} onChange=${e=>patch('kcal',e.target.value)}/><${TextField} label="Protein (g)" type="number" value=${form.protein} onChange=${e=>patch('protein',e.target.value)}/><${TextField} label="Carbs (g)" type="number" value=${form.carbs} onChange=${e=>patch('carbs',e.target.value)}/><${TextField} label="Fat (g)" type="number" value=${form.fat} onChange=${e=>patch('fat',e.target.value)}/></${Box}>
         <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" value=${form.amount} onChange=${e=>patch('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patch('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="ml">Millilitres</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
-        <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto auto',gap:1}}><${TextField} label="Barcode" value=${form.barcode} onChange=${e=>patch('barcode',e.target.value)}/><${Button} variant="outlined" onClick=${()=>lookupBarcode()}>Lookup</${Button}><${Button} variant="outlined" component="label">Scan<input className="sr-only" type="file" accept="image/*" capture="environment" onChange=${e=>scanImage(e.target.files?.[0])}/></${Button}></${Box}>
+        <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto auto',gap:1}}><${TextField} label="Barcode" value=${form.barcode} onChange=${e=>patch('barcode',e.target.value)}/><${Button} variant="outlined" onClick=${()=>lookupBarcode()} disabled=${loading}>Lookup</${Button}><${Button} variant="outlined" component="label" disabled=${loading}>Scan<input className="sr-only" type="file" accept="image/*" capture="environment" onChange=${e=>scanImage(e.target.files?.[0])}/></${Button}></${Box}>
         <${FormControlLabel} control=${html`<${Checkbox} checked=${!!form.favorite} onChange=${e=>patch('favorite',e.target.checked)}/>`} label="Save to favourites"/>
       </${Stack}></${DialogContent}>
-      <${DialogActions} className="food-dialog-actions"><${Button} onClick=${onClose}>Cancel</${Button}><${Button} variant="contained" color="secondary" onClick=${submit}>Save food</${Button}></${DialogActions}>
+      <${DialogActions} className="food-dialog-actions"><${Button} onClick=${closeDialog}>Cancel</${Button}><${Button} variant="contained" color="secondary" onClick=${submit}>Save food</${Button}></${DialogActions}>
     </${Dialog}>`;
   }
 
@@ -1163,6 +1259,7 @@
     const importData=async file=>{if(!file)return;try{const parsed=JSON.parse(await file.text());const incoming=normaliseState(parsed.data||parsed);update(next=>Object.assign(next,mergeStates(next,incoming)));showFeedback('Backup merged');}catch(err){showFeedback('Backup could not be read');}};
     const restoreBackup=()=>{const backup=parseCandidate(localStorage.getItem(BACKUP_KEY));if(!backup){showFeedback('No recovery backup found');return;}if(!confirm('Merge the last automatic backup into current data?'))return;update(next=>Object.assign(next,mergeStates(next,backup)));showFeedback('Backup restored');};
     const integrity=()=>{const issues=[];if(!data.days||typeof data.days!=='object')issues.push('Days container missing');for(const [key,day] of Object.entries(data.days||{})){if(!Array.isArray(day.workouts))issues.push(`${key}: workouts invalid`);if(!Array.isArray(day.calories))issues.push(`${key}: nutrition invalid`);}showFeedback(issues.length?`${issues.length} issue${issues.length===1?'':'s'} found`:`Data check passed · ${recordCount(data)} records`);};
+    const copyLastLookupError=async()=>{let details='';try{details=sessionStorage.getItem(LOOKUP_DIAGNOSTIC_KEY)||'';}catch(err){}if(!details){showFeedback('No lookup error recorded this session');return;}try{await navigator.clipboard.writeText(details);showFeedback('Lookup error details copied');}catch(err){prompt('Copy these lookup details:',details);}};
     const savePlan=(index,value)=>update(next=>{next.weeklyPlan[index]=value;next.scheduleMeta.configured=true;});
     const habit=data.privateHabit||{}; const habitDays=habit.enabled&&habit.startDate?Math.max(0,Math.floor((dateFromKey(localDateKey())-dateFromKey(habit.startDate))/86400000)+1):0;
     const resetHabit=()=>{if(!confirm('Reset this private habit counter today?'))return;update(next=>{next.privateHabit.personalBest=Math.max(Number(next.privateHabit.personalBest)||0,habitDays);next.privateHabit.startDate=localDateKey();});showFeedback('Counter reset');};
@@ -1174,7 +1271,7 @@
         <${Stack} spacing=${2.5}>
           <${CardShell}>
             <${SectionHeading} title="Your profile" subtitle=${goalLabel(data.profile.goal)+' · '+data.profile.experience} action=${html`<${Button} size="small" onClick=${openOnboarding}>Run setup</${Button}>`}/>
-            <${Stack} spacing=${1.5}><${TextField} label="Name" value=${profile.name||''} onChange=${e=>setProfile({...profile,name:e.target.value})}/><${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr',sm:'1fr 1fr'},gap:1}}><${TextField} select label="Goal" value=${profile.goal||'build_muscle'} onChange=${e=>setProfile({...profile,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}><${TextField} select label="Experience" value=${profile.experience||'intermediate'} onChange=${e=>setProfile({...profile,experience:e.target.value})}><${MenuItem} value="beginner">Beginner</${MenuItem}><${MenuItem} value="intermediate">Intermediate</${MenuItem}><${MenuItem} value="advanced">Advanced</${MenuItem}></${TextField}></${Box}><${Alert} severity="info"><b>${splitInfo(profile.split).label}</b> · ${clamp(profile.trainingDays,1,7)} training day${clamp(profile.trainingDays,1,7)===1?'':'s'}. Use <b>Run setup</b> to change split, equipment or movement restrictions safely.</${Alert}><${TextField} label="Equipment" value=${(profile.equipment||[]).join(', ')} onChange=${e=>setProfile({...profile,equipment:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)})}/><${TextField} label="Movements to avoid" value=${profile.avoid||''} onChange=${e=>setProfile({...profile,avoid:e.target.value})}/><${Button} variant="contained" onClick=${saveProfile}>Save profile</${Button}></${Stack}>
+            <${Stack} spacing=${1.5}><${TextField} label="Name" value=${profile.name||''} onChange=${e=>setProfile({...profile,name:e.target.value})}/><${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr',sm:'1fr 1fr'},gap:1}}><${TextField} select label="Goal" value=${profile.goal||'build_muscle'} onChange=${e=>setProfile({...profile,goal:e.target.value})}><${MenuItem} value="build_muscle">Build muscle</${MenuItem}><${MenuItem} value="strength">Build strength</${MenuItem}><${MenuItem} value="fat_loss">Fat loss</${MenuItem}><${MenuItem} value="general">General fitness</${MenuItem}></${TextField}><${TextField} select label="Experience" value=${profile.experience||'intermediate'} onChange=${e=>setProfile({...profile,experience:e.target.value})}><${MenuItem} value="beginner">Beginner</${MenuItem}><${MenuItem} value="intermediate">Intermediate</${MenuItem}><${MenuItem} value="advanced">Advanced</${MenuItem}></${TextField}></${Box}><${Alert} severity="info"><b>${splitInfo(profile.split).label}</b> · ${clamp(profile.trainingDays,1,7)} training day${clamp(profile.trainingDays,1,7)===1?'':'s'}. Use <b>Run setup</b> to change split, equipment or movement restrictions safely.</${Alert}><${Box}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>EQUIPMENT</${Typography}><${Box} sx=${{display:'flex',gap:.65,flexWrap:'wrap',mt:.65}}>${EQUIPMENT_OPTIONS.map(option=>html`<${Chip} key=${option.value} clickable label=${option.label} color=${(profile.equipment||[]).includes(option.value)?'primary':'default'} variant=${(profile.equipment||[]).includes(option.value)?'filled':'outlined'} onClick=${()=>setProfile(current=>({...current,equipment:(current.equipment||[]).includes(option.value)?current.equipment.filter(value=>value!==option.value):[...(current.equipment||[]),option.value]}))}/>` )}</${Box}></${Box}><${Box}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>MOVEMENTS TO AVOID</${Typography}><${Box} sx=${{display:'flex',gap:.65,flexWrap:'wrap',mt:.65}}>${AVOID_OPTIONS.map(option=>html`<${Chip} key=${option.value} clickable label=${option.label} color=${(profile.avoidMovements||[]).includes(option.value)?'error':'default'} variant=${(profile.avoidMovements||[]).includes(option.value)?'filled':'outlined'} onClick=${()=>setProfile(current=>({...current,avoidMovements:(current.avoidMovements||[]).includes(option.value)?current.avoidMovements.filter(value=>value!==option.value):[...(current.avoidMovements||[]),option.value]}))}/>` )}</${Box}></${Box}><${TextField} label="Movement note (optional)" value=${profile.avoidNote||''} onChange=${e=>setProfile({...profile,avoidNote:e.target.value})}/><${Button} variant="contained" onClick=${saveProfile}>Save profile</${Button}></${Stack}>
           </${CardShell}>
 
           <${CardShell}>
@@ -1218,7 +1315,7 @@
 
           <${CardShell}>
             <${SectionHeading} title="Data and reliability" subtitle="Permanent key: setline-data-v1"/>
-            <${Stack} spacing=${1}><${Button} variant="contained" startIcon=${html`<${Icon} name="download"/>`} onClick=${exportData}>Export backup</${Button}><${Button} variant="outlined" startIcon=${html`<${Icon} name="download"/>`} onClick=${exportWorkoutCsv}>Export workout CSV</${Button}><${Button} variant="outlined" component="label" startIcon=${html`<${Icon} name="upload"/>`}>Import and merge<input className="sr-only" type="file" accept="application/json" onChange=${e=>importData(e.target.files?.[0])}/></${Button}><${Button} variant="outlined" onClick=${restoreBackup}>Restore automatic backup</${Button}><${Button} variant="outlined" onClick=${integrity}>Run data-integrity check</${Button}><${Typography} variant="caption" color="text.secondary">${recordCount(data)} workout, nutrition and session records. Last save: ${data.updatedAt?new Date(data.updatedAt).toLocaleString():'Not recorded'}.</${Typography}></${Stack}>
+            <${Stack} spacing=${1}><${Button} variant="contained" startIcon=${html`<${Icon} name="download"/>`} onClick=${exportData}>Export backup</${Button}><${Button} variant="outlined" startIcon=${html`<${Icon} name="download"/>`} onClick=${exportWorkoutCsv}>Export workout CSV</${Button}><${Button} variant="outlined" component="label" startIcon=${html`<${Icon} name="upload"/>`}>Import and merge<input className="sr-only" type="file" accept="application/json" onChange=${e=>importData(e.target.files?.[0])}/></${Button}><${Button} variant="outlined" onClick=${restoreBackup}>Restore automatic backup</${Button}><${Button} variant="outlined" onClick=${integrity}>Run data-integrity check</${Button}><${Button} variant="outlined" onClick=${copyLastLookupError}>Copy last lookup error</${Button}><${Typography} variant="caption" color="text.secondary">${recordCount(data)} workout, nutrition and session records. Last save: ${data.updatedAt?new Date(data.updatedAt).toLocaleString():'Not recorded'}.</${Typography}></${Stack}>
           </${CardShell}>
 
           <${CardShell}>
@@ -1254,7 +1351,7 @@
     useEffect(()=>{const on=()=>setOnline(true),off=()=>setOnline(false);window.addEventListener('online',on);window.addEventListener('offline',off);return()=>{window.removeEventListener('online',on);window.removeEventListener('offline',off);};},[]);
     const navigate=value=>{setTab(value);window.scrollTo({top:0,behavior:data.settings.reducedMotion?'auto':'smooth'});};
     const showFeedback=message=>{setFeedback(message);clearTimeout(feedbackTimer.current);feedbackTimer.current=setTimeout(()=>setFeedback(''),850);if(data.settings.haptics){try{navigator.vibrate?.(35);}catch(err){}}};
-    const showCompletion=summary=>{setCompletion({...summary,streak:calculateStreak(data)});if(data.settings.haptics){try{navigator.vibrate?.([60,50,90]);}catch(err){}}};
+    const showCompletion=summary=>{setCompletion({...summary,streak:summary.streak??calculateStreak(data)});if(data.settings.haptics){try{navigator.vibrate?.([60,50,90]);}catch(err){}}};
     const openGuide=term=>setGuide({open:true,term:term||''});
     const closeChangelog=()=>{setChangelogOpen(false);update(next=>next.changelogSeen=APP_VERSION);};
     const applyUpdate=()=>{if(updateReady?.waiting){try{localStorage.setItem(BACKUP_KEY,JSON.stringify(data));}catch(err){}updateReady.waiting.postMessage({type:'SKIP_WAITING'});}else window.location.reload();};
@@ -1264,7 +1361,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Editorial minimal interface, pastel modular tiles, Focus Mode, XP, missions and mastery.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Reliability fixes for nutrition lookup, XP, PRs, streaks and zero-set records.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

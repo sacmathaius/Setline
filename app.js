@@ -19,7 +19,7 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '7.1';
+  const APP_VERSION = '7.1.1';
   const RELEASE_DATE = 'August 8, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
@@ -72,7 +72,9 @@
   function mondayOf(key=localDateKey()) { const d=dateFromKey(key); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return localDateKey(d); }
   function id(prefix='id') { return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`; }
   function clamp(n,min,max){ return Math.min(max,Math.max(min,Number(n)||0)); }
-  function round1(n){ return Math.round((Number(n)||0)*10)/10; }
+  function round1(n){ const value=Number(n)||0; return Math.round((value+Number.EPSILON)*10)/10; }
+  function displayWhole(n){ const value=Number(n)||0; return Math.max(0,Math.round(value+Number.EPSILON)); }
+  function displayMacro(n){ const value=round1(Math.max(0,Number(n)||0)); return Number.isInteger(value)?String(value):value.toFixed(1); }
   function normalizeUnit(unit){ return String(unit).toLowerCase()==='lb'?'lb':'kg'; }
   function convertWeight(value,fromUnit,toUnit){
     const number=Number(value)||0,from=normalizeUnit(fromUnit),to=normalizeUnit(toUnit);
@@ -80,6 +82,7 @@
     return from==='kg'?number*2.2046226218:number/2.2046226218;
   }
   function exerciseKey(name=''){ return String(name).trim().toLowerCase().replace(/\s+/g,' '); }
+  function exerciseSearchKey(name=''){ return String(name).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' '); }
   function formatLoad(value,unit){ return `${round1(value)} ${normalizeUnit(unit)}`; }
   function convertedLoadText(value,fromUnit,toUnit){
     if(!Number(value)||normalizeUnit(fromUnit)===normalizeUnit(toUnit))return '';
@@ -107,6 +110,43 @@
   const REGION_META = {
     upper_chest:['Upper chest','Push'],chest:['Chest','Push'],lats:['Lats','Pull'],upper_back:['Upper back','Pull'],lower_back:['Lower back','Pull'],front_delts:['Front delts','Push'],side_delts:['Side delts','Push'],rear_delts:['Rear delts','Pull'],biceps:['Biceps','Pull'],triceps:['Triceps','Push'],forearms:['Forearms','Pull'],quads:['Quads','Legs'],hamstrings:['Hamstrings','Legs'],glutes:['Glutes','Legs'],calves:['Calves','Legs'],core:['Core','Core']
   };
+  const EXERCISE_CATALOG = [{"name":"Barbell Bench Press","aliases":["bench press","flat barbell bench"],"primary":["chest"],"secondary":["front_delts","triceps"],"machineProfile":"free_weight"},{"name":"Dumbbell Bench Press","aliases":["flat dumbbell press","db bench press"],"primary":["chest"],"secondary":["front_delts","triceps"],"machineProfile":"free_weight"},{"name":"Incline Barbell Bench Press","aliases":["incline bench press","incline barbell press"],"primary":["upper_chest"],"secondary":["front_delts","triceps"],"machineProfile":"free_weight"},{"name":"Incline Dumbbell Press","aliases":["incline db press","incline dumbell press"],"primary":["upper_chest"],"secondary":["front_delts","triceps"],"machineProfile":"free_weight"},{"name":"Decline Barbell Bench Press","aliases":["decline bench press"],"primary":["chest"],"secondary":["triceps","front_delts"],"machineProfile":"free_weight"},{"name":"Decline Dumbbell Press","aliases":["decline db press"],"primary":["chest"],"secondary":["triceps","front_delts"],"machineProfile":"free_weight"},{"name":"Machine Chest Press","aliases":["chest press","selectorized chest press"],"primary":["chest"],"secondary":["front_delts","triceps"],"machineProfile":"selectorized"},{"name":"Plate-Loaded Chest Press","aliases":["hammer strength chest press"],"primary":["chest"],"secondary":["front_delts","triceps"],"machineProfile":"plate_loaded"},{"name":"Smith Machine Bench Press","aliases":["smith bench press"],"primary":["chest"],"secondary":["front_delts","triceps"],"machineProfile":"smith_machine"},{"name":"Smith Machine Incline Press","aliases":["smith incline press"],"primary":["upper_chest"],"secondary":["front_delts","triceps"],"machineProfile":"smith_machine"},{"name":"Cable Fly","aliases":["standing cable fly","cable chest fly"],"primary":["chest"],"secondary":["front_delts"],"machineProfile":"cable_stack"},{"name":"Low-to-High Cable Fly","aliases":["low high cable fly","upper chest cable fly"],"primary":["upper_chest"],"secondary":["front_delts"],"machineProfile":"cable_stack"},{"name":"High-to-Low Cable Fly","aliases":["high low cable fly","lower chest cable fly"],"primary":["chest"],"secondary":["front_delts"],"machineProfile":"cable_stack"},{"name":"Pec Deck","aliases":["machine fly","pec fly"],"primary":["chest"],"secondary":["front_delts"],"machineProfile":"selectorized"},{"name":"Dumbbell Fly","aliases":["db fly","flat dumbbell fly"],"primary":["chest"],"secondary":["front_delts"],"machineProfile":"free_weight"},{"name":"Incline Dumbbell Fly","aliases":["incline db fly"],"primary":["upper_chest"],"secondary":["front_delts"],"machineProfile":"free_weight"},{"name":"Push-Up","aliases":["push up","pushup"],"primary":["chest"],"secondary":["front_delts","triceps"],"machineProfile":"bodyweight"},{"name":"Chest Dip","aliases":["dips chest","forward lean dip"],"primary":["chest"],"secondary":["triceps","front_delts"],"machineProfile":"bodyweight"},{"name":"Lat Pulldown","aliases":["wide grip pulldown","lat pull down"],"primary":["lats"],"secondary":["biceps","upper_back"],"machineProfile":"cable_stack"},{"name":"Neutral-Grip Lat Pulldown","aliases":["neutral pulldown","close neutral pulldown"],"primary":["lats"],"secondary":["biceps","upper_back"],"machineProfile":"cable_stack"},{"name":"Underhand Lat Pulldown","aliases":["reverse grip pulldown"],"primary":["lats"],"secondary":["biceps"],"machineProfile":"cable_stack"},{"name":"Single-Arm Lat Pulldown","aliases":["one arm lat pulldown","single arm pulldown"],"primary":["lats"],"secondary":["biceps"],"machineProfile":"cable_stack"},{"name":"Straight-Arm Pulldown","aliases":["straight arm cable pulldown"],"primary":["lats"],"secondary":["triceps"],"machineProfile":"cable_stack"},{"name":"Pull-Up","aliases":["pull up","pullup"],"primary":["lats"],"secondary":["biceps","upper_back"],"machineProfile":"bodyweight"},{"name":"Chin-Up","aliases":["chin up","chinup"],"primary":["lats"],"secondary":["biceps"],"machineProfile":"bodyweight"},{"name":"Assisted Pull-Up","aliases":["assisted pull up"],"primary":["lats"],"secondary":["biceps","upper_back"],"machineProfile":"selectorized"},{"name":"Seated Cable Row","aliases":["cable row","seated row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"cable_stack"},{"name":"Chest-Supported Row","aliases":["chest supported dumbbell row","supported row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"free_weight"},{"name":"Machine Row","aliases":["selectorized row","seated machine row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"selectorized"},{"name":"Plate-Loaded Row","aliases":["hammer strength row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"plate_loaded"},{"name":"One-Arm Dumbbell Row","aliases":["single arm dumbbell row","one arm db row"],"primary":["lats","upper_back"],"secondary":["biceps","rear_delts"],"machineProfile":"free_weight"},{"name":"Barbell Bent-Over Row","aliases":["barbell row","bent over row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"free_weight"},{"name":"T-Bar Row","aliases":["t bar row","landmine row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"plate_loaded"},{"name":"Seal Row","aliases":["bench seal row"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"free_weight"},{"name":"Inverted Row","aliases":["body row","australian pull up"],"primary":["upper_back","lats"],"secondary":["biceps","rear_delts"],"machineProfile":"bodyweight"},{"name":"Face Pull","aliases":["rope face pull"],"primary":["rear_delts"],"secondary":["upper_back"],"machineProfile":"cable_stack"},{"name":"Reverse Pec Deck","aliases":["reverse fly machine","rear delt machine"],"primary":["rear_delts"],"secondary":["upper_back"],"machineProfile":"selectorized"},{"name":"Dumbbell Shrug","aliases":["db shrug"],"primary":["upper_back"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Barbell Shrug","aliases":["bb shrug"],"primary":["upper_back"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Barbell Overhead Press","aliases":["barbell shoulder press","military press"],"primary":["front_delts"],"secondary":["side_delts","triceps"],"machineProfile":"free_weight"},{"name":"Dumbbell Shoulder Press","aliases":["db shoulder press","seated dumbbell press"],"primary":["front_delts"],"secondary":["side_delts","triceps"],"machineProfile":"free_weight"},{"name":"Machine Shoulder Press","aliases":["selectorized shoulder press"],"primary":["front_delts"],"secondary":["side_delts","triceps"],"machineProfile":"selectorized"},{"name":"Plate-Loaded Shoulder Press","aliases":["hammer strength shoulder press"],"primary":["front_delts"],"secondary":["side_delts","triceps"],"machineProfile":"plate_loaded"},{"name":"Smith Machine Shoulder Press","aliases":["smith shoulder press"],"primary":["front_delts"],"secondary":["side_delts","triceps"],"machineProfile":"smith_machine"},{"name":"Arnold Press","aliases":["arnold dumbbell press","arnold shoulder press"],"primary":["front_delts"],"secondary":["side_delts","triceps"],"machineProfile":"free_weight"},{"name":"Dumbbell Lateral Raise","aliases":["dumbbell side raise","db lateral raise","side raise","dumbell lateral raise"],"primary":["side_delts"],"secondary":["front_delts"],"machineProfile":"free_weight"},{"name":"Seated Dumbbell Lateral Raise","aliases":["seated lateral raise","seated side raise"],"primary":["side_delts"],"secondary":["front_delts"],"machineProfile":"free_weight"},{"name":"Cable Lateral Raise","aliases":["cable side raise","single arm cable lateral raise"],"primary":["side_delts"],"secondary":["front_delts"],"machineProfile":"cable_stack"},{"name":"Leaning Cable Lateral Raise","aliases":["lean away cable lateral raise"],"primary":["side_delts"],"secondary":["front_delts"],"machineProfile":"cable_stack"},{"name":"Machine Lateral Raise","aliases":["lateral raise machine","side delt machine"],"primary":["side_delts"],"secondary":["front_delts"],"machineProfile":"selectorized"},{"name":"Dumbbell Front Raise","aliases":["db front raise"],"primary":["front_delts"],"secondary":["side_delts"],"machineProfile":"free_weight"},{"name":"Cable Front Raise","aliases":["front cable raise"],"primary":["front_delts"],"secondary":["side_delts"],"machineProfile":"cable_stack"},{"name":"Upright Row","aliases":["barbell upright row","cable upright row"],"primary":["side_delts"],"secondary":["upper_back","front_delts"],"machineProfile":"free_weight"},{"name":"Bent-Over Rear Delt Fly","aliases":["rear delt dumbbell fly","reverse dumbbell fly"],"primary":["rear_delts"],"secondary":["upper_back"],"machineProfile":"free_weight"},{"name":"Cable Rear Delt Fly","aliases":["rear delt cable fly","reverse cable fly"],"primary":["rear_delts"],"secondary":["upper_back"],"machineProfile":"cable_stack"},{"name":"Barbell Curl","aliases":["straight bar curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"EZ-Bar Curl","aliases":["ez curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Dumbbell Curl","aliases":["db curl","standing dumbbell curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Alternating Dumbbell Curl","aliases":["alternating curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Incline Dumbbell Curl","aliases":["incline curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Preacher Curl","aliases":["ez preacher curl","preacher machine curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Machine Biceps Curl","aliases":["biceps curl machine"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"selectorized"},{"name":"Cable Curl","aliases":["standing cable curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"cable_stack"},{"name":"Bayesian Cable Curl","aliases":["bayesian curl","behind body cable curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"cable_stack"},{"name":"Hammer Curl","aliases":["dumbbell hammer curl"],"primary":["biceps","forearms"],"secondary":[],"machineProfile":"free_weight"},{"name":"Cross-Body Hammer Curl","aliases":["cross body curl"],"primary":["biceps","forearms"],"secondary":[],"machineProfile":"free_weight"},{"name":"Concentration Curl","aliases":["seated concentration curl"],"primary":["biceps"],"secondary":["forearms"],"machineProfile":"free_weight"},{"name":"Reverse Curl","aliases":["reverse barbell curl","reverse ez curl"],"primary":["forearms"],"secondary":["biceps"],"machineProfile":"free_weight"},{"name":"Wrist Curl","aliases":["forearm wrist curl"],"primary":["forearms"],"secondary":[],"machineProfile":"free_weight"},{"name":"Reverse Wrist Curl","aliases":["wrist extension curl"],"primary":["forearms"],"secondary":[],"machineProfile":"free_weight"},{"name":"Farmer Carry","aliases":["farmers walk","farmer walk"],"primary":["forearms"],"secondary":["upper_back","core"],"machineProfile":"free_weight"},{"name":"Rope Triceps Pushdown","aliases":["rope pushdown","tricep rope pushdown"],"primary":["triceps"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Straight-Bar Triceps Pushdown","aliases":["bar pushdown","straight bar pushdown"],"primary":["triceps"],"secondary":[],"machineProfile":"cable_stack"},{"name":"V-Bar Triceps Pushdown","aliases":["v bar pushdown"],"primary":["triceps"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Single-Arm Cable Pushdown","aliases":["one arm triceps pushdown"],"primary":["triceps"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Overhead Cable Triceps Extension","aliases":["cable overhead extension","rope overhead extension"],"primary":["triceps"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Dumbbell Overhead Triceps Extension","aliases":["dumbbell overhead extension","db triceps extension"],"primary":["triceps"],"secondary":[],"machineProfile":"free_weight"},{"name":"Skull Crusher","aliases":["lying triceps extension","ez bar skull crusher"],"primary":["triceps"],"secondary":[],"machineProfile":"free_weight"},{"name":"Close-Grip Bench Press","aliases":["close grip bench"],"primary":["triceps"],"secondary":["chest","front_delts"],"machineProfile":"free_weight"},{"name":"Triceps Dip","aliases":["bench dip","upright dip"],"primary":["triceps"],"secondary":["chest","front_delts"],"machineProfile":"bodyweight"},{"name":"Cable Triceps Kickback","aliases":["cable kickback"],"primary":["triceps"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Dumbbell Triceps Kickback","aliases":["db kickback"],"primary":["triceps"],"secondary":[],"machineProfile":"free_weight"},{"name":"Back Squat","aliases":["barbell back squat","high bar squat","low bar squat"],"primary":["quads"],"secondary":["glutes","lower_back"],"machineProfile":"free_weight"},{"name":"Front Squat","aliases":["barbell front squat"],"primary":["quads"],"secondary":["glutes","core"],"machineProfile":"free_weight"},{"name":"Goblet Squat","aliases":["dumbbell goblet squat"],"primary":["quads"],"secondary":["glutes","core"],"machineProfile":"free_weight"},{"name":"Smith Machine Squat","aliases":["smith squat"],"primary":["quads"],"secondary":["glutes"],"machineProfile":"smith_machine"},{"name":"Hack Squat","aliases":["machine hack squat"],"primary":["quads"],"secondary":["glutes"],"machineProfile":"plate_loaded"},{"name":"Leg Press","aliases":["45 degree leg press","horizontal leg press"],"primary":["quads"],"secondary":["glutes"],"machineProfile":"plate_loaded"},{"name":"Single-Leg Press","aliases":["one leg press"],"primary":["quads"],"secondary":["glutes"],"machineProfile":"plate_loaded"},{"name":"Leg Extension","aliases":["machine leg extension"],"primary":["quads"],"secondary":[],"machineProfile":"selectorized"},{"name":"Bulgarian Split Squat","aliases":["rear foot elevated split squat","bulgarian squat"],"primary":["quads","glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Split Squat","aliases":["stationary lunge"],"primary":["quads","glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Walking Lunge","aliases":["walking lunges"],"primary":["quads","glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Reverse Lunge","aliases":["backward lunge"],"primary":["quads","glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Step-Up","aliases":["dumbbell step up","box step up"],"primary":["quads","glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Romanian Deadlift","aliases":["rdl","barbell rdl"],"primary":["hamstrings"],"secondary":["glutes","lower_back"],"machineProfile":"free_weight"},{"name":"Dumbbell Romanian Deadlift","aliases":["dumbbell rdl","db rdl"],"primary":["hamstrings"],"secondary":["glutes","lower_back"],"machineProfile":"free_weight"},{"name":"Stiff-Leg Deadlift","aliases":["stiff legged deadlift"],"primary":["hamstrings"],"secondary":["glutes","lower_back"],"machineProfile":"free_weight"},{"name":"Conventional Deadlift","aliases":["deadlift"],"primary":["lower_back","glutes","hamstrings"],"secondary":["upper_back","forearms"],"machineProfile":"free_weight"},{"name":"Sumo Deadlift","aliases":["sumo"],"primary":["glutes","hamstrings"],"secondary":["quads","lower_back"],"machineProfile":"free_weight"},{"name":"Trap-Bar Deadlift","aliases":["hex bar deadlift"],"primary":["glutes","quads"],"secondary":["hamstrings","lower_back"],"machineProfile":"free_weight"},{"name":"Seated Leg Curl","aliases":["seated hamstring curl"],"primary":["hamstrings"],"secondary":["calves"],"machineProfile":"selectorized"},{"name":"Lying Leg Curl","aliases":["prone leg curl","lying hamstring curl"],"primary":["hamstrings"],"secondary":["calves"],"machineProfile":"selectorized"},{"name":"Standing Leg Curl","aliases":["standing hamstring curl"],"primary":["hamstrings"],"secondary":["calves"],"machineProfile":"selectorized"},{"name":"Single-Leg Curl","aliases":["one leg curl"],"primary":["hamstrings"],"secondary":["calves"],"machineProfile":"selectorized"},{"name":"Nordic Hamstring Curl","aliases":["nordic curl"],"primary":["hamstrings"],"secondary":["calves"],"machineProfile":"bodyweight"},{"name":"Glute-Ham Raise","aliases":["ghr"],"primary":["hamstrings","glutes"],"secondary":["lower_back"],"machineProfile":"bodyweight"},{"name":"Barbell Hip Thrust","aliases":["hip thrust"],"primary":["glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Machine Hip Thrust","aliases":["hip thrust machine"],"primary":["glutes"],"secondary":["hamstrings"],"machineProfile":"selectorized"},{"name":"Glute Bridge","aliases":["barbell glute bridge"],"primary":["glutes"],"secondary":["hamstrings"],"machineProfile":"free_weight"},{"name":"Cable Glute Kickback","aliases":["glute cable kickback"],"primary":["glutes"],"secondary":["hamstrings"],"machineProfile":"cable_stack"},{"name":"Hip Abduction Machine","aliases":["abductor machine","seated hip abduction"],"primary":["glutes"],"secondary":[],"machineProfile":"selectorized"},{"name":"Hip Adduction Machine","aliases":["adductor machine","seated hip adduction"],"primary":["quads"],"secondary":["glutes"],"machineProfile":"selectorized"},{"name":"Good Morning","aliases":["barbell good morning"],"primary":["hamstrings","lower_back"],"secondary":["glutes"],"machineProfile":"free_weight"},{"name":"Back Extension","aliases":["hyperextension","45 degree back extension"],"primary":["lower_back"],"secondary":["glutes","hamstrings"],"machineProfile":"bodyweight"},{"name":"Standing Calf Raise","aliases":["standing calf machine"],"primary":["calves"],"secondary":[],"machineProfile":"selectorized"},{"name":"Seated Calf Raise","aliases":["seated calf machine"],"primary":["calves"],"secondary":[],"machineProfile":"plate_loaded"},{"name":"Leg Press Calf Raise","aliases":["calf press"],"primary":["calves"],"secondary":[],"machineProfile":"plate_loaded"},{"name":"Single-Leg Calf Raise","aliases":["one leg calf raise"],"primary":["calves"],"secondary":[],"machineProfile":"bodyweight"},{"name":"Cable Crunch","aliases":["kneeling cable crunch"],"primary":["core"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Machine Crunch","aliases":["ab crunch machine"],"primary":["core"],"secondary":[],"machineProfile":"selectorized"},{"name":"Ab Wheel Rollout","aliases":["ab wheel"],"primary":["core"],"secondary":["lats"],"machineProfile":"bodyweight"},{"name":"Plank","aliases":["front plank"],"primary":["core"],"secondary":[],"machineProfile":"bodyweight"},{"name":"Side Plank","aliases":["lateral plank"],"primary":["core"],"secondary":[],"machineProfile":"bodyweight"},{"name":"Hanging Leg Raise","aliases":["hanging knee raise"],"primary":["core"],"secondary":[],"machineProfile":"bodyweight"},{"name":"Reverse Crunch","aliases":["lying reverse crunch"],"primary":["core"],"secondary":[],"machineProfile":"bodyweight"},{"name":"Russian Twist","aliases":["weighted russian twist"],"primary":["core"],"secondary":[],"machineProfile":"free_weight"},{"name":"Pallof Press","aliases":["cable pallof press"],"primary":["core"],"secondary":[],"machineProfile":"cable_stack"},{"name":"Cable Wood Chop","aliases":["woodchop","cable chop"],"primary":["core"],"secondary":[],"machineProfile":"cable_stack"}];
+  const EXERCISE_LOOKUP = new Map();
+  for(const item of EXERCISE_CATALOG){
+    for(const label of [item.name,...(item.aliases||[])]) EXERCISE_LOOKUP.set(exerciseSearchKey(label),item);
+  }
+  function editDistance(a,b,limit=4){
+    if(Math.abs(a.length-b.length)>limit)return limit+1;
+    const previous=Array.from({length:b.length+1},(_,index)=>index);
+    for(let i=1;i<=a.length;i++){
+      const current=[i];let rowMin=i;
+      for(let j=1;j<=b.length;j++){
+        const cost=a[i-1]===b[j-1]?0:1;
+        current[j]=Math.min(current[j-1]+1,previous[j]+1,previous[j-1]+cost);rowMin=Math.min(rowMin,current[j]);
+      }
+      if(rowMin>limit)return limit+1;
+      for(let j=0;j<current.length;j++)previous[j]=current[j];
+    }
+    return previous[b.length];
+  }
+  function searchExerciseCatalog(query='',limit=14){
+    const q=exerciseSearchKey(query);
+    if(!q)return EXERCISE_CATALOG.slice(0,limit);
+    const queryTokens=q.split(' ').filter(Boolean);
+    return EXERCISE_CATALOG.map(item=>{
+      const labels=[item.name,...(item.aliases||[])].map(exerciseSearchKey);
+      let score=99;
+      for(const label of labels){
+        if(label===q)score=Math.min(score,0);
+        else if(label.startsWith(q))score=Math.min(score,1);
+        else if(label.includes(q)||q.includes(label))score=Math.min(score,2);
+        else if(queryTokens.every(token=>label.includes(token)))score=Math.min(score,3);
+        else{const distance=editDistance(label,q,Math.max(2,Math.floor(q.length*.18)));if(distance<=Math.max(2,Math.floor(q.length*.18)))score=Math.min(score,4+distance);}
+      }
+      return {item,score};
+    }).filter(result=>result.score<99).sort((a,b)=>a.score-b.score||a.item.name.localeCompare(b.item.name)).slice(0,limit).map(result=>result.item);
+  }
+
   const EXERCISE_DEFINITIONS = [
     {pattern:/^(seated |lying |prone |standing |single[- ]leg )?(machine )?(leg|hamstring) curls?$/i,primary:['hamstrings'],secondary:['calves'],machineProfile:'selectorized'},
     {pattern:/^leg extensions?$/i,primary:['quads'],secondary:[],machineProfile:'selectorized'},
@@ -143,7 +183,8 @@
 
   function exerciseDefinition(name=''){
     const clean=String(name).trim();
-    return EXERCISE_DEFINITIONS.find(item=>item.pattern.test(clean))||null;
+    const exact=EXERCISE_LOOKUP.get(exerciseSearchKey(clean));
+    return exact||EXERCISE_DEFINITIONS.find(item=>item.pattern.test(clean))||null;
   }
   function inferredMachineProfile(name=''){
     const defined=exerciseDefinition(name); if(defined?.machineProfile)return defined.machineProfile;
@@ -191,7 +232,9 @@
     {name:'Rolled oats, dry',aliases:['oats','oatmeal'],amount:100,unit:'g',kcal:379,protein:13.2,carbs:67.7,fat:6.5,note:'per 100 g'},
     {name:'Banana',aliases:['banana medium'],amount:1,unit:'piece',kcal:105,protein:1.3,carbs:27,fat:.4,note:'1 medium'},
     {name:'Milk, 2%',aliases:['2 percent milk','milk'],amount:250,unit:'ml',kcal:122,protein:8.1,carbs:12,fat:4.8,note:'per 250 ml'},
-    {name:'Plain yogurt',aliases:['yogurt','curd'],amount:100,unit:'g',kcal:61,protein:3.5,carbs:4.7,fat:3.3,note:'per 100 g'}
+    {name:'Plain yogurt',aliases:['yogurt','curd'],amount:100,unit:'g',kcal:61,protein:3.5,carbs:4.7,fat:3.3,note:'per 100 g'},
+    {name:'Whole-wheat bread',aliases:['whole wheat bread','brown bread','bread slice'],amount:1,unit:'slice',kcal:82,protein:4,carbs:13.8,fat:1.1,note:'typical 1 slice; verify the package'},
+    {name:'White bread',aliases:['white bread slice','toast'],amount:1,unit:'slice',kcal:79,protein:2.7,carbs:14.8,fat:1,note:'typical 1 slice; verify the package'}
   ];
 
   const GUIDE_ITEMS = [
@@ -216,6 +259,7 @@
   ];
 
   const CHANGELOG = [
+    {version:'7.1.1',date:RELEASE_DATE,items:['Replaced full-resolution photo barcode scanning with a low-memory live camera scanner capped near 1280 × 720','Added Slice as a serving unit and reads explicit package labels such as 2 slices (56 g) as 28 g per slice','Rounded calorie remainders and macro displays so raw floating-point values never reach the interface','Expanded the offline exercise catalogue to over 120 canonical exercises, including Arnold Press and Dumbbell Lateral Raise','Added aliases and typo-tolerant exercise search while keeping custom exercise names available','Fixed Carbs and Fat card backgrounds, contrast, equal heights, baselines and progress-bar alignment in light and dark themes']},
     {version:'7.1',date:RELEASE_DATE,items:['Barcode nutrition now scales to the actual portion instead of leaving per-100-g values unchanged','Scanned foods keep an immutable per-100-g nutrition basis and recalculate live when amount or unit changes','Cup, piece, scoop, can and unknown serving sizes require a gram equivalent instead of guessing','Package serving nutrition and serving weight are used automatically when Open Food Facts provides them','Manual macro edits safely disable automatic scaling so user-entered values are never overwritten','Retains all Setline 7.0.3 reliability fixes for lookup, XP, PRs, streaks and zero-set validation']},
     {version:'7.0.3',date:RELEASE_DATE,items:['Fixed nutrition lookup memory pressure by requesting only required product fields and limiting temporary results','Added request cancellation, timeout handling and exact network/no-result messages with copyable diagnostics','Weekly mission rewards now contribute to XP exactly once per completed week','PR XP now requires a genuine improvement over an earlier logged performance','Rest days may maintain a streak but can never create one without a completed workout','Explicit zero-set and zero-rep records no longer inflate XP, mastery, missions or muscle coverage','Corrected current-version ordering and smaller reliability fixes']},
     {version:'7.0.2',date:RELEASE_DATE,items:['Run Setup weekly preview lets you move any day to a different slot with arrow controls before finishing setup','Added a Reset order action to return to the auto-generated split sequence','Changing training split or training days resets any manual day order so the preview matches the latest choice']},
@@ -610,10 +654,10 @@
     const interactive=typeof onClick==='function';
     const tone=String(label||'metric').toLowerCase().replace(/[^a-z0-9]+/g,'-');
     return html`<${CardShell} className=${`metric-card metric-${tone}`} role=${interactive?'button':undefined} tabIndex=${interactive?0:undefined} onClick=${onClick} onKeyDown=${interactive?(event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onClick();}}):undefined} sx=${{height:'100%',cursor:interactive?'pointer':'default',transition:'transform .16s ease, border-color .16s ease','&:hover':interactive?{transform:'translateY(-1px)'}:{},'&:focus-visible':interactive?{outline:'3px solid',outlineColor:'text.primary',outlineOffset:2}:{}}}>
-      <${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${1}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${label}</${Typography}>${interactive?html`<${Typography} aria-hidden="true" color="text.secondary" sx=${{fontSize:18,lineHeight:1}}>›</${Typography}>`:null}</${Stack}>
-      <${Typography} className="metric-number" variant="h5" sx=${{mt:.3}}>${value}</${Typography}>${sub?html`<${Typography} variant="caption" color="text.secondary" sx=${{display:'block',minHeight:'1.5em'}}>${sub}</${Typography}>`:null}
-      ${trend?.length?html`<${Box} sx=${{mt:.7,color:color==='secondary'?'secondary.main':'primary.main'}}><${MiniSparkline} values=${trend}/></${Box}>`:null}
-      ${Number.isFinite(progress)?html`<${LinearProgress} variant="determinate" value=${clamp(progress,0,100)} color=${color} sx=${{mt:trend?.length?.5:1.2,height:7,borderRadius:99}}/>`:null}
+      <div className="metric-card-inner"><${Stack} direction="row" justifyContent="space-between" alignItems="flex-start" spacing=${1}><${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${label}</${Typography}>${interactive?html`<${Typography} aria-hidden="true" color="text.secondary" sx=${{fontSize:18,lineHeight:1}}>›</${Typography}>`:null}</${Stack}>
+      <${Typography} className="metric-number" variant="h5" sx=${{mt:.3}}>${value}</${Typography}>${sub?html`<${Typography} className="metric-sub" variant="caption" color="text.secondary">${sub}</${Typography}>`:html`<span className="metric-sub"></span>`}
+      <div className="metric-card-bottom">${trend?.length?html`<${Box} className="metric-trend" sx=${{color:color==='secondary'?'secondary.main':'primary.main'}}><${MiniSparkline} values=${trend}/></${Box}>`:null}
+      ${Number.isFinite(progress)?html`<${LinearProgress} variant="determinate" value=${clamp(progress,0,100)} color=${color}/>`:null}</div></div>
     </${CardShell}>`;
   }
 
@@ -827,8 +871,8 @@
     const openQuote=()=>{let index=Math.floor(Math.random()*STREAK_QUOTES.length);if(STREAK_QUOTES.length>1&&index===lastQuote.current)index=(index+1)%STREAK_QUOTES.length;lastQuote.current=index;setQuote(STREAK_QUOTES[index]);setQuoteOpen(true);};
     const order=(data.settings.homeCardOrder||['calories','protein','readiness','bodyweight']); const hidden=new Set(data.settings.hiddenHomeCards||[]);
     const cardMap={
-      calories:html`<${MetricCard} label="CALORIES" value=${Math.round(totals.kcal)} sub=${`${Math.max(0,data.calorieGoal-totals.kcal)} remaining`} progress=${totals.kcal/data.calorieGoal*100} color="secondary" trend=${trends.calories} onClick=${()=>setMetricSheet('calories')}/>` ,
-      protein:html`<${MetricCard} label="PROTEIN" value=${`${Math.round(totals.protein)} g`} sub=${`${Math.max(0,data.proteinGoal-totals.protein)} g remaining`} progress=${totals.protein/data.proteinGoal*100} trend=${trends.protein} onClick=${()=>setMetricSheet('protein')}/>` ,
+      calories:html`<${MetricCard} label="CALORIES" value=${displayWhole(totals.kcal)} sub=${`${displayWhole(data.calorieGoal-totals.kcal)} remaining`} progress=${totals.kcal/data.calorieGoal*100} color="secondary" trend=${trends.calories} onClick=${()=>setMetricSheet('calories')}/>` ,
+      protein:html`<${MetricCard} label="PROTEIN" value=${`${displayMacro(totals.protein)} g`} sub=${`${displayMacro(data.proteinGoal-totals.protein)} g remaining`} progress=${totals.protein/data.proteinGoal*100} trend=${trends.protein} onClick=${()=>setMetricSheet('protein')}/>` ,
       readiness:html`<${MetricCard} label="READINESS" value=${ready?ready.score:'—'} sub=${ready?ready.label:'Check in first'} progress=${ready?.score} trend=${trends.readiness} onClick=${()=>setMetricSheet('readiness')}/>` ,
       bodyweight:html`<${MetricCard} label="BODYWEIGHT" value=${weightDisplay(data,todayWeight)} sub="Latest entry" trend=${trends.bodyweight} onClick=${()=>setMetricSheet('bodyweight')}/>`
     };
@@ -888,7 +932,7 @@
     </div>`;
   }
 
-  const COMMON_EXERCISES=['Incline Dumbbell Press','Chest Press','Cable Fly','Shoulder Press','Cable Lateral Raise','Rear Delt Fly','Rope Triceps Pushdown','Overhead Triceps Extension','Lat Pulldown','Seated Cable Row','Chest-Supported Row','Face Pull','Preacher Curl','Hammer Curl','Hack Squat','Leg Press','Romanian Deadlift','Leg Curl','Leg Extension','Hip Thrust','Calf Raise','Cable Crunch'];
+  const COMMON_EXERCISES=EXERCISE_CATALOG.map(item=>item.name);
   const WORKOUT_TEMPLATES={
     push:['Incline Dumbbell Press','Chest Press','Cable Lateral Raise','Rope Triceps Pushdown'],
     pull:['Lat Pulldown','Chest-Supported Row','Rear Delt Fly','Preacher Curl'],
@@ -920,13 +964,15 @@
       else{sets=Array.from({length:clamp(count,1,12)},()=>({id:id('set'),load:Number(load)||0,unit,reps:Number(reps)||0,done:false,type:'working',rir:'',rpe:'',note:''}));}
       onAdd({id:initial?.id||id('workout'),name:name.trim(),group:group.trim(),unit,machineProfile,increment:Number(increment)||machineIncrement(machineProfile,unit),unitLocked:false,setEntries:sets,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()},initial);onClose();
     };
-    const suggestions=[...(WORKOUT_TEMPLATES[plan]||[]),...COMMON_EXERCISES].filter((item,index,array)=>array.indexOf(item)===index);
+    const planSuggestions=[...(WORKOUT_TEMPLATES[plan]||[]),...COMMON_EXERCISES].filter((item,index,array)=>array.indexOf(item)===index);
+    const matchedExercises=useMemo(()=>searchExerciseCatalog(name,14),[name]);
+    const suggestions=(name.trim()?matchedExercises:planSuggestions).filter((item,index,array)=>array.indexOf(item)===index);
     return html`<${Dialog} open=${open} onClose=${onClose} maxWidth="sm" fullWidth>
       <${DialogTitle}>${initial?'Edit exercise':'Add exercise'}</${DialogTitle}>
       <${DialogContent}><${Stack} spacing=${2} sx=${{pt:.5}}>
-        <${TextField} label="Exercise name" value=${name} onChange=${e=>setName(e.target.value)} autoFocus inputProps=${{list:'exercise-suggestions'}}/><datalist id="exercise-suggestions">${COMMON_EXERCISES.map(x=>html`<option value=${x}></option>`)}</datalist>
+        <${TextField} label="Exercise name" value=${name} onChange=${e=>setName(e.target.value)} autoFocus inputProps=${{list:'exercise-suggestions'}} helperText=${`${COMMON_EXERCISES.length} offline exercises with aliases and typo-tolerant search. A custom name is still allowed.`}/><datalist id="exercise-suggestions">${COMMON_EXERCISES.map(x=>html`<option value=${x}></option>`)}</datalist>
         <${Typography} variant="caption" color="text.secondary" fontWeight=${800}>${WORKOUT_TEMPLATES[plan]?`${planLabel(plan).toUpperCase()} SUGGESTIONS`:'COMMON EXERCISES'}</${Typography}>
-        <${Box} sx=${{display:'flex',gap:.7,flexWrap:'wrap'}}>${suggestions.slice(0,10).map(item=>html`<${Chip} key=${item} label=${item} size="small" variant="outlined" onClick=${()=>setName(item)}/>` )}</${Box}>
+        <${Box} sx=${{display:'flex',gap:.7,flexWrap:'wrap'}}>${suggestions.slice(0,14).map(item=>html`<${Chip} key=${item} label=${item} size="small" variant="outlined" onClick=${()=>setName(item)}/>` )}</${Box}>
         ${previous&&!initial?html`<${Alert} severity="info"><b>Previous:</b> ${getSets(previous,data.preferredUnit).map(s=>`${formatLoad(s.load,s.unit)} × ${s.reps}`).join(' · ')}<${FormControlLabel} sx=${{display:'block',mt:.5}} control=${html`<${Checkbox} checked=${usePrevious} onChange=${e=>setUsePrevious(e.target.checked)}/>`} label="Prefill previous sets as incomplete"/></${Alert}>`:null}
         <${Paper} variant="outlined" sx=${{p:1.5,borderRadius:3}}><${Stack} spacing=${1.3}>
           <${Typography} fontWeight=${800}>Machine and load unit</${Typography}>
@@ -1051,14 +1097,65 @@
     </div>`;
   }
 
+
+  function LiveBarcodeScannerDialog({open,onClose,onDetected}){
+    const mobile=useMediaQuery('(max-width:600px)');
+    const videoRef=useRef(null),streamRef=useRef(null),timerRef=useRef(null),busyRef=useRef(false);
+    const [status,setStatus]=useState('Point the rear camera at the barcode.');
+    const [error,setError]=useState('');
+    useEffect(()=>{
+      if(!open)return;
+      let cancelled=false;let detector=null;const canvas=document.createElement('canvas');
+      const stop=()=>{cancelled=true;clearTimeout(timerRef.current);busyRef.current=false;const stream=streamRef.current;if(stream){stream.getTracks().forEach(track=>track.stop());streamRef.current=null;}if(videoRef.current)videoRef.current.srcObject=null;canvas.width=1;canvas.height=1;};
+      const schedule=fn=>{if(!cancelled)timerRef.current=setTimeout(fn,330);};
+      const start=async()=>{
+        setError('');setStatus('Starting camera…');
+        if(!('BarcodeDetector' in window)){setError('Live barcode scanning is not supported in this browser. Enter the barcode manually.');return;}
+        if(!navigator.mediaDevices?.getUserMedia){setError('Camera access is unavailable. Enter the barcode manually.');return;}
+        try{
+          detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
+          let stream;
+          try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280,max:1280},height:{ideal:720,max:720}}});}
+          catch(firstError){stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'environment'}});}
+          if(cancelled){stream.getTracks().forEach(track=>track.stop());return;}
+          streamRef.current=stream;const video=videoRef.current;if(!video)return;video.srcObject=stream;await video.play();setStatus('Hold steady. Scanning stays low-resolution to protect memory.');
+          const scanFrame=async()=>{
+            if(cancelled)return;
+            if(busyRef.current||video.readyState<2||!video.videoWidth){schedule(scanFrame);return;}
+            busyRef.current=true;
+            try{
+              const sourceW=video.videoWidth,sourceH=video.videoHeight;
+              const cropW=Math.max(1,Math.floor(sourceW*.9)),cropH=Math.max(1,Math.floor(sourceH*.48));
+              const sourceX=Math.floor((sourceW-cropW)/2),sourceY=Math.floor((sourceH-cropH)/2);
+              const scale=Math.min(1,960/cropW,540/cropH);canvas.width=Math.max(1,Math.floor(cropW*scale));canvas.height=Math.max(1,Math.floor(cropH*scale));
+              const context=canvas.getContext('2d',{alpha:false,desynchronized:true});context.drawImage(video,sourceX,sourceY,cropW,cropH,0,0,canvas.width,canvas.height);
+              const codes=await detector.detect(canvas);
+              if(codes?.length&&codes[0].rawValue){const value=String(codes[0].rawValue);stop();onDetected(value);return;}
+            }catch(scanError){if(!cancelled&&scanError?.name!=='NotFoundError')console.warn('[Setline barcode frame]',scanError);}
+            finally{busyRef.current=false;canvas.width=1;canvas.height=1;}
+            schedule(scanFrame);
+          };
+          schedule(scanFrame);
+        }catch(cameraError){
+          if(cancelled)return;
+          const denied=cameraError?.name==='NotAllowedError'||cameraError?.name==='SecurityError';
+          setError(denied?'Camera permission was denied. Allow camera access or enter the barcode manually.':'The camera could not start. Enter the barcode manually.');
+          console.error('[Setline live barcode scanner]',cameraError);
+        }
+      };
+      start();return stop;
+    },[open]);
+    return html`<${Dialog} open=${open} onClose=${onClose} fullScreen=${mobile} maxWidth="sm" fullWidth><${DialogTitle}>Scan barcode</${DialogTitle}><${DialogContent} dividers><${Stack} spacing=${1.2}><div className="barcode-camera"><video ref=${videoRef} className="barcode-camera-video" muted playsInline autoPlay></video><div className="barcode-camera-frame" aria-hidden="true"></div></div>${error?html`<${Alert} severity="warning">${error}</${Alert}>`:html`<${Typography} variant="body2" color="text.secondary">${status}</${Typography}>`}<${Typography} variant="caption" color="text.secondary">Setline scans a cropped 960 × 540 frame instead of opening a full-resolution photo, reducing memory use.</${Typography}></${Stack}></${DialogContent}><${DialogActions}><${Button} onClick=${onClose}>Cancel</${Button}></${DialogActions}></${Dialog}>`;
+  }
+
   function AddFoodDialog({open,onClose,data,initial,onSave,defaultMeal='Breakfast'}){
     const mobile=useMediaQuery('(max-width:600px)');
     const blank={name:'',meal:defaultMeal,kcal:'',protein:'',carbs:'',fat:'',amount:1,unit:'serving',favorite:false,barcode:'',nutritionMode:'manual',per100:null,servingNutrition:null,servingGrams:'',servingSizeLabel:'',gramsPerUnit:'',portionUnitWeights:{}};
-    const [form,setForm]=useState(blank);const [query,setQuery]=useState('');const [results,setResults]=useState([]);const [loading,setLoading]=useState(false);const [error,setError]=useState('');const [debugDetails,setDebugDetails]=useState('');
+    const [form,setForm]=useState(blank);const [query,setQuery]=useState('');const [results,setResults]=useState([]);const [loading,setLoading]=useState(false);const [error,setError]=useState('');const [debugDetails,setDebugDetails]=useState('');const [scannerOpen,setScannerOpen]=useState(false);
     const searchAbort=useRef(null),barcodeAbort=useRef(null),requestSequence=useRef(0);
-    const closeDialog=()=>{searchAbort.current?.abort('dialog_closed');barcodeAbort.current?.abort('dialog_closed');setLoading(false);setResults([]);onClose();};
+    const closeDialog=()=>{searchAbort.current?.abort('dialog_closed');barcodeAbort.current?.abort('dialog_closed');setScannerOpen(false);setLoading(false);setResults([]);onClose();};
     useEffect(()=>{
-      if(open){setForm(initial?{...blank,...initial,portionUnitWeights:initial.portionUnitWeights&&typeof initial.portionUnitWeights==='object'?initial.portionUnitWeights:{},favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');setDebugDetails('');}
+      if(open){setForm(initial?{...blank,...initial,portionUnitWeights:initial.portionUnitWeights&&typeof initial.portionUnitWeights==='object'?initial.portionUnitWeights:{},favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');setDebugDetails('');setScannerOpen(false);}
       return()=>{searchAbort.current?.abort('unmounted');barcodeAbort.current?.abort('unmounted');};
     },[open,initial,defaultMeal]);
     const patch=(key,value)=>setForm(current=>({...current,[key]:value}));
@@ -1071,6 +1168,12 @@
       const label=String(product?.serving_size||'');
       const match=label.match(/([0-9]+(?:[.,][0-9]+)?)\s*(?:g|gram|grams)\b/i);
       return match?Number(match[1].replace(',','.')):0;
+    };
+    const servingUnitFromProduct=(product,servingGrams)=>{
+      const label=String(product?.serving_size||'').toLowerCase();
+      const patterns=[['slice',/([0-9]+(?:[.,][0-9]+)?)\s*slices?\b/i],['piece',/([0-9]+(?:[.,][0-9]+)?)\s*pieces?\b/i],['scoop',/([0-9]+(?:[.,][0-9]+)?)\s*scoops?\b/i],['can',/([0-9]+(?:[.,][0-9]+)?)\s*cans?\b/i],['cup',/([0-9]+(?:[.,][0-9]+)?)\s*cups?\b/i]];
+      for(const [unit,pattern] of patterns){const match=label.match(pattern);const count=match?Number(match[1].replace(',','.')):0;if(count>0&&servingGrams>0)return {unit,count,gramsPerUnit:servingGrams/count};}
+      return null;
     };
     const slimProduct=product=>({
       code:product?.code||'',product_name:product?.product_name||'',generic_name:product?.generic_name||'',brands:product?.brands||'',serving_size:product?.serving_size||'',serving_quantity:Number(product?.serving_quantity)||0,serving_quantity_unit:product?.serving_quantity_unit||'',nutrition_data_per:product?.nutrition_data_per||'',
@@ -1118,7 +1221,10 @@
       const servingNutrition=nutritionShape(n['energy-kcal_serving'],n.proteins_serving,n.carbohydrates_serving,n.fat_serving);
       const servingGrams=servingWeightFromProduct(product);
       const hasServing=validServingNutrition(servingNutrition)||servingGrams>0;
-      setForm(current=>recalculatePortion({...current,name:product.product_name||product.generic_name||current.name,amount:hasServing?1:100,unit:hasServing?'serving':'g',barcode:product.code||current.barcode,nutritionMode:'product',per100,servingNutrition:validServingNutrition(servingNutrition)?servingNutrition:null,servingGrams:servingGrams||'',servingSizeLabel:product.serving_size||'',gramsPerUnit:hasServing&&servingGrams?servingGrams:'',portionUnitWeights:hasServing&&servingGrams?{serving:servingGrams}:{}}));
+      const explicitUnit=servingUnitFromProduct(product,servingGrams);
+      const portionUnitWeights=hasServing&&servingGrams?{serving:servingGrams,...(explicitUnit?{[explicitUnit.unit]:explicitUnit.gramsPerUnit}:{})}:{};
+      const startingUnit=explicitUnit?.unit||(hasServing?'serving':'g');const startingAmount=explicitUnit?.count||(hasServing?1:100);const startingGramWeight=explicitUnit?.gramsPerUnit||(hasServing&&servingGrams?servingGrams:'');
+      setForm(current=>recalculatePortion({...current,name:product.product_name||product.generic_name||current.name,amount:startingAmount,unit:startingUnit,barcode:product.code||current.barcode,nutritionMode:'product',per100,servingNutrition:validServingNutrition(servingNutrition)?servingNutrition:null,servingGrams:servingGrams||'',servingSizeLabel:product.serving_size||'',gramsPerUnit:startingUnit==='g'?'':startingGramWeight,portionUnitWeights}));
       setResults([]);
     };
     const search=async()=>{
@@ -1159,7 +1265,6 @@
         else saveDiagnostic('Barcode lookup failed. Enter the food manually.',err,{operation:'barcode_lookup',barcode:clean});
       }finally{clearTimeout(timeout);setLoading(false);}
     };
-    const scanImage=async file=>{if(!file)return;if(!('BarcodeDetector' in window)){setError('Camera barcode detection is not supported in this browser. Type the barcode instead.');return;}setLoading(true);try{const bitmap=await createImageBitmap(file);const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});const codes=await detector.detect(bitmap);bitmap.close?.();if(!codes.length)throw new Error('No barcode');patch('barcode',codes[0].rawValue);await lookupBarcode(codes[0].rawValue);}catch(err){saveDiagnostic('No barcode was detected in that image.',err,{operation:'barcode_scan'});}finally{setLoading(false);}};
     const usesServingDirectly=form.nutritionMode==='product'&&form.unit==='serving'&&validServingNutrition(form.servingNutrition);
     const needsGramEquivalent=form.nutritionMode==='product'&&form.unit!=='g'&&!usesServingDirectly;
     const missingGramEquivalent=needsGramEquivalent&&!(Number(form.gramsPerUnit)>0);
@@ -1170,7 +1275,7 @@
       onSave({...form,id:initial?.id||id('food'),name:form.name.trim(),kcal:Number(form.kcal)||0,protein:Number(form.protein)||0,carbs:Number(form.carbs)||0,fat:Number(form.fat)||0,amount:Number(form.amount),loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()});closeDialog();
     };
     const productPortionMessage=form.nutritionMode==='product'?(missingGramEquivalent?`Enter the gram weight for 1 ${form.unit}. Barcode values are stored per 100 g and Setline will not guess.`:usesServingDirectly?`Using the package serving nutrition${form.servingSizeLabel?` (${form.servingSizeLabel})`:''}. Totals update with the amount.`:form.unit==='g'?`Calculated from the product's per-100-g nutrition for ${form.amount||0} g.`:`Calculated from per-100-g nutrition using ${form.gramsPerUnit||0} g per ${form.unit}.`):'';
-    return html`<${Dialog} className="food-dialog" open=${open} onClose=${closeDialog} maxWidth="sm" fullWidth fullScreen=${mobile} scroll="paper">
+    return html`<${React.Fragment}><${Dialog} className="food-dialog" open=${open} onClose=${closeDialog} maxWidth="sm" fullWidth fullScreen=${mobile} scroll="paper">
       <${DialogTitle}>${initial?'Edit food':'Log food'}</${DialogTitle}>
       <${DialogContent} dividers className="food-dialog-content"><${Stack} spacing=${1.4} sx=${{pt:.25}}>
         <${Box}><${Typography} component="label" variant="caption" color="text.secondary" fontWeight=${800} sx=${{display:'block',mb:.55}}>SEARCH FOODS</${Typography}><${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:.8}}><${TextField} placeholder="e.g. boiled eggs" aria-label="Search foods" value=${query} onChange=${e=>setQuery(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter'){e.preventDefault();search();}}} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}}/><${Button} variant="outlined" onClick=${search} disabled=${loading}>Search</${Button}></${Box}></${Box}>
@@ -1179,14 +1284,14 @@
         <${Divider}>OR ENTER MANUALLY</${Divider}>
         <${TextField} label="Food or meal" value=${form.name} onChange=${e=>patch('name',e.target.value)}/>
         <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(4,1fr)'},gap:1}}><${TextField} label="Calories" type="number" value=${form.kcal} onChange=${e=>patchNutrition('kcal',e.target.value)}/><${TextField} label="Protein (g)" type="number" value=${form.protein} onChange=${e=>patchNutrition('protein',e.target.value)}/><${TextField} label="Carbs (g)" type="number" value=${form.carbs} onChange=${e=>patchNutrition('carbs',e.target.value)}/><${TextField} label="Fat (g)" type="number" value=${form.fat} onChange=${e=>patchNutrition('fat',e.target.value)}/></${Box}>
-        <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" inputProps=${{min:'0',step:'any'}} value=${form.amount} onChange=${e=>patchPortion('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patchPortion('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="ml">Millilitres</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
+        <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" inputProps=${{min:'0',step:'any'}} value=${form.amount} onChange=${e=>patchPortion('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patchPortion('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="ml">Millilitres</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="slice">Slice</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
         ${needsGramEquivalent?html`<${TextField} label=${`1 ${form.unit} equals (g)`} type="number" inputProps=${{min:'0',step:'any'}} value=${form.gramsPerUnit} onChange=${e=>patchGramEquivalent(e.target.value)} helperText="Use the package serving weight or measure it once. Setline remembers it for this food entry."/>`:null}
         ${productPortionMessage?html`<${Alert} severity=${missingGramEquivalent?'warning':'success'}>${productPortionMessage}</${Alert}>`:null}
-        <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto auto',gap:1}}><${TextField} label="Barcode" value=${form.barcode} onChange=${e=>patch('barcode',e.target.value)}/><${Button} variant="outlined" onClick=${()=>lookupBarcode()} disabled=${loading}>Lookup</${Button}><${Button} variant="outlined" component="label" disabled=${loading}>Scan<input className="sr-only" type="file" accept="image/*" capture="environment" onChange=${e=>scanImage(e.target.files?.[0])}/></${Button}></${Box}>
+        <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto auto',gap:1}}><${TextField} label="Barcode" value=${form.barcode} onChange=${e=>patch('barcode',e.target.value)}/><${Button} variant="outlined" onClick=${()=>lookupBarcode()} disabled=${loading}>Lookup</${Button}><${Button} variant="outlined" onClick=${()=>setScannerOpen(true)} disabled=${loading}>Scan</${Button}></${Box}>
         <${FormControlLabel} control=${html`<${Checkbox} checked=${!!form.favorite} onChange=${e=>patch('favorite',e.target.checked)}/>`} label="Save to favourites"/>
       </${Stack}></${DialogContent}>
       <${DialogActions} className="food-dialog-actions"><${Button} onClick=${closeDialog}>Cancel</${Button}><${Button} variant="contained" color="secondary" onClick=${submit}>Save food</${Button}></${DialogActions}>
-    </${Dialog}>`;
+    </${Dialog}><${LiveBarcodeScannerDialog} open=${scannerOpen} onClose=${()=>setScannerOpen(false)} onDetected=${code=>{setScannerOpen(false);patch('barcode',code);lookupBarcode(code);}}/></${React.Fragment}>`;
   }
 
   function NutritionPage({data,update,selectedDate,setSelectedDate,showFeedback}){
@@ -1424,7 +1529,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Serving-aware barcode nutrition and all Setline 7.0.3 reliability fixes.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Low-memory live barcode scanning, slices, expanded exercises and display fixes.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>

@@ -26,3 +26,17 @@ A full remote API success test requires internet access. Offline/error paths and
 - Test a product with serving nutrition and confirm 1 serving uses package values.
 - Manually edit a macro and confirm later amount changes do not overwrite it.
 - Edit a saved 7.1 food and confirm its portion metadata is retained.
+
+
+## Setline 7.1.1 checks
+- [ ] Live scanner uses `getUserMedia` with constrained 1280 × 720 video and no full-resolution file input.
+- [ ] Scanner detects only a cropped frame and stops every camera track on close or detection.
+- [ ] Slice appears in serving units.
+- [ ] `2 slices (56 g)` resolves to 28 g per slice without guessing.
+- [ ] Calorie remainder never displays raw floating-point precision.
+- [ ] Arnold Press and Dumbbell Lateral Raise appear in local search.
+- [ ] Typo `dumbell lateral raise` resolves to Dumbbell Lateral Raise.
+- [ ] Offline catalogue contains at least 120 canonical exercises.
+- [ ] Carbs and Fat cards have explicit backgrounds and readable contrast in both themes.
+- [ ] All metric cards share equal height and bottom-aligned progress bars.
+- [ ] Storage key remains `setline-data-v1`.

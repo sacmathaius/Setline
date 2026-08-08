@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Setline 7.1 Fitness Tracker",
+  "name": "Setline 7.1.1 Fitness Tracker",
   "short_name": "Setline",
-  "description": "Editorial workout, nutrition and progression tracking with serving-aware barcode nutrition, safer food lookup, explainable XP, mixed kg/lb support and local-first data.",
+  "description": "Editorial workout and nutrition tracker with low-memory live barcode scanning, serving-aware portions including slices, expanded offline exercises, explainable XP, mixed kg/lb support and local-first data.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

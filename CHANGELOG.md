@@ -1,3 +1,15 @@
+# Setline 7.1.1 — Hardening, scanner and catalogue update
+
+- Replaced full-resolution photo barcode capture with a low-memory live camera scanner using a constrained stream and cropped scan frame.
+- Added `slice` as a serving unit. Explicit package labels such as `2 slices (56 g)` become `28 g per slice`; Setline does not guess missing conversions.
+- Fixed raw floating-point calorie remainders and standardized calorie/macro display rounding.
+- Expanded the offline exercise catalogue to more than 120 canonical movements, including Arnold Press and Dumbbell Lateral Raise.
+- Added aliases and typo-tolerant exercise search while retaining custom exercise entry.
+- Fixed Carbs/Fat card backgrounds, text contrast, equal heights, baselines, and progress-bar alignment in both themes.
+- Retained the permanent `setline-data-v1` storage key and every 7.1 reliability fix.
+
+---
+
 # Setline 7.1 — Serving-aware nutrition
 
 - Barcode nutrition scales to the actual entered portion.

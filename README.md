@@ -1,4 +1,4 @@
-# Setline 7.1
+# Setline 7.1.1
 
 Setline 7 is the largest interface and progression update so far. It keeps the permanent `setline-data-v1` storage key and migrates existing records without rewriting completed load values or units.
 
@@ -61,3 +61,11 @@ Food searches are cancellable, limited, and never written to local storage. When
 - Package serving nutrition/weight is used when provided by Open Food Facts.
 - Cup, piece, scoop, can, millilitre, or unknown serving conversions require a gram equivalent; Setline never guesses.
 - Manual macro edits switch the entry to manual mode so user values are not overwritten.
+
+
+## 7.1.1 scanner, portions and exercise catalogue
+
+- Barcode scanning now uses a live, constrained rear-camera stream and cropped frame rather than a full-resolution camera photograph.
+- Bread can be logged by slice. Package-provided slice counts and gram weights are used when explicit; otherwise Setline asks for grams per slice.
+- The local catalogue contains 129 canonical exercises with aliases and typo-tolerant search.
+- Home and Nutrition metric tiles share one aligned layout and remain readable in light and dark mode.

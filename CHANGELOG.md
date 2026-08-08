@@ -1,3 +1,15 @@
+# Setline 7.1 — Serving-aware nutrition
+
+- Barcode nutrition scales to the actual entered portion.
+- Scanned per-100-g values remain immutable and are used as the calculation basis.
+- Amount and unit changes update calories, protein, carbs, and fat live.
+- Package serving size and serving nutrition are used when available.
+- Cup, piece, scoop, can, millilitre, and unknown serving units require a gram equivalent instead of guessing.
+- Manual nutrition edits disable automatic scaling to protect user-entered values.
+- Includes every Setline 7.0.3 reliability fix.
+
+---
+
 # Setline 7.0.3 — Reliability patch
 
 - Reduced nutrition-search memory use by requesting only required Open Food Facts fields and keeping no more than nine temporary results.

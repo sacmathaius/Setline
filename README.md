@@ -1,4 +1,4 @@
-# Setline 7.0.3
+# Setline 7.1
 
 Setline 7 is the largest interface and progression update so far. It keeps the permanent `setline-data-v1` storage key and migrates existing records without rewriting completed load values or units.
 
@@ -52,6 +52,12 @@ The interface now uses a custom editorial design: warm off-white light mode, cha
 ## 7.0.2 Run Setup improvement
 The weekly preview step in Run Setup now has arrow controls to move any day to a different slot, plus a Reset order action, so you can arrange your split across the week without leaving the wizard.
 
-## 7.0.3 reliability notes
+## 7.1 serving-aware nutrition
 
 Food searches are cancellable, limited, and never written to local storage. When an online lookup fails, local common foods and manual entry remain available. Error details can be copied from the food dialog or Profile during the same app session.
+
+- Barcode and packaged-food nutrition is stored against an immutable per-100-g basis.
+- Amount and unit changes recalculate calories and macros live.
+- Package serving nutrition/weight is used when provided by Open Food Facts.
+- Cup, piece, scoop, can, millilitre, or unknown serving conversions require a gram equivalent; Setline never guesses.
+- Manual macro edits switch the entry to manual mode so user values are not overwritten.

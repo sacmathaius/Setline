@@ -1,39 +1,20 @@
-# Setline 7.0.3 QA report
+# Setline 7.1 QA report
 
-## Demo data used
-
-- Mixed kg/lb workouts
-- First-time exercise baselines and later genuine PR improvements
-- Explicit zero-set and zero-rep records
-- Planned training and rest days
-- Rest-only schedule with nutrition data but no workout
-- Three completed workout days with 12 working sets
-- Four protein-target days
-- Current-week mission completion
-
-## Results
-
-18 focused reliability checks passed:
-
-- Permanent `setline-data-v1` key preserved
-- Explicit zero sets remain zero
-- Zero-rep rows do not affect coverage, XP, missions, or mastery
-- Bodyweight sets with reps remain valid at zero external load
-- Rest-only plans cannot create a streak
-- Rest days can maintain a streak anchored by completed training
-- First performance establishes a PR baseline without PR XP
-- A later improvement creates exactly one PR event
-- Exercise-name capitalization does not split PR history
-- Weekly mission rewards are included in XP once per week
-- Changelog correctly marks 7.0.3 current
-- Food lookup requests only required fields
-- Online results are capped and kept in component memory only
-- Previous requests are aborted
-- Requests time out after eight seconds
-- Exact error diagnostics can be copied
-- Manifest and JavaScript syntax are valid
-- Service-worker cache names were advanced to 7.0.3
+## Passed checks
+- JavaScript syntax validation.
+- Required PWA files and icon assets present.
+- Service-worker cache version updated to 7.1.
+- App title, current version, manifest description, README, and changelog updated.
+- Open Food Facts requests include serving-size, serving-quantity, serving-unit, and serving nutrient fields.
+- Scanned nutrition keeps a per-100-g basis separate from displayed portion totals.
+- 100 g remains equal to the barcode data.
+- 150 g scales all nutrients by 1.5.
+- Selecting cup without a gram equivalent clears stale totals and blocks saving.
+- 1 cup at 195 g correctly scales a 356 kcal/100 g product to 694.2 kcal.
+- 0.5 cup correctly halves the calculated totals.
+- Product-provided serving nutrition scales by serving count.
+- Manual macro edits remain untouched and disable automatic scaling.
+- Existing storage key remains `setline-data-v1`; no workout or nutrition history rewrite was introduced.
 
 ## Limitation
-
-The build environment could not complete a live remote Open Food Facts request, so the successful online-response path was not end-to-end tested here. Offline, timeout, cancellation, request-size safeguards, and fallback paths were validated.
+A live successful Open Food Facts response and full rendered browser test were not available in the build environment. Network timeout, cancellation, field-selection, calculation, syntax, and package-integrity paths were tested locally.

@@ -19,7 +19,7 @@
     Stepper, Step, StepLabel, Slider, InputAdornment, Avatar, Paper, useMediaQuery, SvgIcon
   } = MaterialUI;
 
-  const APP_VERSION = '7.0.3';
+  const APP_VERSION = '7.1';
   const RELEASE_DATE = 'August 8, 2026';
   const STORAGE_KEY = 'setline-data-v1';
   const BACKUP_KEY = 'setline-data-last-good-v1';
@@ -216,6 +216,7 @@
   ];
 
   const CHANGELOG = [
+    {version:'7.1',date:RELEASE_DATE,items:['Barcode nutrition now scales to the actual portion instead of leaving per-100-g values unchanged','Scanned foods keep an immutable per-100-g nutrition basis and recalculate live when amount or unit changes','Cup, piece, scoop, can and unknown serving sizes require a gram equivalent instead of guessing','Package serving nutrition and serving weight are used automatically when Open Food Facts provides them','Manual macro edits safely disable automatic scaling so user-entered values are never overwritten','Retains all Setline 7.0.3 reliability fixes for lookup, XP, PRs, streaks and zero-set validation']},
     {version:'7.0.3',date:RELEASE_DATE,items:['Fixed nutrition lookup memory pressure by requesting only required product fields and limiting temporary results','Added request cancellation, timeout handling and exact network/no-result messages with copyable diagnostics','Weekly mission rewards now contribute to XP exactly once per completed week','PR XP now requires a genuine improvement over an earlier logged performance','Rest days may maintain a streak but can never create one without a completed workout','Explicit zero-set and zero-rep records no longer inflate XP, mastery, missions or muscle coverage','Corrected current-version ordering and smaller reliability fixes']},
     {version:'7.0.2',date:RELEASE_DATE,items:['Run Setup weekly preview lets you move any day to a different slot with arrow controls before finishing setup','Added a Reset order action to return to the auto-generated split sequence','Changing training split or training days resets any manual day order so the preview matches the latest choice']},
     {version:'7.0.1',date:RELEASE_DATE,items:['New editorial Setline visual system inspired by clean Figma case-study layouts','Warm off-white light mode and charcoal dark mode with restrained pastel tiles','Inter Tight typography, tighter hierarchy and simpler black-and-white controls','Home metrics, today plan, XP, recovery and weekly focus use a modular color grid','Flattened cards, compact fields and less Material-style visual chrome','All Setline 7 features and the permanent data key remain unchanged']},
@@ -1052,29 +1053,80 @@
 
   function AddFoodDialog({open,onClose,data,initial,onSave,defaultMeal='Breakfast'}){
     const mobile=useMediaQuery('(max-width:600px)');
-    const blank={name:'',meal:defaultMeal,kcal:'',protein:'',carbs:'',fat:'',amount:1,unit:'serving',favorite:false,barcode:''};
+    const blank={name:'',meal:defaultMeal,kcal:'',protein:'',carbs:'',fat:'',amount:1,unit:'serving',favorite:false,barcode:'',nutritionMode:'manual',per100:null,servingNutrition:null,servingGrams:'',servingSizeLabel:'',gramsPerUnit:'',portionUnitWeights:{}};
     const [form,setForm]=useState(blank);const [query,setQuery]=useState('');const [results,setResults]=useState([]);const [loading,setLoading]=useState(false);const [error,setError]=useState('');const [debugDetails,setDebugDetails]=useState('');
     const searchAbort=useRef(null),barcodeAbort=useRef(null),requestSequence=useRef(0);
     const closeDialog=()=>{searchAbort.current?.abort('dialog_closed');barcodeAbort.current?.abort('dialog_closed');setLoading(false);setResults([]);onClose();};
     useEffect(()=>{
-      if(open){setForm(initial?{...blank,...initial,favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');setDebugDetails('');}
+      if(open){setForm(initial?{...blank,...initial,portionUnitWeights:initial.portionUnitWeights&&typeof initial.portionUnitWeights==='object'?initial.portionUnitWeights:{},favorite:data.favoriteFoods.some(f=>String(f.name).toLowerCase()===String(initial.name).toLowerCase())}:blank);setQuery('');setResults([]);setError('');setDebugDetails('');}
       return()=>{searchAbort.current?.abort('unmounted');barcodeAbort.current?.abort('unmounted');};
     },[open,initial,defaultMeal]);
     const patch=(key,value)=>setForm(current=>({...current,[key]:value}));
-    const slimProduct=product=>({code:product?.code||'',product_name:product?.product_name||'',generic_name:product?.generic_name||'',brands:product?.brands||'',nutriments:{'energy-kcal_100g':Number(product?.nutriments?.['energy-kcal_100g']||0),proteins_100g:Number(product?.nutriments?.proteins_100g||0),carbohydrates_100g:Number(product?.nutriments?.carbohydrates_100g||0),fat_100g:Number(product?.nutriments?.fat_100g||0)}});
+    const nutritionShape=(kcal=0,protein=0,carbs=0,fat=0)=>({kcal:Number(kcal)||0,protein:Number(protein)||0,carbs:Number(carbs)||0,fat:Number(fat)||0});
+    const validServingNutrition=value=>value&&['kcal','protein','carbs','fat'].some(key=>Number(value[key])>0);
+    const servingWeightFromProduct=product=>{
+      const unit=String(product?.serving_quantity_unit||'').trim().toLowerCase();
+      const quantity=Number(product?.serving_quantity);
+      if(quantity>0&&(!unit||['g','gram','grams'].includes(unit)))return quantity;
+      const label=String(product?.serving_size||'');
+      const match=label.match(/([0-9]+(?:[.,][0-9]+)?)\s*(?:g|gram|grams)\b/i);
+      return match?Number(match[1].replace(',','.')):0;
+    };
+    const slimProduct=product=>({
+      code:product?.code||'',product_name:product?.product_name||'',generic_name:product?.generic_name||'',brands:product?.brands||'',serving_size:product?.serving_size||'',serving_quantity:Number(product?.serving_quantity)||0,serving_quantity_unit:product?.serving_quantity_unit||'',nutrition_data_per:product?.nutrition_data_per||'',
+      nutriments:{'energy-kcal_100g':Number(product?.nutriments?.['energy-kcal_100g']||0),proteins_100g:Number(product?.nutriments?.proteins_100g||0),carbohydrates_100g:Number(product?.nutriments?.carbohydrates_100g||0),fat_100g:Number(product?.nutriments?.fat_100g||0),'energy-kcal_serving':Number(product?.nutriments?.['energy-kcal_serving']||0),proteins_serving:Number(product?.nutriments?.proteins_serving||0),carbohydrates_serving:Number(product?.nutriments?.carbohydrates_serving||0),fat_serving:Number(product?.nutriments?.fat_serving||0)}
+    });
+    const recalculatePortion=next=>{
+      if(next.nutritionMode!=='product'||!next.per100)return next;
+      const amount=Number(next.amount);
+      if(!(amount>0))return {...next,kcal:'',protein:'',carbs:'',fat:''};
+      let totals=null;
+      if(next.unit==='g'){
+        const factor=amount/100;totals=nutritionShape(next.per100.kcal*factor,next.per100.protein*factor,next.per100.carbs*factor,next.per100.fat*factor);
+      }else if(next.unit==='serving'&&validServingNutrition(next.servingNutrition)){
+        totals=nutritionShape(next.servingNutrition.kcal*amount,next.servingNutrition.protein*amount,next.servingNutrition.carbs*amount,next.servingNutrition.fat*amount);
+      }else{
+        const gramsPerUnit=Number(next.gramsPerUnit);
+        if(!(gramsPerUnit>0))return {...next,kcal:'',protein:'',carbs:'',fat:''};
+        const factor=(amount*gramsPerUnit)/100;totals=nutritionShape(next.per100.kcal*factor,next.per100.protein*factor,next.per100.carbs*factor,next.per100.fat*factor);
+      }
+      return {...next,kcal:round1(totals.kcal),protein:round1(totals.protein),carbs:round1(totals.carbs),fat:round1(totals.fat)};
+    };
+    const patchPortion=(key,value)=>setForm(current=>{
+      let next={...current,[key]:value};
+      if(key==='unit'){
+        const remembered=current.portionUnitWeights?.[value];
+        next.gramsPerUnit=value==='g'?'':(remembered??(value==='serving'&&Number(current.servingGrams)>0?current.servingGrams:''));
+      }
+      return recalculatePortion(next);
+    });
+    const patchGramEquivalent=value=>setForm(current=>{
+      const weights={...(current.portionUnitWeights||{}),[current.unit]:value};
+      return recalculatePortion({...current,gramsPerUnit:value,portionUnitWeights:weights});
+    });
+    const patchNutrition=(key,value)=>setForm(current=>({...current,[key]:value,nutritionMode:'manual'}));
     const saveDiagnostic=(message,err,context={})=>{
       const details=JSON.stringify({time:new Date().toISOString(),message,errorName:err?.name||'',errorMessage:err?.message||String(err||''),online:navigator.onLine,...context},null,2);
       setError(message);setDebugDetails(details);console.error('[Setline nutrition lookup]',details,err);
       try{sessionStorage.setItem(LOOKUP_DIAGNOSTIC_KEY,details);}catch(storageError){}
     };
     const copyDebug=async()=>{if(!debugDetails)return;try{await navigator.clipboard.writeText(debugDetails);setError('Error details copied. Manual logging still works.');}catch(err){prompt('Copy these error details:',debugDetails);}};
-    const applyProduct=product=>{if(product._setlinePreset){setForm(current=>({...current,name:product.name,kcal:product.kcal,protein:product.protein,carbs:product.carbs,fat:product.fat,amount:product.amount,unit:product.unit,barcode:''}));setResults([]);return;}const n=product.nutriments||{};setForm(current=>({...current,name:product.product_name||product.generic_name||current.name,kcal:Math.round(Number(n['energy-kcal_100g']||0)),protein:round1(n.proteins_100g||0),carbs:round1(n.carbohydrates_100g||0),fat:round1(n.fat_100g||0),amount:100,unit:'g',barcode:product.code||current.barcode}));setResults([]);};
+    const applyProduct=product=>{
+      if(product._setlinePreset){setForm(current=>({...current,name:product.name,kcal:product.kcal,protein:product.protein,carbs:product.carbs,fat:product.fat,amount:product.amount,unit:product.unit,barcode:'',nutritionMode:'manual',per100:null,servingNutrition:null,servingGrams:'',servingSizeLabel:'',gramsPerUnit:'',portionUnitWeights:{}}));setResults([]);return;}
+      const n=product.nutriments||{};
+      const per100=nutritionShape(n['energy-kcal_100g'],n.proteins_100g,n.carbohydrates_100g,n.fat_100g);
+      const servingNutrition=nutritionShape(n['energy-kcal_serving'],n.proteins_serving,n.carbohydrates_serving,n.fat_serving);
+      const servingGrams=servingWeightFromProduct(product);
+      const hasServing=validServingNutrition(servingNutrition)||servingGrams>0;
+      setForm(current=>recalculatePortion({...current,name:product.product_name||product.generic_name||current.name,amount:hasServing?1:100,unit:hasServing?'serving':'g',barcode:product.code||current.barcode,nutritionMode:'product',per100,servingNutrition:validServingNutrition(servingNutrition)?servingNutrition:null,servingGrams:servingGrams||'',servingSizeLabel:product.serving_size||'',gramsPerUnit:hasServing&&servingGrams?servingGrams:'',portionUnitWeights:hasServing&&servingGrams?{serving:servingGrams}:{}}));
+      setResults([]);
+    };
     const search=async()=>{
       const rawTerm=query.trim(),term=rawTerm.toLowerCase();if(term.length<2){setError('Type at least two characters.');return;}
       const local=COMMON_FOODS.filter(item=>[item.name,...item.aliases].some(label=>label.toLowerCase().includes(term)||term.includes(label.toLowerCase()))).slice(0,5).map(item=>({...item,_setlinePreset:true}));
       setResults(local);setError('');setDebugDetails('');searchAbort.current?.abort('superseded');const controller=new AbortController();searchAbort.current=controller;const requestId=++requestSequence.current;const timeout=setTimeout(()=>controller.abort('timeout'),8000);setLoading(true);
       try{
-        const fields='code,product_name,generic_name,brands,nutriments';
+        const fields='code,product_name,generic_name,brands,serving_size,serving_quantity,serving_quantity_unit,nutrition_data_per,nutriments';
         const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(rawTerm)}&search_simple=1&action=process&json=1&page_size=4&fields=${encodeURIComponent(fields)}`;
         const response=await fetch(url,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/json'}});
         if(!response.ok)throw new Error(`HTTP ${response.status}`);
@@ -1095,7 +1147,7 @@
       const clean=String(code||'').trim();if(!clean){setError('Enter a barcode first.');return;}
       barcodeAbort.current?.abort('superseded');const controller=new AbortController();barcodeAbort.current=controller;const timeout=setTimeout(()=>controller.abort('timeout'),8000);setLoading(true);setError('');setDebugDetails('');
       try{
-        const fields='code,product_name,generic_name,brands,nutriments';
+        const fields='code,product_name,generic_name,brands,serving_size,serving_quantity,serving_quantity_unit,nutrition_data_per,nutriments';
         const response=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(clean)}.json?fields=${encodeURIComponent(fields)}`,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/json'}});
         if(!response.ok)throw new Error(`HTTP ${response.status}`);
         const payload=await response.json();if(!payload.product)throw new Error('Product not found');applyProduct({...slimProduct(payload.product),code:clean});
@@ -1108,17 +1160,28 @@
       }finally{clearTimeout(timeout);setLoading(false);}
     };
     const scanImage=async file=>{if(!file)return;if(!('BarcodeDetector' in window)){setError('Camera barcode detection is not supported in this browser. Type the barcode instead.');return;}setLoading(true);try{const bitmap=await createImageBitmap(file);const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});const codes=await detector.detect(bitmap);bitmap.close?.();if(!codes.length)throw new Error('No barcode');patch('barcode',codes[0].rawValue);await lookupBarcode(codes[0].rawValue);}catch(err){saveDiagnostic('No barcode was detected in that image.',err,{operation:'barcode_scan'});}finally{setLoading(false);}};
-    const submit=()=>{if(!form.name.trim()||!Number.isFinite(Number(form.kcal))){setError('Enter a food name and calories.');return;}onSave({...form,id:initial?.id||id('food'),name:form.name.trim(),kcal:Number(form.kcal)||0,protein:Number(form.protein)||0,carbs:Number(form.carbs)||0,fat:Number(form.fat)||0,amount:Number(form.amount)||1,loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()});closeDialog();};
+    const usesServingDirectly=form.nutritionMode==='product'&&form.unit==='serving'&&validServingNutrition(form.servingNutrition);
+    const needsGramEquivalent=form.nutritionMode==='product'&&form.unit!=='g'&&!usesServingDirectly;
+    const missingGramEquivalent=needsGramEquivalent&&!(Number(form.gramsPerUnit)>0);
+    const submit=()=>{
+      if(!form.name.trim()||form.kcal===''||!Number.isFinite(Number(form.kcal))){setError('Enter a food name and valid calories.');return;}
+      if(!(Number(form.amount)>0)){setError('Amount must be greater than zero.');return;}
+      if(missingGramEquivalent){setError(`Enter how many grams are in 1 ${form.unit}. Setline will not guess a serving conversion.`);return;}
+      onSave({...form,id:initial?.id||id('food'),name:form.name.trim(),kcal:Number(form.kcal)||0,protein:Number(form.protein)||0,carbs:Number(form.carbs)||0,fat:Number(form.fat)||0,amount:Number(form.amount),loggedAt:initial?.loggedAt||new Date().toISOString(),updatedAt:new Date().toISOString()});closeDialog();
+    };
+    const productPortionMessage=form.nutritionMode==='product'?(missingGramEquivalent?`Enter the gram weight for 1 ${form.unit}. Barcode values are stored per 100 g and Setline will not guess.`:usesServingDirectly?`Using the package serving nutrition${form.servingSizeLabel?` (${form.servingSizeLabel})`:''}. Totals update with the amount.`:form.unit==='g'?`Calculated from the product's per-100-g nutrition for ${form.amount||0} g.`:`Calculated from per-100-g nutrition using ${form.gramsPerUnit||0} g per ${form.unit}.`):'';
     return html`<${Dialog} className="food-dialog" open=${open} onClose=${closeDialog} maxWidth="sm" fullWidth fullScreen=${mobile} scroll="paper">
       <${DialogTitle}>${initial?'Edit food':'Log food'}</${DialogTitle}>
       <${DialogContent} dividers className="food-dialog-content"><${Stack} spacing=${1.4} sx=${{pt:.25}}>
         <${Box}><${Typography} component="label" variant="caption" color="text.secondary" fontWeight=${800} sx=${{display:'block',mb:.55}}>SEARCH FOODS</${Typography}><${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:.8}}><${TextField} placeholder="e.g. boiled eggs" aria-label="Search foods" value=${query} onChange=${e=>setQuery(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter'){e.preventDefault();search();}}} InputProps=${{startAdornment:html`<${InputAdornment} position="start"><${Icon} name="search"/></${InputAdornment}>`}}/><${Button} variant="outlined" onClick=${search} disabled=${loading}>Search</${Button}></${Box}></${Box}>
         ${loading?html`<${LinearProgress}/>`:null}${error?html`<${Alert} severity="info" action=${debugDetails?html`<${Button} color="inherit" size="small" onClick=${copyDebug}>Copy details</${Button}>`:null}>${error}</${Alert}>`:null}
-        ${results.length?html`<${Paper} variant="outlined" sx=${{maxHeight:230,overflow:'auto'}}>${results.map((product,index)=>html`<${ListItemButton} key=${product.code||product.name||index} onClick=${()=>applyProduct(product)}><${ListItemText} primary=${product._setlinePreset?product.name:product.product_name} secondary=${product._setlinePreset?`${product.note} · ${Math.round(product.kcal)} kcal`:`${product.brands||'Packaged food'} · ${Math.round(Number(product.nutriments?.['energy-kcal_100g']||0))} kcal/100g`}/></${ListItemButton}>`)}</${Paper}>`:null}
+        ${results.length?html`<${Paper} variant="outlined" sx=${{maxHeight:230,overflow:'auto'}}>${results.map((product,index)=>html`<${ListItemButton} key=${product.code||product.name||index} onClick=${()=>applyProduct(product)}><${ListItemText} primary=${product._setlinePreset?product.name:product.product_name} secondary=${product._setlinePreset?`${product.note} · ${Math.round(product.kcal)} kcal`:`${product.brands||'Packaged food'} · ${Math.round(Number(product.nutriments?.['energy-kcal_100g']||0))} kcal/100g${product.serving_size?` · serving ${product.serving_size}`:''}`}/></${ListItemButton}>`)}</${Paper}>`:null}
         <${Divider}>OR ENTER MANUALLY</${Divider}>
         <${TextField} label="Food or meal" value=${form.name} onChange=${e=>patch('name',e.target.value)}/>
-        <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(4,1fr)'},gap:1}}><${TextField} label="Calories" type="number" value=${form.kcal} onChange=${e=>patch('kcal',e.target.value)}/><${TextField} label="Protein (g)" type="number" value=${form.protein} onChange=${e=>patch('protein',e.target.value)}/><${TextField} label="Carbs (g)" type="number" value=${form.carbs} onChange=${e=>patch('carbs',e.target.value)}/><${TextField} label="Fat (g)" type="number" value=${form.fat} onChange=${e=>patch('fat',e.target.value)}/></${Box}>
-        <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" value=${form.amount} onChange=${e=>patch('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patch('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="ml">Millilitres</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
+        <${Box} sx=${{display:'grid',gridTemplateColumns:{xs:'1fr 1fr',sm:'repeat(4,1fr)'},gap:1}}><${TextField} label="Calories" type="number" value=${form.kcal} onChange=${e=>patchNutrition('kcal',e.target.value)}/><${TextField} label="Protein (g)" type="number" value=${form.protein} onChange=${e=>patchNutrition('protein',e.target.value)}/><${TextField} label="Carbs (g)" type="number" value=${form.carbs} onChange=${e=>patchNutrition('carbs',e.target.value)}/><${TextField} label="Fat (g)" type="number" value=${form.fat} onChange=${e=>patchNutrition('fat',e.target.value)}/></${Box}>
+        <${Box} sx=${{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}><${TextField} label="Amount" type="number" inputProps=${{min:'0',step:'any'}} value=${form.amount} onChange=${e=>patchPortion('amount',e.target.value)}/><${TextField} select label="Unit" value=${form.unit} onChange=${e=>patchPortion('unit',e.target.value)}><${MenuItem} value="serving">Serving</${MenuItem}><${MenuItem} value="g">Grams</${MenuItem}><${MenuItem} value="ml">Millilitres</${MenuItem}><${MenuItem} value="cup">Cup</${MenuItem}><${MenuItem} value="piece">Piece</${MenuItem}><${MenuItem} value="scoop">Scoop</${MenuItem}><${MenuItem} value="can">Can</${MenuItem}></${TextField}><${TextField} select label="Meal" value=${form.meal} onChange=${e=>patch('meal',e.target.value)}><${MenuItem} value="Breakfast">Breakfast</${MenuItem}><${MenuItem} value="Lunch">Lunch</${MenuItem}><${MenuItem} value="Dinner">Dinner</${MenuItem}><${MenuItem} value="Snack">Snack</${MenuItem}></${TextField}></${Box}>
+        ${needsGramEquivalent?html`<${TextField} label=${`1 ${form.unit} equals (g)`} type="number" inputProps=${{min:'0',step:'any'}} value=${form.gramsPerUnit} onChange=${e=>patchGramEquivalent(e.target.value)} helperText="Use the package serving weight or measure it once. Setline remembers it for this food entry."/>`:null}
+        ${productPortionMessage?html`<${Alert} severity=${missingGramEquivalent?'warning':'success'}>${productPortionMessage}</${Alert}>`:null}
         <${Box} sx=${{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto auto',gap:1}}><${TextField} label="Barcode" value=${form.barcode} onChange=${e=>patch('barcode',e.target.value)}/><${Button} variant="outlined" onClick=${()=>lookupBarcode()} disabled=${loading}>Lookup</${Button}><${Button} variant="outlined" component="label" disabled=${loading}>Scan<input className="sr-only" type="file" accept="image/*" capture="environment" onChange=${e=>scanImage(e.target.files?.[0])}/></${Button}></${Box}>
         <${FormControlLabel} control=${html`<${Checkbox} checked=${!!form.favorite} onChange=${e=>patch('favorite',e.target.checked)}/>`} label="Save to favourites"/>
       </${Stack}></${DialogContent}>
@@ -1361,7 +1424,7 @@
       <${BottomNavigation} className="bottom-nav-mobile" showLabels value=${tab} onChange=${(_,value)=>navigate(value)} sx=${{position:'fixed',left:0,right:0,bottom:0,zIndex:1300}}><${BottomNavigationAction} value="home" label="Home" icon=${html`<${Icon} name="home"/>`}/><${BottomNavigationAction} value="workout" label="Workout" icon=${html`<${Icon} name="workout"/>`}/><${BottomNavigationAction} value="nutrition" label="Nutrition" icon=${html`<${Icon} name="nutrition"/>`}/><${BottomNavigationAction} value="progress" label="Progress" icon=${html`<${Icon} name="progress"/>`}/><${BottomNavigationAction} value="profile" label="Profile" icon=${html`<${Icon} name="profile"/>`}/></${BottomNavigation}>
       ${!online?html`<div className="offline-pill">Offline · local data still works</div>`:null}
       ${updateReady&&tab!=='profile'?html`<${Paper} className="update-banner" elevation=${12} sx=${{p:1.3,display:'flex',alignItems:'center',justifyContent:'space-between',gap:1.5}}><${Box}><${Typography} fontWeight=${800}>Update ready</${Typography}><${Typography} variant="caption" color="text.secondary">A backup will be made before reloading.</${Typography}></${Box}><${Button} size="small" variant="contained" onClick=${applyUpdate}>Update</${Button}></${Paper}>`:null}
-      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Reliability fixes for nutrition lookup, XP, PRs, streaks and zero-set records.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
+      ${data.changelogSeen!==APP_VERSION&&!changelogOpen?html`<${Paper} elevation=${12} sx=${{position:'fixed',left:{xs:12,sm:'auto'},right:{xs:12,sm:24},bottom:'calc(82px + env(safe-area-inset-bottom))',zIndex:1250,p:1.3,borderRadius:3,display:'flex',alignItems:'center',gap:1.5,maxWidth:390}}><${Avatar} sx=${{bgcolor:'primary.main'}}><${Icon} name="spark"/></${Avatar}><${Box} sx=${{flex:1,minWidth:0}}><${Typography} fontWeight=${800}>Setline ${APP_VERSION} is here</${Typography}><${Typography} variant="caption" color="text.secondary">Serving-aware barcode nutrition and all Setline 7.0.3 reliability fixes.</${Typography}></${Box}><${Button} size="small" onClick=${()=>setChangelogOpen(true)}>View</${Button}><${IconButton} size="small" onClick=${()=>update(next=>next.changelogSeen=APP_VERSION)}><${Icon} name="close"/></${IconButton}></${Paper}>`:null}
       ${feedback?html`<div className="save-pop"><${Typography} fontWeight=${850}>✓ ${feedback}</${Typography}></div>`:null}
       ${completion?html`<${CompletionOverlay} summary=${completion} reducedMotion=${data.settings.reducedMotion} onClose=${()=>setCompletion(null)}/>`:null}
       <${TrainingGuideDialog} open=${guide.open} initialTerm=${guide.term} onClose=${()=>setGuide({open:false,term:''})}/><${ChangelogDialog} open=${changelogOpen} onClose=${closeChangelog}/><${OnboardingDialog} open=${onboardingOpen} data=${data} update=${update} onClose=${()=>setOnboardingOpen(false)}/>
